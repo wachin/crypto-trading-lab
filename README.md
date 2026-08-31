@@ -40,7 +40,7 @@ The AI Agent will then read the instructions and begin building Crypto Trading L
 |------|---------|
 | `GENESIS.md` | The starting instruction that tells the AI Agent how to begin |
 | `ROADMAP.md` | The complete project specification with task checkboxes for tracking progress |
-| `Project_ Crypto Trading Lab.md` | The original full project description |
+| `README.md` | The instructions to read about this repo |
 
 ## License
 
