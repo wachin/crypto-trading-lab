@@ -34,7 +34,7 @@ It must clearly explain that:
 
 ---
 
-- [ ] # 1. Supported platforms and technologies
+# 1. Supported platforms and technologies
 
 The application must be developed primarily for:
 
@@ -70,7 +70,7 @@ Do not use proprietary components or services that require mandatory payment.
 
 ---
 
-- [ ] # 2. Debian dependency priority
+# 2. Debian dependency priority
 
 Prioritize dependencies available in the official Debian 12 repositories before adding dependencies from PyPI.
 
@@ -247,7 +247,7 @@ Do not add external dependencies unnecessarily.
 
 ---
 
-- [ ] # 3. Mandatory project principles
+# 3. Mandatory project principles
 
 The application must comply with the following rules:
 
@@ -281,7 +281,7 @@ The application must comply with the following rules:
 
 ---
 
-- [ ] # 4. Architecture
+# 4. Architecture
 
 Use a modular, maintainable, testable architecture.
 
@@ -417,7 +417,7 @@ Do not place business logic inside generated interface files.
 
 ---
 
-- [ ] # 5. Domain models
+# 5. Domain models
 
 Implement explicit, strongly validated models for:
 
@@ -464,7 +464,7 @@ Every exchange adapter must normalize exchange-specific data into common domain 
 
 ---
 
-- [ ] # 6. Market precision and exchange rules
+# 6. Market precision and exchange rules
 
 Every exchange adapter must retrieve and respect:
 
@@ -499,7 +499,7 @@ Before creating an order:
 
 ---
 
-- [ ] # 7. Market-data sources and exchange adapters
+# 7. Market-data sources and exchange adapters
 
 Create an `ExchangeAdapter` interface or equivalent.
 
@@ -572,7 +572,7 @@ Do not mix Coinbase-specific models with the central domain.
 
 ---
 
-- [ ] # 8. Connection state management
+# 8. Connection state management
 
 Create a connection state machine with:
 
@@ -610,7 +610,7 @@ Every connection state must have:
 
 ---
 
-- [ ] # 9. Database
+# 9. Database
 
 Use SQLite with SQLAlchemy.
 
@@ -670,7 +670,7 @@ Exports must include:
 
 ---
 
-- [ ] # 10. Financial charts
+# 10. Financial charts
 
 Implement charts for:
 
@@ -719,7 +719,7 @@ Each chart must include an optional beginner explanation panel describing:
 
 ---
 
-- [ ] # 11. Technical indicators
+# 11. Technical indicators
 
 Initially implement:
 
@@ -762,7 +762,7 @@ Every indicator must also include beginner documentation:
 
 ---
 
-- [ ] # 12. Strategies
+# 12. Strategies
 
 Strategies must use explicit, testable, declarative rules.
 
@@ -815,7 +815,7 @@ No strategy may communicate directly with an exchange API.
 
 ---
 
-- [ ] # 13. Visual strategy builder
+# 13. Visual strategy builder
 
 Create a basic no-code strategy builder using blocks or forms for:
 
@@ -852,7 +852,7 @@ Use a versioned schema for strategy files.
 
 ---
 
-- [ ] # 14. Backtesting
+# 14. Backtesting
 
 The backtesting engine must be deterministic.
 
@@ -901,7 +901,7 @@ Every backtest result must include a beginner-oriented explanation covering:
 
 ---
 
-- [ ] # 15. Data splitting
+# 15. Data splitting
 
 Allow chronological division into:
 
@@ -919,7 +919,7 @@ Explain in beginner language why chronological separation matters.
 
 ---
 
-- [ ] # 16. Parameter optimization
+# 16. Parameter optimization
 
 Initially include:
 
@@ -945,7 +945,7 @@ Explain optimization to beginners using simple examples.
 
 ---
 
-- [ ] # 17. Performance metrics
+# 17. Performance metrics
 
 Calculate and display:
 
@@ -995,7 +995,7 @@ Every metric must provide:
 
 ---
 
-- [ ] # 18. Paper trading
+# 18. Paper trading
 
 Paper trading must use real-time or replayed data with simulated money.
 
@@ -1039,7 +1039,7 @@ Add a beginner tutorial explaining:
 
 ---
 
-- [ ] # 19. Risk manager
+# 19. Risk manager
 
 Create a central `RiskManager` service.
 
@@ -1087,7 +1087,7 @@ Every risk rule must include educational documentation explaining why it exists.
 
 ---
 
-- [ ] # 20. Emergency kill switch
+# 20. Emergency kill switch
 
 Implement a visible and accessible kill switch.
 
@@ -1111,7 +1111,7 @@ Provide a beginner explanation of:
 
 ---
 
-- [ ] # 21. Real trading
+# 21. Real trading
 
 Real trading support must remain behind multiple protections.
 
@@ -1140,7 +1140,7 @@ The beginner documentation must strongly recommend learning, backtesting, and pa
 
 ---
 
-- [ ] # 22. Main interface
+# 22. Main interface
 
 Design a professional, clear, responsive interface.
 
@@ -1211,7 +1211,7 @@ Avoid:
 
 ---
 
-- [ ] # 23. Themes and appearance
+# 23. Themes and appearance
 
 Include:
 
@@ -1236,7 +1236,7 @@ Do not download icons at runtime.
 
 ---
 
-- [ ] # 24. Multilingual support and Qt Linguist
+# 24. Multilingual support and Qt Linguist
 
 The application must be multilingual from the beginning.
 
@@ -1343,7 +1343,7 @@ Add automated checks for untranslated critical strings.
 
 ---
 
-- [ ] # 25. Credential security
+# 25. Credential security
 
 Create an abstract `CredentialStore`.
 
@@ -1379,7 +1379,7 @@ Add a logging filter that redacts:
 
 ---
 
-- [ ] # 26. Logging and auditing
+# 26. Logging and auditing
 
 Use Python’s standard `logging` module.
 
@@ -1419,7 +1419,7 @@ Do not log secret values.
 
 ---
 
-- [ ] # 27. Reports
+# 27. Reports
 
 Generate backtesting and paper-trading reports in:
 
@@ -1457,7 +1457,7 @@ Include an optional beginner summary that explains the results in plain language
 
 ---
 
-- [ ] # 28. Data import
+# 28. Data import
 
 Allow candle import from CSV.
 
@@ -1491,7 +1491,7 @@ Include a beginner explanation of OHLCV columns.
 
 ---
 
-- [ ] # 29. Background processing
+# 29. Background processing
 
 Do not block the GUI.
 
@@ -1518,7 +1518,7 @@ Do not update widgets directly from worker threads.
 
 ---
 
-- [ ] # 30. Performance
+# 30. Performance
 
 Design for:
 
@@ -1545,7 +1545,7 @@ Include benchmarks for:
 
 ---
 
-- [ ] # 31. Tests
+# 31. Tests
 
 Write tests from the beginning.
 
@@ -1635,7 +1635,7 @@ Verify:
 
 ---
 
-- [ ] # 32. Python packaging
+# 32. Python packaging
 
 Use `pyproject.toml`.
 
@@ -1666,7 +1666,7 @@ Do not use paths that depend on the current working directory.
 
 ---
 
-- [ ] # 33. Debian package
+# 33. Debian package
 
 Create a complete and valid `debian/` directory.
 
@@ -1738,7 +1738,7 @@ Verify exact Debian 12 package names before writing `debian/control`.
 
 ---
 
-- [ ] # 34. Debian dependency documentation
+# 34. Debian dependency documentation
 
 Create:
 
@@ -1824,7 +1824,7 @@ English documentation must be completed first.
 
 ---
 
-- [ ] # 35. AppImage
+# 35. AppImage
 
 Prepare a separate AppImage strategy.
 
@@ -1857,7 +1857,7 @@ Do not download binaries without verifying their origin and checksum.
 
 ---
 
-- [ ] # 36. Documentation
+# 36. Documentation
 
 Documentation is a core feature of the project, not an optional final task.
 
@@ -2072,7 +2072,7 @@ The README must clearly explain:
 
 ---
 
-- [ ] # 37. Built-in Learning Center
+# 37. Built-in Learning Center
 
 Create a Learning Center inside the application.
 
@@ -2123,7 +2123,7 @@ Do not require an internet connection for core educational content.
 
 ---
 
-- [ ] # 38. Glossary
+# 38. Glossary
 
 Create an English glossary first, followed by Spanish.
 
@@ -2183,7 +2183,7 @@ Every glossary entry must include:
 
 ---
 
-- [ ] # 39. Threat model and security documentation
+# 39. Threat model and security documentation
 
 Create a threat model covering:
 
@@ -2210,7 +2210,7 @@ Document mitigations for each threat.
 
 ---
 
-- [ ] # 40. Reproducibility
+# 40. Reproducibility
 
 Every backtest must store:
 
@@ -2229,7 +2229,7 @@ Repeating a backtest with identical data and configuration must produce identica
 
 ---
 
-- [ ] # 41. Accessibility
+# 41. Accessibility
 
 Include:
 
@@ -2248,7 +2248,7 @@ Include:
 
 ---
 
-- [ ] # 42. Complementary CLI
+# 42. Complementary CLI
 
 Add a basic CLI without duplicating business logic:
 
@@ -2284,7 +2284,7 @@ It must never display secrets.
 
 ---
 
-- [ ] # 43. Development phases
+# 43. Development phases
 
 Do not try to implement the entire application in one change.
 
@@ -2400,7 +2400,7 @@ Do not proceed to a new phase if the previous phase does not compile or its test
 
 ---
 
-- [ ] # 44. Working method
+# 44. Working method
 
 Before modifying files:
 
@@ -2438,7 +2438,7 @@ Every completed feature must include:
 
 ---
 
-- [ ] # 45. First concrete task
+# 45. First concrete task
 
 Begin only with Phase 0 and the minimum foundation of Phase 1.
 
@@ -2534,7 +2534,7 @@ It must initially define at least:
 
 ---
 
-- [ ] # 46. Expected result of the first iteration
+# 46. Expected result of the first iteration
 
 At the end, provide:
 
