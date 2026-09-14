@@ -16,7 +16,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 257 passed, 2 skipped —
+- **Tests:** 263 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
 - **Source:** 44 Python files under `src/crypto_trading_lab/`
 - **Tests:** 41 Python files under `tests/`
@@ -70,6 +70,7 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Performance metrics (returns, trades, risk, activity, benchmark, validity) | `src/crypto_trading_lab/backtesting/metrics.py` | 40 |
 | Backtesting Lab UI (results + beginner explanation) | `src/crypto_trading_lab/ui/backtesting/lab.py` | 37.9, 37.10 |
 | Report generation (HTML/CSV/JSON, evidence levels) | `src/crypto_trading_lab/reporting/report.py` | 41 (partial) |
+| Robustness (seeded Monte Carlo, perturbation, cost sweeps) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 (partial) |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
 
 ### Domain-model naming and the chapter 7/26/30 reconciliation
@@ -224,9 +225,19 @@ Per `ROADMAP.md` and the last iteration report:
    with an identical-strategy warning, and the plain-language verdict;
    257 tests passing. Still open: graphical equity/drawdown comparison
    views, and feeding qualification (ch. 66).
-5. Next: robustness (43-46), paper trading (57), risk manager (58).
-   Note: §37.8 determinism checkboxes are still open; much of it is
-   already engine-tested, reconciling them is a cheap documentation task.
+5. ~~Robustness core (chapter 44, partial)~~ — done on 2026-09-14:
+   `backtesting/robustness.py` with seeded trade-resampling Monte Carlo
+   (drawdown distributions, risk of ruin, mandatory warnings), SMA
+   parameter perturbation with collapse detection, and cost sweeps;
+   263 tests passing. Still open: block bootstrap, randomized
+   execution, dataset variations, out-of-sample degradation (needs
+   ch. 38 splitting), PBO (44.8, needs ch. 39 optimization), the
+   consolidated robustness report (44.9) and all of chapter 45
+   (walk-forward).
+6. Next: chapter 38 (data splitting) unblocks 44.7 and 45; then paper
+   trading (57), risk manager (58). Note: §37.8 determinism checkboxes
+   are still open; much of it is already engine-tested, reconciling
+   them is a cheap documentation task.
 
 Do not start a task before reading the chapter that owns it, and do not tick
 a requirement until it is implemented **and tested**.
@@ -254,4 +265,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 257 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 263 tests passing at time of writing.*

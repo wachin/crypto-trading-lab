@@ -3142,31 +3142,31 @@ Optimization (Chapter 39) finds configurations that worked on given data; robust
 
 The system must support:
 
-- [ ] parameter perturbation;
-- [ ] Monte Carlo simulation (see 44.4);
-- [ ] bootstrap;
-- [ ] randomized execution;
-- [ ] slippage variation;
-- [ ] fee variation;
-- [ ] market variation;
-- [ ] out-of-sample degradation analysis;
-- [ ] sensitivity analysis.
+- [x] parameter perturbation; (`perturb_sma_crossover`)
+- [x] Monte Carlo simulation (see 44.4); (`monte_carlo_trades`)
+- [x] bootstrap; (trade-level bootstrap inside the Monte Carlo runner)
+- [ ] randomized execution; — pending (needs a fill-uncertainty model)
+- [x] slippage variation; (`sweep_costs`)
+- [x] fee variation; (`sweep_costs`)
+- [ ] market variation; — pending (dataset variations, ch. 44.3)
+- [ ] out-of-sample degradation analysis; — pending (needs the data-splitting of ch. 38)
+- [x] sensitivity analysis.
 
 ### 44.2 Parameter perturbation
 
-- [ ] Perturb each parameter within a documented neighborhood.
-- [ ] Show how metrics change when parameters move away from the optimized values.
-- [ ] Identify parameter regions where performance collapses.
-- [ ] Compare perturbed results against the optimized result.
+- [x] Perturb each parameter within a documented neighborhood. (±20% grid, explicated in the code)
+- [x] Show how metrics change when parameters move away from the optimized values.
+- [x] Identify parameter regions where performance collapses. (`collapsed` flag at <50% of the reference return)
+- [x] Compare perturbed results against the optimized result. (`delta_vs_reference`)
 
 ### 44.3 Sensitivity analysis
 
-- [ ] Vary one factor at a time where appropriate.
-- [ ] Vary combinations of factors where practical.
-- [ ] Sweep trading-cost assumptions (fees, slippage, spread).
-- [ ] Sweep execution assumptions (latency, fill rate).
-- [ ] Sweep dataset variations (time ranges, markets) where appropriate.
-- [ ] Present results as ranges or heatmaps, not single numbers.
+- [x] Vary one factor at a time where appropriate. (cost multiplier sweep)
+- [ ] Vary combinations of factors where practical. — pending
+- [x] Sweep trading-cost assumptions (fees, slippage, spread). (`sweep_costs`)
+- [ ] Sweep execution assumptions (latency, fill rate). — pending (needs randomized execution, 44.6)
+- [ ] Sweep dataset variations (time ranges, markets) where appropriate. — pending
+- [x] Present results as ranges or heatmaps, not single numbers. (sweeps return scenario rows, never a single point)
 
 ### 44.4 Monte Carlo simulation
 
@@ -3174,36 +3174,36 @@ Monte Carlo must clearly explain **what is being simulated**.
 
 Supported modes may include:
 
-- [ ] reshuffling of trade sequences where statistically justifiable;
-- [ ] bootstrap resampling of trades;
-- [ ] variation of results under alternative trade sequences;
-- [ ] randomized slippage and fees;
-- [ ] execution uncertainty;
-- [ ] drawdown distributions;
-- [ ] risk-of-ruin estimates (see Chapter 60).
+- [x] reshuffling of trade sequences where statistically justifiable; (resampling with replacement)
+- [x] bootstrap resampling of trades;
+- [x] variation of results under alternative trade sequences;
+- [ ] randomized slippage and fees; — pending (needs randomized execution, 44.6)
+- [ ] execution uncertainty; — pending (44.6)
+- [x] drawdown distributions; (p50/p95 of per-scenario max drawdown)
+- [x] risk-of-ruin estimates (see Chapter 60). (fraction of scenarios hitting 50% capital)
 
 Requirements:
 
-- [ ] The scenario definition must be explicit and documented.
-- [ ] The random seed must be recorded.
-- [ ] The number of scenarios must be recorded.
-- [ ] The distribution of outcomes must be shown, not only the average.
-- [ ] Confidence ranges must be labeled as estimates under the stated assumptions.
-- [ ] Warn when reshuffling destroys the temporal structure of the data and therefore may not be statistically justifiable.
-- [ ] Never present Monte Carlo as a prediction of the future.
+- [x] The scenario definition must be explicit and documented. (`MonteCarloConfig`)
+- [x] The random seed must be recorded. (`MonteCarloReport.seed`, deterministic)
+- [x] The number of scenarios must be recorded.
+- [x] The distribution of outcomes must be shown, not only the average. (percentile reports)
+- [x] Confidence ranges must be labeled as estimates under the stated assumptions.
+- [x] Warn when reshuffling destroys the temporal structure of the data and therefore may not be statistically justifiable.
+- [x] Never present Monte Carlo as a prediction of the future. (both warnings are mandatory in every report)
 
 ### 44.5 Bootstrap
 
-- [ ] Support bootstrap resampling where statistically appropriate.
-- [ ] Support block bootstrap for dependent data; document the block scheme and block length.
-- [ ] Report bootstrap confidence intervals with their assumptions.
-- [ ] Warn when independence assumptions are violated.
+- [x] Support bootstrap resampling where statistically appropriate. (with-replacement trade resampling)
+- [ ] Support block bootstrap for dependent data; document the block scheme and block length. — pending
+- [ ] Report bootstrap confidence intervals with their assumptions. — percentiles land via 44.4's Monte Carlo report; formal CIs pending
+- [ ] Warn when independence assumptions are violated. — pending
 
 ### 44.6 Randomized execution
 
-- [ ] Support randomized execution simulations to test execution sensitivity.
-- [ ] Record the random seed and distribution used.
-- [ ] Compare execution-sensitive metrics across scenarios.
+- [ ] Support randomized execution simulations to test execution sensitivity. — pending
+- [ ] Record the random seed and distribution used. — pending
+- [ ] Compare execution-sensitive metrics across scenarios. — pending
 
 ### 44.7 Out-of-sample degradation
 
