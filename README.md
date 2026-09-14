@@ -1,155 +1,213 @@
+<div align="center">
+
+<img src="assets/logo.png" alt="Crypto Trading Lab logo" width="160"/>
+
 # Crypto Trading Lab
 
-Crypto Trading Lab is a personal idea:
+**A specifications-first laboratory for honest crypto-trading research.**
+Survive → Validate → Earn. In that order, non-negotiable.
 
-**Crypto Trading Lab → plataforma de investigación, backtesting, paper trading y posteriormente trading real.**
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
+[![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
+[![Tests: 255 passed, 2 skipped](https://img.shields.io/badge/tests-255%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
+[![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
+[![Real trading: DISABLED](https://img.shields.io/badge/real%20trading-DISABLED-critical)](#safety-by-construction)
 
-**Status: early development.** This repository is being built AI-agent-first: a complete written specification drives the work, and an AI Agent implements it phase by phase. Real trading is disabled by default and will remain behind strict safety gates.
+</div>
 
-## Vision and mission
+---
 
-Some people genuinely make a living from the cryptocurrency markets — not by luck or hope, but by studying, measuring, and surviving bad seasons. Crypto Trading Lab exists to give its user a real, honest chance of becoming one of them.
+## What this is — and what it refuses to be
 
-The farmer's truth applies: no one can promise in which year it will rain well. This program can never **guarantee** gains. What it can do is maximize the user's real chances: search for a genuine, measurable edge with scientific discipline, validate it out-of-sample, protect the capital, and tell the truth when no edge exists.
+Crypto Trading Lab is an educational **research, backtesting and
+(paper-)trading platform** for cryptocurrency markets, built for users
+with scientific standards:
 
-Priority order, non-negotiable:
+| It is | It is not |
+|---|---|
+| A measurement instrument for trading hypotheses | A signal-selling bot |
+| Exact `Decimal` arithmetic, UTC, fully auditable | Floating-point promises |
+| Statistically honest: small samples are *flagged*, not celebrated | A profit-guarantee machine |
+| A pipeline that can conclude *"no edge exists"* — and will say so | A tool that always finds "alpha" |
 
-1. **Survive** — never risk money needed to live.
-2. **Validate** — only statistically defensible edges.
-3. **Earn** — attempt real profits only after (1) and (2).
+The methodological backbone follows *Advances in Financial Machine
+Learning* (López de Prado, 2018) — cited by **bibliographic reference
+only**. Every technique brought into the codebase is specified,
+reviewed and mapped in [`docs/en/developers/afml-techniques.md`](docs/en/developers/afml-techniques.md).
 
-The method follows the discipline of *Advances in Financial Machine
-Learning* (Marcos López de Prado, Wiley, 2018) — cited here by
-bibliographic reference only. Its techniques are implemented from the
-specification in `docs/en/developers/afml-techniques.md`, the study notes in
-`docs/en/developers/reference-projects.md`, and the MIT-licensed exercise
-repository under `external/`, with attribution.
+---
 
-## What the finished program will be used for
+## System architecture
 
-Once completed, Crypto Trading Lab will let you:
-
-- visualize cryptocurrency markets with candlestick charts;
-- download and store historical market data;
-- calculate technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands, and more);
-- create rule-based trading strategies without writing code;
-- run backtests against historical data, with realistic costs and bias prevention;
-- validate strategies statistically (out-of-sample testing, walk-forward analysis, overfitting detection);
-- practice with paper trading using simulated money;
-- analyze performance and risk through honest metrics and reports;
-- qualify strategies through a mandatory promotion pipeline before any real trading is ever considered;
-- learn from scratch with built-in lessons, a glossary, and tutorials for complete beginners.
-
-## Current state
-
-Implemented so far (each with passing tests):
-
-- validated domain models (Decimal money, UTC timestamps, self-checking entities);
-- exchange adapter port + MockExchange + CCXT adapter (read-only by default, contract tests);
-- credential store abstraction (system keyring, in-memory, mock; withdrawal permissions blocked);
-- logging with secret redaction and an audit trail;
-- SQLite/SQLAlchemy persistence with candle repository;
-- CSV import with full validation and pre-import summary;
-- indicators: SMA, EMA, RSI, Bollinger Bands, ATR, ROC;
-- PyQtGraph candlestick charts (zoom, crosshair with OHLCV readout, gap-aware time axis);
-- deterministic backtesting engine (commissions, slippage, spread, next-open execution, no look-ahead);
-- strategies: SMA crossover, buy-and-hold, null baseline;
-- beginner documentation (start guide, glossary, indicators explained);
-- Learning Center shell with the 20-lesson path.
-
-## How to start the creation process
-
-This repository is ready for an AI Agent to initiate or continue the creation of the program. No programming knowledge is required.
-
-1. Open an AI Agent (such as opencode) inside this repository.
-2. Tell it to read `AGENT-HANDOFF.md` — §1 states what exists today and
-   §5 gives the exact continuation point. For a brand-new start, use
-   `GENESIS.md`.
-3. The Agent will continue building step by step, following the
-   specification in `ROADMAP.md`.
-
-### After migrating to a new repository
-
-Verify the migration is clean, then let the Agent continue:
-
-```bash
-# 1. Install dependencies if needed (all Debian packages):
-sudo apt install python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
-                 python3-platformdirs python3-pytest qt6-l10n-tools
-
-# 2. Add the reference submodules (see "Reference submodules" below).
-
-# 3. Verify the test baseline:
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → expect: 229 passed, 2 skipped
+```mermaid
+flowchart TD
+    A[Exchange adapters<br/>Mock · CCXT read-only] -->|validated candles| B[Market Data<br/>CSV importer · SQLite repository]
+    B --> C[Indicators<br/>SMA · EMA · RSI · BB · ATR · ROC]
+    C --> D[Strategies<br/>SMA crossover · buy-and-hold · null]
+    D --> E[Backtesting Engine<br/>next-open fills · fees · spread · slippage<br/>no look-ahead by construction]
+    E --> F[Performance Metrics<br/>returns · trades · risk · validity warnings]
+    F --> G[Reports<br/>HTML · CSV · JSON<br/>evidence-level labels]
+    B --> H[UI — PyQt6<br/>charts · Backtesting Lab · Learning Center]
+    E --> H
+    G --> H
 ```
 
-In the new repo, open the AI Agent and tell it: **"read
-AGENT-HANDOFF.md"** — development continues exactly where it left
-off.
+The execution pipeline every strategy must pass through:
 
-## Repository contents
+```
+        Historical market data (validated, Decimal, UTC)
+                          │
+                          ▼
+                ┌───────────────────┐
+                │ Strategy evaluates │  sees candles[:i] only —
+                │ candles 0 … i      │  the future is invisible
+                └─────────┬─────────┘
+                          ▼
+               signal at close of candle i
+                          │
+                          ▼
+                ┌───────────────────┐
+                │  Fill at the open  │  costs applied: taker fee,
+                │  of candle i + 1   │  spread, slippage
+                └─────────┬─────────┘
+                          ▼
+                ┌───────────────────┐
+                │ Equity curve, full │
+                │ cost attribution   │
+                └─────────┬─────────┘
+                          ▼
+                ┌───────────────────┐
+                │  Metrics + validity│  Sharpe/Drawdown/… with
+                │  warnings          │  "not statistically supported"
+                └─────────┬─────────┘
+                          ▼
+                ┌───────────────────┐
+                │ Report: observed   │  never presented as proof of
+                │ result, not proof  │  future profitability
+                └───────────────────┘
+```
+
+---
+
+## Illustrative run (generated by this codebase)
+
+Both figures below were rendered by the project's own engine and
+backtesting stack — **and they deliberately show a humbling case**: over
+this sample the active SMA-crossover strategy *underperforms*
+buy-and-hold (net P/L **+155.82 vs. +373.11**). Showing that, instead
+of a cherry-picked winner, is the whole point of the laboratory.
+
+![Equity curve and underwater plot](assets/chart-equity-drawdown.png)
+
+![Signal mechanics](assets/chart-signals.png)
+
+Signals are decided at a candle's **close** and filled at the **next**
+candle's open — the engine cannot see the future, so neither can you.
+
+---
+
+## The quantitative core (implemented, tested)
+
+All metrics are exact `Decimal` arithmetic and ship with explicit
+validity flags and assumptions (ROADMAP chapter 40).
+
+| Family | Metrics | Definitions |
+|---|---|---|
+| Returns | total, annualized | $R = \dfrac{E_T - E_0}{E_0}$, $\quad R_{\text{ann}} = (1+R)^{n_{\text{yr}}/P} - 1$ |
+| Drawdown | max, duration, average | $\mathrm{DD}_t = \dfrac{\max_{s \le t} E_s - E_t}{\max_{s \le t} E_s}$ |
+| Risk | volatility, downside | $\sigma \cdot \sqrt{n}$, $\quad \sigma^- = \sqrt{\tfrac{1}{n}\sum \min(r_i,0)^2}\cdot\sqrt{n}$ |
+| Ratios | Sharpe, Sortino, Calmar | $\mathrm{SR} = \dfrac{\bar r - r_f}{\sigma}\sqrt{n}$, $\;\mathrm{Sortino} = \dfrac{\bar r - r_f}{\sigma^-}\sqrt{n}$ |
+| Trades | profit factor, expectancy | $\mathrm{PF} = \dfrac{\sum \text{wins}}{\lvert\sum \text{losses}\rvert}$, $\;\mathbb{E}[\text{trade}] = \bar{\text{P\&L}}$ |
+| Activity | turnover, fees, spread, slippage | exact per-fill attribution |
+
+**Statistical safeguards baked in:**
+
+- annualized metrics are **suppressed** when the sample covers less
+  than one year of periods;
+- Sharpe/Sortino from fewer than 30 observations are labeled
+  *descriptive only*;
+- every report labels its **evidence level** — a single in-sample
+  backtest is an *observed result*, never statistical evidence.
+
+---
+
+## Safety by construction
+
+| Guard | State |
+|---|---|
+| Real trading | **Disabled by default**; gated behind the chapter-68 qualification pipeline |
+| Money handling | `Decimal` everywhere; naive timestamps rejected; server times UTC |
+| Secrets | keyring-backed storage; redacted in every log |
+| Withdrawals | blocked at the adapter layer |
+| Risk manager | strategies can never bypass it |
+
+> A profitable backtest is **not** proof of future profitability.
+> Capital protection outranks profit seeking: never risk money needed
+> to live.
+
+---
+
+## Current state of the build
+
+✅ Implemented and tested (255 passing):
+
+- Domain models, exchange adapters (Mock + CCXT read-only), credential
+  store, logging with secret redaction, SQLite persistence;
+- CSV import with full validation and a pre-import summary;
+- Indicators: SMA, EMA, RSI, Bollinger Bands, ATR, ROC;
+- Deterministic backtesting engine (fees, spread, slippage, next-open);
+- Performance-metric catalogue with statistical-validity warnings;
+- Backtesting Lab UI with beginner explanations + HTML/CSV/JSON
+  reports;
+- Candlestick charts, Learning Center, bilingual UI (EN/ES).
+
+🚧 Ahead: benchmarking views (ch. 42), robustness testing (43–46),
+paper trading (57), risk manager (58), qualification pipeline (66–68).
+
+---
+
+## Repository map
 
 | Path | Purpose |
-|------|---------|
-| `AGENT-HANDOFF.md` | Migration guide and continuation instructions — start here |
-| `AGENTS.md` | Ground rules every AI Agent must follow in this repository |
-| `GENESIS.md` | The original first-session instruction (kept for fresh starts) |
-| `ROADMAP.md` | The complete project specification (72 chapters in checklist format, for tracking progress) |
-| `docs/` | Developer documentation (ADRs, reference-project studies, AFML technique specifications) and beginner guides |
-| `src/` | Application source code (domain, adapters, security, logging, persistence, indicators, backtesting, UI) |
-| `tests/` | Automated tests (unit, GUI, persistence, backtesting) |
-| `external/` | Git submodules with reference projects studied during development (all open source) |
-| `pyproject.toml` | Python packaging |
+|---|---|
+| `ROADMAP.md` | **The specification** — 72 chapters, checklist-driven progress |
+| `AGENT-HANDOFF.md` | Current state + exact continuation point |
+| `AGENTS.md` | Non-negotiable ground rules for AI contributors |
+| `GENESIS.md` | The original first-session instruction |
+| `docs/en/beginners/` | Plain-language guides (start here, glossary, indicators, metrics) |
+| `docs/en/developers/` | ADRs, AFML technique specifications, reference-project studies |
+| `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, reporting, i18n, UI |
+| `tests/` | 41 test modules — engine arithmetic is hand-verified |
+| `external/` | 8 reference projects as git submodules (freqtrade, hummingbot, jesse, ccxt, vectorbt, backtrader, ta-lib, AFML exercises) |
+| `assets/` | Logo and figures (SVG sources rendered to PNG) |
 
-## Reference submodules
-
-The `external/` directory contains open-source projects studied as
-references during development (see `docs/en/developers/reference-projects.md`
-for the conclusions). To clone this repository with all submodules:
+## Test baseline
 
 ```bash
-git clone --recurse-submodules https://github.com/wachin/crypto-trading-lab
-```
-
-If you cloned without them, initialize and pull all submodules:
-
-```bash
-git submodule update --init --recursive
-```
-
-To add them individually to a fresh repository (complete list):
-
-```bash
-git submodule add https://github.com/freqtrade/freqtrade.git external/freqtrade
-git submodule add https://github.com/hummingbot/hummingbot.git external/hummingbot
-git submodule add https://github.com/jesse-ai/jesse.git external/jesse
-git submodule add https://github.com/ccxt/ccxt.git external/ccxt
-git submodule add https://github.com/polakowo/vectorbt.git external/vectorbt
-git submodule add https://github.com/mementum/backtrader.git external/backtrader
-git submodule add https://github.com/TA-Lib/ta-lib.git external/ta-lib
-git submodule add https://github.com/fernandodelacalle/adv-financial-ml-marcos-exercises external/adv-financial-ml-marcos-exercises
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
+# → 255 passed, 2 skipped
 ```
 
 ## Running
 
 ```bash
-# Tests (headless):
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
+# dependencies are all Debian system packages (no venv):
+sudo apt install python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
+                 python3-platformdirs python3-pytest qt6-l10n-tools
 
-# GUI:
+git clone --recurse-submodules https://github.com/wachin/crypto-trading-lab
+cd crypto-trading-lab
 PYTHONPATH=src python3 -m crypto_trading_lab
 ```
 
-## Dependencies
+## Contributing
 
-All dependencies are Debian system packages (no venv needed):
-
-```bash
-sudo apt install python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
-                 python3-platformdirs python3-pytest qt6-l10n-tools
-```
+This repository is built agent-first: read `AGENT-HANDOFF.md`, then
+`AGENTS.md`, then the relevant `ROADMAP.md` chapter. Small changes,
+tests always run, honesty over hype.
 
 ## License
 
-GPL-3.0
+GPL-3.0 — see [LICENSE](LICENSE).
