@@ -1,0 +1,4909 @@
+# Project: Crypto Trading Lab
+
+Act as a senior software architect, Python/PyQt6 developer, financial systems specialist, automated testing engineer, application security specialist, Debian packaging specialist, technical writer, and educator.
+
+Design and develop a professional desktop application called:
+
+# Crypto Trading Lab
+
+Crypto Trading Lab is an educational, research, simulation, and market-analysis platform for:
+
+- visualizing cryptocurrency markets;
+- downloading and storing historical data;
+- displaying candlestick charts;
+- calculating technical indicators;
+- creating rule-based trading strategies;
+- running backtests;
+- performing paper trading;
+- analyzing performance and risk;
+- optionally connecting to cryptocurrency exchanges through adapters;
+- learning how cryptocurrency markets work;
+- teaching complete beginners how to use the application;
+- allowing real trading only after strict safety mechanisms have been implemented and validated.
+
+## Vision and mission
+
+The developer's vision, stated plainly:
+
+- Some people genuinely make a living from the cryptocurrency markets — not by luck or hope, but by studying, measuring, and surviving bad seasons. Crypto Trading Lab exists to give its user a real, honest chance of becoming one of them.
+- The farmer's truth applies: no one can promise in which year it will rain well, and a farmer who depends on rain can never be assured of profits. In the same way, this program can never **guarantee** gains to whoever uses it. What it can do is maximize the user's real chances: search for a genuine, measurable edge with scientific discipline, validate it out-of-sample, protect the capital, and tell the truth when no edge exists.
+- **Mission: seek real profits with statistical honesty — never through hope, hype, or fabricated metrics.**
+- **Priority order: (1) survive — never risk money needed to live; (2) validate — only statistically defensible edges; (3) earn — attempt real profits only after (1) and (2) are satisfied.** The developer of this project is in a vulnerable economic situation; this priority order is therefore not optional ideology but the project's reason for survival.
+- The method follows *Advances in Financial Machine Learning* (Marcos López de Prado) — the discipline of those who actually survive in this field — as studied in `docs/en/developers/reference-projects.md`.
+
+The application must never be presented as a tool that guarantees profits.
+
+It must clearly explain that:
+
+- cryptocurrency trading involves substantial risk;
+- users can lose part or all of their capital;
+- historical performance does not guarantee future results;
+- paper trading does not reproduce every real-market condition;
+- backtesting can produce misleading results if implemented incorrectly;
+- the application is a research, simulation, risk-management, and education tool whose **honest ambition** is to help the user obtain real profits, and whose **non-negotiable duty** is to keep the user financially alive while trying.
+
+---
+
+# How to use this roadmap
+
+This document is the complete project specification. It is organized in progressive parts:
+
+```text
+FOUNDATION
+    ↓
+DATA
+    ↓
+MARKET MODEL
+    ↓
+STRATEGIES
+    ↓
+SIGNALS
+    ↓
+BACKTESTING
+    ↓
+DATA SPLITTING
+    ↓
+OPTIMIZATION
+    ↓
+PERFORMANCE
+    ↓
+STATISTICAL RESEARCH
+    ↓
+ROBUSTNESS
+    ↓
+WALK-FORWARD
+    ↓
+REGIME ANALYSIS
+    ↓
+FEATURE ENGINEERING
+    ↓
+MACHINE LEARNING
+    ↓
+ADVANCED FINANCIAL ML (AFML)
+    ↓
+ENSEMBLES
+    ↓
+PORTFOLIO
+    ↓
+EXECUTION
+    ↓
+PAPER TRADING
+    ↓
+RISK
+    ↓
+MONITORING
+    ↓
+STRATEGY QUALIFICATION
+    ↓
+SAFETY GATES
+    ↓
+REAL TRADING
+```
+
+Rules:
+
+- Every chapter uses the checklist format `## [ ] N. Chapter name` with `- [ ]` requirement items.
+- A strategy must never be able to jump directly from `Backtest → Real Trading`. Qualification is mandatory.
+- Research, execution, and risk are separate responsibilities. Never mix them (see Chapter 6.1).
+- When a chapter references another, the referenced chapter owns the canonical requirements.
+
+---
+
+# PART I — FOUNDATION
+
+---
+
+## [ ] 1. Project purpose and scientific principles
+
+Crypto Trading Lab is a **research instrument**, not a market-prediction machine.
+
+The scientific and technical objective is to allow the user to:
+
+- [ ] formulate trading hypotheses;
+- [ ] develop strategies;
+- [ ] test them on historical data;
+- [ ] avoid look-ahead bias and data leakage;
+- [ ] separate training, validation, and out-of-sample data correctly;
+- [ ] optimize parameters in a controlled way;
+- [ ] analyze risk and performance;
+- [ ] check robustness;
+- [ ] study different market regimes;
+- [ ] compare against benchmarks;
+- [ ] perform paper trading;
+- [ ] eventually evaluate a strategy for real trading under strict safety controls.
+
+The application must favor reproducible and statistically responsible research, **with the explicit goal of finding and validating real edges that can generate real profits** — while never promising that such an edge will be found, and always telling the user the truth when it is not.
+
+### 1.1 What the application is and is not
+
+- [ ] Not a tool that "predicts the market".
+- [ ] Not a guarantee of profit — and it must never claim to be one.
+- [ ] A serious research instrument whose honest purpose is to find, validate, and help harvest a genuine edge.
+- [ ] Not a substitute for financial advice.
+- [ ] Not a place where a profitable backtest is treated as evidence of future advantage.
+
+### 1.2 Evidence hierarchy
+
+The interface must distinguish between:
+
+```text
+Observed result
+Statistical evidence
+Research hypothesis
+Validated evidence
+```
+
+- [ ] "Observed result" = what happened in one historical test.
+- [ ] "Statistical evidence" = whether the result is distinguishable from noise (see Chapter 43).
+- [ ] "Research hypothesis" = the idea being investigated, never presented as a proven fact.
+- [ ] "Validated evidence" = evidence that survived out-of-sample, robustness, and qualification checks (see Chapters 38, 44, and 66).
+
+- [ ] The application must never present an observed backtest result as validated evidence by default.
+
+### 1.3 Educational duty
+
+- [ ] Every complex financial concept must be accompanied by a plain-language explanation.
+- [ ] Every financial metric must include an explanation a complete beginner can understand.
+- [ ] Every warning must be understandable to a complete beginner.
+
+### 1.4 Realistic expectations
+
+The application must teach realistic expectations grounded in real-world evidence:
+
+- [ ] Explain that a large majority of retail crypto traders lose money (studies commonly report that roughly 70–95% of retail traders lose money, and that most day traders stop within their first two years).
+- [ ] Explain that most of those who lose share the same mistakes: no validated edge, no risk control, risking money they need to live. This program exists precisely to be the opposite of that majority.
+- [ ] Explain that a profitable backtest does not imply a profitable future (see Chapters 43–45).
+- [ ] Explain that trading is not a reliable source of income — the reliable strategy is survival first, edge second.
+- [ ] Explain that fees, spread, and slippage reduce net returns and compound over time.
+- [ ] Explain that the safest financial decision for most people is not to trade money they cannot afford to lose.
+- [ ] Never encourage the user to trade with essential funds, borrowed money, or emergency savings.
+- [ ] Include these lessons in the Learning Center (see Chapter 23) and in the beginner documentation (see Chapter 19.2).
+
+---
+
+## [ ] 2. Terminology and conventions
+
+These definitions are canonical for the whole document. Use them consistently in code, UI, documentation, and reports.
+
+### 2.1 Costs
+
+- [ ] **Trading fees**: the umbrella term for all costs applied to an order (commission, spread, slippage, and, where applicable, funding/borrowing costs).
+- [ ] **Commission**: the exchange fee charged per order. A component of trading fees.
+- [ ] **Spread**: the difference between the best bid and the best ask.
+- [ ] **Slippage**: the difference between the expected execution price and the actual fill price.
+- [ ] **Funding/borrowing costs**: apply only if leveraged or futures products are ever supported. Not applicable to the spot-only MVP.
+
+### 2.2 Order rules
+
+- [ ] **Minimum order quantity**: the smallest quantity of an asset that may be ordered.
+- [ ] **Minimum order value/notional**: the smallest quote-currency value an order may have. Distinct from minimum order quantity.
+- [ ] **Tick size**: the minimum price increment.
+- [ ] **Step size**: the minimum quantity increment.
+
+### 2.3 Entities and flow
+
+- [ ] **Signal**: the output of a strategy ("enter long", "exit long", "hold"). A signal is not an order.
+- [ ] **Order**: a request to execute a trade. Created only after a signal passes the risk manager.
+- [ ] **Fill**: the executed portion of an order.
+- [ ] **Strategy**: defines *when* a signal is generated. Never communicates with an exchange.
+- [ ] **Execution**: handles orders, fills, latency, slippage, liquidity, exchange, positions, and balances.
+- [ ] **Risk**: enforces limits, exposure, drawdown, position size, losses, restrictions, and emergency stop.
+
+### 2.4 Data
+
+- [ ] **Dataset**: a stored, versioned collection of market data used for research.
+- [ ] **Data source**: the origin of data (exchange, CSV file, provider).
+- [ ] **Backtest**: a deterministic historical simulation of strategy + execution + risk rules.
+- [ ] **Paper trading**: simulated trading on real-time or replayed market data with simulated money.
+- [ ] **Historical replay**: a paper-trading mode that replays stored historical data.
+
+### 2.5 Validation periods
+
+- [ ] **Training (strategy-development) period**: data used to develop rules and select initial parameters.
+- [ ] **Validation period**: data used to compare candidates and refine hypotheses.
+- [ ] **Out-of-sample (test) period**: data reserved for final historical evaluation.
+
+### 2.6 Conventions
+
+- [ ] All internal timestamps use UTC. Local timezone is used only for presentation.
+- [ ] Monetary values, prices, quantities, commissions, and balances use `Decimal`, never `float`.
+- [ ] The document uses "trading fees", "minimum order quantity", "minimum order value", "signal", "order", "backtest", "paper trading", "dataset", and "data source" as defined above.
+
+---
+
+## [ ] 3. Supported platforms and technologies
+
+### 3.1 Supported platforms
+
+The application must be developed primarily for:
+
+- [ ] Debian 12 Bookworm;
+- [ ] Debian 13;
+- [ ] MX Linux;
+- [ ] AV Linux MXe;
+- [ ] Ubuntu;
+- [ ] Ubuntu-based distributions;
+- [ ] other Debian-based GNU/Linux distributions.
+
+### 3.2 Main technologies
+
+Main technologies:
+
+- [ ] Python 3;
+- [ ] PyQt6;
+- [x] SQLite;
+- [x] Qt Linguist;
+- [ ] Qt translation tools;
+- [ ] `pyproject.toml`;
+- [ ] pytest;
+- [ ] Debian `.deb` packaging;
+- [ ] an architecture prepared for AppImage distribution.
+
+- [ ] The AppImage packaging process must remain separate from the official Debian package.
+- [ ] The project must be Free Software and use a Debian-compatible license, preferably:
+
+```text
+GPL-3.0-or-later
+```
+
+- [ ] Do not use proprietary components or services that require mandatory payment.
+
+---
+
+## [ ] 4. Debian dependency priority
+
+Prioritize dependencies available in the official Debian 12 repositories before adding dependencies from PyPI.
+
+### 4.0 MANDATORY STOP RULE for dependencies
+
+The AI Agent must apply this rule without exception:
+
+- [ ] If at any point the development requires installing a new dependency, the Agent must **STOP** development immediately at that task.
+- [ ] The Agent must **NOT** install anything by itself: no `apt install`, no `pip install`, no `pip --user`, no downloading of packages or wheels.
+- [ ] Instead, the Agent must **notify the developer** with:
+  1. the exact package name;
+  2. whether it comes from the Debian repositories or from PyPI;
+  3. the reason it is needed;
+  4. the exact command the developer must run.
+- [ ] If the package exists in the Debian repositories, the developer installs it with `apt`; the Agent then verifies the import works and continues.
+- [ ] If the package exists only on PyPI, the developer must create and activate a virtual environment (`python3 -m venv .venv`), and only then may the Agent use it inside that venv. The Agent must never create, activate, or install into a venv on its own.
+- [ ] To this day no venv has been needed because every required package is available in the distribution; the first PyPI-only dependency will require this venv procedure, and the Agent must warn the developer before that happens.
+- [ ] The Agent must not proceed past a missing dependency, must not mock a missing import to pretend work continues, and must record the blocker in the final report until the developer resolves it.
+
+Before choosing any dependency:
+
+1. [ ] confirm whether it exists in Debian 12;
+2. [ ] confirm its exact Debian package name;
+3. [ ] verify its version;
+4. [ ] verify its license;
+5. [ ] determine whether it is suitable for runtime, development, packaging, or optional use;
+6. [ ] avoid adding a PyPI dependency when the Python standard library, Qt, or an official Debian package already solves the problem adequately.
+
+### 4.1 Graphical interface
+
+Evaluate and use the following Debian packages where appropriate:
+
+- [ ] `python3-pyqt6`
+- [ ] `python3-pyqt6.qtcharts`
+- [ ] `python3-pyqt6.qtwebsockets`
+- [ ] `python3-pyqt6.qtsvg`
+- [ ] `python3-pyqt6.qtdesigner`
+- [ ] `pyqt6-dev-tools`
+- [ ] `python3-superqt`
+
+### 4.2 Charting libraries
+
+Research and evaluate:
+
+- [ ] `python3-pyqtgraph`
+- [ ] `python3-pyqt6.qtcharts`
+- [ ] `python3-matplotlib`
+
+- [x] Create an internal chart abstraction so that the chart backend can be replaced without modifying the financial domain or strategy logic.
+
+Initial preference:
+
+- [ ] PyQtGraph for real-time charts, candlesticks, volume, and fast updates;
+- [ ] Matplotlib for static reports, statistical charts, and exported graphics;
+- [ ] Qt Charts where it is suitable and does not create performance limitations.
+
+- [ ] Do not use Qt WebEngine for the main charts unless there is a documented technical justification.
+
+### 4.3 Data processing and analysis
+
+Evaluate:
+
+- [ ] `python3-numpy`
+- [ ] `python3-pandas`
+- [ ] `python3-scipy`
+- [ ] `python3-statsmodels`
+- [ ] `python3-sklearn`
+- [ ] `python3-numba`
+
+Use:
+
+- [ ] NumPy for numerical arrays and vectorized calculations;
+- [ ] pandas for time series, tables, imports, exports, and analysis;
+- [ ] SciPy when advanced statistical or numerical functions are required;
+- [ ] statsmodels when statistically justified;
+- [ ] scikit-learn only for optional research experiments;
+- [ ] Numba only as an optional performance optimization.
+
+- [ ] Machine learning must not be a mandatory part of the initial application.
+- [ ] Do not describe machine learning as a method that can predict the market with certainty.
+- [ ] Machine learning details are defined in Chapter 48.
+
+### 4.4 Networking
+
+Evaluate:
+
+- [ ] `python3-aiohttp`
+- [ ] `python3-websockets`
+- [ ] `python3-requests`
+- [ ] `python3-requests-cache`
+- [ ] `python3-ratelimiter`
+
+Analyze whether the application should use:
+
+- [ ] 1. `aiohttp` for REST and WebSocket communication;
+- [ ] 2. `websockets` for WebSocket connections;
+- [ ] 3. `QNetworkAccessManager` and `QWebSocket` for Qt-native networking.
+
+- [ ] Create interfaces that remain independent of the specific transport implementation.
+- [ ] Never block the Qt main thread.
+
+### 4.5 Persistence and validation
+
+Evaluate:
+
+- [ ] `python3-sqlalchemy`
+- [ ] `python3-pydantic`
+- [ ] `python3-dateutil`
+- [ ] `python3-platformdirs`
+- [ ] `python3-yaml`
+- [ ] `python3-jsonschema`
+
+- [ ] SQLite must be the default database.
+- [ ] Do not make PostgreSQL a requirement for the desktop application.
+- [ ] PostgreSQL may be considered as a future optional backend, but it must not be part of the MVP runtime requirements.
+
+### 4.6 Security
+
+Evaluate:
+
+- [ ] `python3-keyring`
+- [ ] `python3-cryptography`
+
+API keys and secrets must never be stored:
+
+- [ ] in plain text;
+- [ ] inside the Git repository;
+- [ ] in `.json` files;
+- [ ] in `.yaml` files;
+- [ ] in `.toml` files;
+- [ ] in `.ini` files;
+- [ ] in debug logs;
+- [ ] in error reports;
+- [ ] in SQLite without proper protection.
+
+- [ ] Use the operating system credential store through `keyring`.
+
+The application must also work without credentials for:
+
+- [ ] public market data;
+- [ ] imported CSV data;
+- [ ] offline demonstrations;
+- [x] backtesting;
+- [x] paper trading;
+- [ ] educational exercises.
+
+### 4.7 Testing and code quality
+
+Evaluate:
+
+- [ ] `python3-pytest`
+- [ ] `python3-pytest-asyncio`
+- [ ] `python3-pytest-cov`
+- [ ] `python3-requests-mock`
+- [ ] `python3-freezegun`
+- [ ] `python3-flake8`
+- [ ] `python3-mypy`
+- [ ] `python3-bandit`
+- [ ] `python3-black`
+- [ ] `python3-isort`
+
+Classify each dependency as one of the following:
+
+- [ ] required runtime dependency;
+- [ ] recommended runtime dependency;
+- [ ] optional dependency;
+- [ ] development-only dependency;
+- [ ] packaging-only dependency;
+- [ ] available only from PyPI;
+- [ ] unnecessary because the standard library or Qt is sufficient.
+
+- [ ] Do not add external dependencies unnecessarily.
+
+---
+
+## [ ] 5. Mandatory project principles
+
+The application must comply with the following rules:
+
+- [ ] 1. Paper trading must be the default mode.
+- [ ] 2. Real trading must be disabled in the initial build.
+- [ ] 3. Futures must not be implemented in the MVP.
+- [ ] 4. Margin trading must not be implemented in the MVP.
+- [ ] 5. Leverage must not be implemented in the MVP.
+- [ ] 6. The MVP must support spot markets only.
+- [ ] 7. Martingale strategies must not be implemented.
+- [ ] 8. The application must never double position size automatically after a loss.
+- [ ] 9. The application must never promise profits.
+- [ ] 10. The application must never request API withdrawal permissions.
+- [ ] 11. The application must reject or warn about API keys with withdrawal permissions.
+- [ ] 12. Strategies must never bypass the central risk manager.
+- [ ] 13. Every order must pass through validation before being submitted.
+- [ ] 14. The application must operate fully without API keys.
+- [ ] 15. Automated tests must never use real funds.
+- [ ] 16. The application must not implement market manipulation.
+- [ ] 17. The application must not implement spoofing.
+- [ ] 18. The application must not implement wash trading.
+- [ ] 19. The application must not implement front-running.
+- [ ] 20. The application must not abuse exchange APIs.
+- [ ] 21. User strategy rules must not execute arbitrary Python code.
+- [ ] 22. Do not use `eval()`.
+- [ ] 23. Do not use `exec()`.
+- [ ] 24. Do not dynamically import untrusted strategy code.
+- [ ] 25. Educational explanations must accompany complex financial concepts.
+- [ ] 26. Every financial metric must include a plain-language explanation.
+- [ ] 27. Every warning must be understandable to a complete beginner.
+- [ ] 28. The application must never encourage trading with money the user cannot afford to lose.
+- [ ] 29. The application must warn when the user indicates financial hardship or an inability to absorb losses.
+- [ ] 30. The application must never suggest borrowing money to trade.
+- [ ] 31. The application must not present trading as a solution to financial problems.
+
+---
+
+## [ ] 6. Architecture
+
+Use a modular, maintainable, testable architecture.
+
+- [ ] Propose a Clean Architecture or Hexagonal Architecture adapted to a PyQt6 desktop application.
+
+Clearly separate:
+
+- [ ] financial domain;
+- [ ] application use cases;
+- [ ] market-data providers;
+- [ ] exchange adapters;
+- [ ] strategy engine;
+- [ ] backtesting engine;
+- [ ] paper-trading engine;
+- [ ] execution engine;
+- [ ] order management;
+- [ ] risk management;
+- [ ] portfolio management;
+- [ ] persistence;
+- [ ] PyQt6 interface;
+- [x] configuration;
+- [ ] security;
+- [ ] reporting;
+- [ ] internationalization;
+- [ ] beginner education;
+- [ ] user documentation.
+
+### 6.1 Research / Execution / Risk separation
+
+This is a mandatory architectural rule (see also Chapter 2):
+
+- [ ] **Research** owns: hypotheses, experiments, statistics, datasets, features, optimization, validation, robustness, machine learning, strategy comparison, regime analysis, reproducibility.
+- [ ] **Execution** owns: signals, orders, fills, latency, slippage, liquidity, exchange, positions, balances.
+- [ ] **Risk** owns: limits, exposure, drawdown, position size, losses, restrictions, emergency stop.
+
+- [ ] Research components must not submit orders.
+- [ ] Execution components must not modify risk limits.
+- [ ] Risk components must not design strategies.
+- [ ] The backtesting engine must not be expanded into a general research toolbox; research methods live in their own chapters (Chapters 43–51).
+
+### 6.2 Suggested structure
+
+- [ ] `crypto-trading-lab/`
+  - [ ] `pyproject.toml`
+  - [ ] `README.md`
+  - [ ] `LICENSE`
+  - [ ] `CHANGELOG.md`
+  - [ ] `CONTRIBUTING.md`
+  - [ ] `SECURITY.md`
+  - [ ] `CODE_OF_CONDUCT.md`
+  - [ ] `src/`
+    - [ ] `crypto_trading_lab/`
+      - [ ] `__init__.py`
+      - [ ] `__main__.py`
+      - [ ] `application.py`
+      - [ ] `domain/`
+        - [ ] `entities/`
+        - [ ] `value_objects/`
+        - [ ] `services/`
+        - [ ] `exceptions/`
+        - [ ] `protocols/`
+      - [ ] `use_cases/`
+      - [ ] `market_data/`
+        - [ ] `providers/`
+        - [ ] `normalization/`
+        - [ ] `aggregation/`
+        - [ ] `cache/`
+      - [ ] `exchanges/`
+        - [ ] `base/`
+        - [ ] `binance/`
+        - [ ] `coinbase/`
+        - [ ] `mock/`
+      - [ ] `indicators/`
+      - [ ] `strategies/`
+      - [ ] `backtesting/`
+      - [ ] `research/`
+        - [ ] `statistics/`
+        - [ ] `robustness/`
+        - [ ] `walk_forward/`
+        - [ ] `regimes/`
+        - [ ] `features/`
+        - [ ] `machine_learning/`
+        - [ ] `ensembles/`
+        - [ ] `portfolio/`
+        - [ ] `benchmarking/`
+        - [ ] `experiments/`
+        - [ ] `notebooks/`
+      - [ ] `paper_trading/`
+      - [ ] `execution/`
+      - [ ] `risk/`
+      - [ ] `portfolio/`
+      - [ ] `analytics/`
+      - [ ] `persistence/`
+        - [ ] `database/`
+        - [ ] `repositories/`
+        - [ ] `migrations/`
+      - [ ] `security/`
+      - [ ] `configuration/`
+      - [ ] `reporting/`
+      - [ ] `education/`
+        - [ ] `lessons/`
+        - [ ] `glossary/`
+        - [ ] `tutorials/`
+        - [ ] `quizzes/`
+        - [ ] `examples/`
+      - [ ] `infrastructure/`
+      - [ ] `ui/`
+        - [ ] `main_window/`
+        - [ ] `dashboards/`
+        - [ ] `charts/`
+        - [ ] `dialogs/`
+        - [ ] `models/`
+        - [ ] `delegates/`
+        - [ ] `workers/`
+        - [ ] `education/`
+        - [ ] `resources/`
+        - [ ] `generated/`
+      - [ ] `i18n/`
+        - [ ] `en/`
+        - [ ] `es/`
+        - [ ] `translations/`
+        - [ ] `README.md`
+  - [ ] `tests/`
+    - [ ] `unit/`
+    - [ ] `integration/`
+    - [ ] `gui/`
+    - [ ] `contract/`
+    - [ ] `regression/`
+    - [ ] `security/`
+    - [ ] `education/`
+    - [ ] `fixtures/`
+  - [ ] `docs/`
+    - [ ] `en/`
+      - [ ] `beginners/`
+      - [ ] `user-guide/`
+      - [ ] `developers/`
+      - [ ] `reference/`
+    - [ ] `es/`
+      - [ ] `beginners/`
+      - [ ] `user-guide/`
+      - [ ] `developers/`
+      - [ ] `reference/`
+  - [ ] `examples/`
+  - [ ] `scripts/`
+  - [ ] `data/`
+    - [ ] `samples/`
+  - [ ] `debian/`
+  - [ ] `packaging/`
+    - [ ] `appimage/`
+  - [ ] `.github/`
+    - [ ] `workflows/`
+
+- [ ] The `ui/generated` directory may contain files generated from Qt Designer.
+- [ ] Do not place business logic inside generated interface files.
+
+---
+
+## [ ] 7. Domain models
+
+Implement explicit, strongly validated models for:
+
+- [ ] Exchange;
+- [ ] Market;
+- [ ] TradingPair;
+- [ ] Asset;
+- [ ] Candle;
+- [ ] Trade;
+- [ ] OrderBook;
+- [ ] OrderBookLevel;
+- [ ] Ticker;
+- [ ] Balance;
+- [ ] Position;
+- [ ] Portfolio;
+- [ ] Order;
+- [ ] OrderRequest;
+- [ ] OrderResult;
+- [ ] Fill;
+- [ ] Fee;
+- [ ] Strategy;
+- [ ] StrategySignal;
+- [ ] RiskDecision;
+- [ ] Backtest;
+- [ ] BacktestResult;
+- [ ] PaperAccount;
+- [ ] PerformanceMetrics;
+- [ ] DatasetVersion;
+- [ ] Experiment;
+- [ ] StrategyVersion;
+- [ ] QualificationReport.
+
+Use:
+
+- [ ] `Decimal` for money;
+- [ ] `Decimal` for prices;
+- [ ] `Decimal` for quantities;
+- [ ] `Decimal` for commissions;
+- [ ] `Decimal` for balances;
+- [ ] normalized timestamps;
+- [ ] UTC internally;
+- [ ] the local timezone only for presentation;
+- [ ] dataclasses or Pydantic models where appropriate.
+
+- [ ] Do not use `float` for critical monetary calculations.
+- [ ] Every exchange adapter must normalize exchange-specific data into common domain models.
+
+---
+
+## [ ] 8. Database
+
+Use SQLite with SQLAlchemy.
+
+The database must store:
+
+- [ ] configured exchanges;
+- [ ] markets;
+- [x] candles;
+- [ ] trades;
+- [ ] optional order-book snapshots;
+- [ ] strategies;
+- [ ] strategy parameters;
+- [ ] strategy versions;
+- [ ] dataset versions;
+- [ ] backtest runs;
+- [ ] experiments (see Chapter 52);
+- [ ] simulated orders;
+- [ ] fills;
+- [ ] fees;
+- [ ] simulated balances;
+- [ ] positions;
+- [ ] performance metrics;
+- [ ] qualification reports (see Chapter 66);
+- [ ] alerts;
+- [ ] audit records;
+- [ ] non-secret configuration;
+- [ ] educational progress;
+- [ ] completed lessons;
+- [ ] glossary bookmarks;
+- [ ] beginner tutorial progress.
+
+- [x] Do not store API keys in SQLite.
+
+Enable where appropriate:
+
+- [x] foreign keys;
+- [x] indexes;
+- [x] transactions;
+- [x] WAL mode;
+- [x] migrations;
+- [ ] backups;
+- [ ] integrity checks.
+
+- [ ] Design a retention policy to prevent uncontrolled database growth.
+
+Include import and export support for:
+
+- [ ] CSV;
+- [ ] JSON;
+- [ ] optional Parquet if an acceptable Debian dependency exists.
+
+Exports must include:
+
+- [x] exchange;
+- [x] trading pair;
+- [ ] interval;
+- [ ] time range;
+- [ ] timezone;
+- [ ] format;
+- [ ] schema version.
+
+---
+
+## [ ] 9. Credential security
+
+Create an abstract `CredentialStore`.
+
+Initial implementations:
+
+- [x] system keyring;
+- [x] in-memory storage for tests;
+- [x] mock implementation for unit tests.
+
+The application must:
+
+- [ ] hide keys on screen;
+- [ ] allow secure pasting;
+- [ ] never log pasted secrets;
+- [ ] never copy secrets automatically to the clipboard;
+- [ ] clear sensitive fields;
+- [ ] never log authentication headers;
+- [ ] redact secrets from exceptions;
+- [ ] block withdrawal permissions;
+- [ ] warn about excessive permissions;
+- [ ] allow credential deletion;
+- [ ] display the last-use date without showing the secret.
+
+Add a logging filter that redacts:
+
+- [x] API keys;
+- [x] tokens;
+- [x] signatures;
+- [x] JWTs;
+- [x] secrets;
+- [x] sensitive parameters;
+- [x] authorization headers.
+
+---
+
+## [ ] 10. Logging and auditing
+
+Use Python's standard `logging` module.
+
+Separate logs for:
+
+- [x] application;
+- [x] networking;
+- [x] trading;
+- [x] auditing;
+- [x] errors.
+
+Features:
+
+- [x] rotation;
+- [x] configurable levels;
+- [x] human-readable format;
+- [x] optional JSON format;
+- [x] correlation IDs;
+- [x] secret redaction;
+- [ ] support export;
+- [ ] size limits;
+- [ ] retention policy.
+
+The audit log must record:
+
+- [x] mode changes;
+- [x] risk-setting changes;
+- [x] strategy creation;
+- [x] backtest start and completion;
+- [x] experiment start and completion;
+- [x] kill-switch activation;
+- [x] real-trading attempts;
+- [x] order creation and cancellation;
+- [x] credential changes;
+- [x] critical errors.
+
+- [x] Do not log secret values.
+
+---
+
+## [ ] 11. Threat model and security documentation
+
+- [ ] Create a threat model covering:
+
+- [ ] API key theft;
+- [ ] secrets appearing in logs;
+- [ ] compromised dependencies;
+- [ ] malicious strategy files;
+- [ ] malformed CSV files;
+- [ ] manipulated API responses;
+- [ ] stale market data;
+- [ ] incorrect local clock;
+- [ ] replayed messages;
+- [ ] duplicate orders;
+- [ ] uncontrolled storage growth;
+- [ ] GUI freezes;
+- [ ] incomplete database updates;
+- [ ] corrupted configuration;
+- [ ] excessive API permissions;
+- [ ] accidental real-trading activation;
+- [ ] misleading educational content;
+- [ ] users confusing simulation with real profitability.
+
+- [ ] Document mitigations for each threat.
+
+---
+
+## [ ] 12. Background processing
+
+Do not block the GUI.
+
+Use a consistent approach involving:
+
+- [ ] `QThreadPool`;
+- [ ] `QRunnable`;
+- [ ] worker objects moved to `QThread`;
+- [ ] signals and slots;
+- [ ] carefully integrated asyncio;
+- [ ] separate processes for CPU-intensive work when necessary.
+
+- [ ] Do not mix multiple concurrency models without a clear abstraction.
+
+Backtesting, optimization, robustness, and walk-forward jobs must:
+
+- [ ] report progress;
+- [ ] support cancellation;
+- [ ] terminate cleanly;
+- [ ] save safe partial results;
+- [ ] notify errors.
+
+- [ ] Do not update widgets directly from worker threads.
+
+---
+
+## [ ] 13. Performance
+
+Design for:
+
+- [ ] hundreds of thousands of stored candles;
+- [ ] charts with limited visible windows;
+- [ ] batch insertion;
+- [ ] indexed queries;
+- [ ] vectorized processing;
+- [ ] controlled caching;
+- [ ] task cancellation;
+- [ ] moderate memory usage.
+
+- [ ] First build a correct and testable implementation.
+- [ ] Optimize only after measuring.
+
+Include benchmarks for:
+
+- [ ] CSV loading;
+- [ ] indicator calculation;
+- [ ] backtesting;
+- [ ] SQLite insertion;
+- [ ] chart updates.
+
+---
+
+## [ ] 14. Tests
+
+Write tests from the beginning.
+
+### 14.1 Unit tests
+
+Test:
+
+- [ ] monetary models;
+- [ ] normalization;
+- [ ] indicators;
+- [ ] strategy rules;
+- [ ] risk rules;
+- [ ] position sizing;
+- [x] commissions;
+- [x] slippage;
+- [ ] metrics;
+- [ ] `Decimal` precision;
+- [ ] educational text availability;
+- [ ] translation-key availability.
+
+### 14.2 Integration tests
+
+Test:
+
+- [ ] SQLite;
+- [ ] repositories;
+- [ ] migrations;
+- [ ] CSV imports;
+- [ ] mock providers;
+- [ ] simulated HTTP clients;
+- [ ] simulated WebSockets;
+- [ ] credential-store abstractions.
+
+### 14.3 Contract tests
+
+- [ ] Every exchange adapter must pass a common contract-test suite.
+
+### 14.4 GUI tests
+
+Test:
+
+- [ ] table models;
+- [ ] validators;
+- [ ] critical dialogs;
+- [ ] language switching;
+- [ ] English startup;
+- [ ] Spanish translation loading;
+- [ ] settings;
+- [ ] kill switch;
+- [ ] mode activation;
+- [ ] Learning Center navigation;
+- [ ] glossary search;
+- [ ] tutorial progress.
+
+- [ ] Do not make real network calls in normal automated tests.
+
+### 14.5 Financial regression tests
+
+- [ ] Include small frozen datasets and expected results to prevent silent changes in:
+
+- [ ] trades;
+- [ ] balances;
+- [ ] metrics;
+- [ ] equity curves;
+- [ ] drawdowns.
+
+### 14.6 Statistical tests
+
+- [ ] Add tests for the statistical research components (see Chapters 38 and 43–46):
+
+- [ ] split reproducibility;
+- [ ] walk-forward window boundaries;
+- [ ] Monte Carlo seeds and scenario counts;
+- [ ] sensitivity sweeps;
+- [ ] significance calculations on synthetic data with known properties.
+
+### 14.7 Security tests
+
+Verify that:
+
+- [ ] secrets do not appear in logs;
+- [ ] secrets are not stored in SQLite;
+- [ ] secrets do not appear in exported files;
+- [ ] real trading remains disabled;
+- [ ] strategies cannot bypass the risk manager.
+
+### 14.8 Documentation tests
+
+Verify:
+
+- [ ] required beginner guides exist;
+- [ ] internal documentation links are valid;
+- [ ] code examples are syntactically correct;
+- [ ] English documentation is present;
+- [ ] Spanish documentation structure mirrors the English structure where translated;
+- [ ] glossary terms referenced by the interface exist.
+
+---
+
+## [ ] 15. Python packaging
+
+- [ ] Use `pyproject.toml`.
+- [ ] Prefer a simple Debian-compatible backend such as setuptools.
+
+Include:
+
+- [ ] project metadata;
+- [ ] graphical entry point;
+- [ ] console entry point;
+- [ ] translation files;
+- [ ] icons;
+- [ ] license;
+- [ ] example files;
+- [ ] typing information;
+- [ ] resources through `importlib.resources`.
+
+Expected commands:
+
+- [ ] `python3 -m build`
+- [ ] `python3 -m pytest`
+- [ ] `python3 -m crypto_trading_lab`
+- [ ] `crypto-trading-lab`
+
+- [ ] Do not use paths that depend on the current working directory.
+
+---
+
+## [ ] 16. Debian package
+
+- [ ] Create a complete and valid `debian/` directory.
+
+Expected files:
+
+- [ ] `debian/changelog`
+- [ ] `debian/control`
+- [ ] `debian/copyright`
+- [ ] `debian/rules`
+- [ ] `debian/source/format`
+- [ ] `debian/watch`
+- [ ] `debian/upstream/metadata`
+- [ ] `debian/crypto-trading-lab.install`
+- [ ] `debian/crypto-trading-lab.manpages`
+- [ ] `debian/crypto-trading-lab.desktop`
+- [ ] `debian/crypto-trading-lab.metainfo.xml`
+
+Use:
+
+- [ ] debhelper-compat;
+- [ ] dh-python;
+- [ ] pybuild;
+- [ ] `dh-sequence-python3` where appropriate;
+- [ ] automatic Python dependency substitution;
+- [ ] tests during package build;
+- [ ] `Rules-Requires-Root: no`;
+- [ ] source format `3.0 (quilt)`.
+
+The package must:
+
+- [ ] install into standard paths;
+- [ ] not install into `/opt`;
+- [ ] not include a virtual environment;
+- [ ] not download dependencies during the build;
+- [ ] not use pip during Debian package construction;
+- [ ] not include prebuilt wheels;
+- [ ] not modify user files during installation;
+- [ ] respect XDG directories;
+- [ ] store user data in appropriate user directories;
+- [ ] install icons;
+- [ ] install a `.desktop` file;
+- [ ] install AppStream metadata;
+- [ ] include a man page;
+- [ ] pass `lintian` reasonably;
+- [ ] build in a clean environment using `sbuild` or `pbuilder`.
+
+Carefully classify:
+
+- [ ] `Build-Depends`;
+- [ ] `Depends`;
+- [ ] `Recommends`;
+- [ ] `Suggests`.
+
+- [ ] Do not declare a development-only package as a mandatory runtime dependency.
+
+Include instructions for:
+
+- [ ] `dpkg-buildpackage -us -uc -b`
+- [ ] `lintian ../*.changes`
+
+- [ ] Verify exact Debian 12 package names before writing `debian/control`.
+
+---
+
+## [ ] 17. Debian dependency documentation
+
+Create:
+
+- [ ] `docs/en/developers/debian-dependencies.md`
+
+Include a table containing:
+
+- [ ] purpose;
+- [ ] Python import;
+- [ ] Debian package;
+- [ ] Debian 12 version;
+- [ ] required or optional;
+- [ ] runtime or build dependency;
+- [ ] alternative;
+- [ ] reason for selection;
+- [ ] Debian 13 availability;
+- [ ] PyPI equivalent.
+
+Evaluate at least:
+
+- [ ] `python3-pyqt6`
+- [ ] `python3-pyqt6.qtcharts`
+- [ ] `python3-pyqt6.qtwebsockets`
+- [ ] `python3-pyqt6.qtsvg`
+- [ ] `python3-pyqt6.qtdesigner`
+- [ ] `pyqt6-dev-tools`
+- [ ] `python3-pyqtgraph`
+- [ ] `python3-superqt`
+- [ ] `python3-numpy`
+- [ ] `python3-pandas`
+- [ ] `python3-scipy`
+- [ ] `python3-matplotlib`
+- [ ] `python3-statsmodels`
+- [ ] `python3-sklearn`
+- [ ] `python3-numba`
+- [ ] `python3-aiohttp`
+- [ ] `python3-websockets`
+- [ ] `python3-requests`
+- [ ] `python3-requests-cache`
+- [ ] `python3-ratelimiter`
+- [ ] `python3-sqlalchemy`
+- [ ] `python3-pydantic`
+- [ ] `python3-dateutil`
+- [ ] `python3-platformdirs`
+- [ ] `python3-yaml`
+- [ ] `python3-jsonschema`
+- [ ] `python3-keyring`
+- [ ] `python3-cryptography`
+- [ ] `python3-apscheduler`
+- [ ] `python3-pytest`
+- [ ] `python3-pytest-asyncio`
+- [ ] `python3-pytest-cov`
+- [ ] `python3-requests-mock`
+- [ ] `python3-freezegun`
+- [ ] `python3-flake8`
+- [ ] `python3-mypy`
+- [ ] `python3-bandit`
+- [ ] `python3-black`
+- [ ] `python3-isort`
+- [ ] `python3-build`
+- [ ] `python3-setuptools`
+- [ ] `python3-wheel`
+- [ ] `python3-debian`
+- [ ] `dh-python`
+- [ ] `debhelper-compat`
+- [ ] `devscripts`
+- [ ] `lintian`
+- [ ] `sbuild`
+
+- [ ] Do not assume every package must be installed.
+
+- [ ] Create a Spanish translation later at `docs/es/developers/dependencias-debian.md`
+
+- [ ] English documentation must be completed first.
+
+---
+
+## [ ] 18. AppImage
+
+- [ ] Prepare a separate AppImage strategy.
+- [ ] Do not add AppImage tools to the official Debian package `Build-Depends`.
+
+Create:
+
+- [ ] `packaging/appimage/README.md`
+- [ ] `packaging/appimage/AppRun`
+- [ ] `packaging/appimage/crypto-trading-lab.desktop`
+- [ ] `packaging/appimage/crypto-trading-lab.appdata.xml`
+- [ ] `packaging/appimage/build-appimage.sh`
+
+The build script must:
+
+- [ ] use `set -euo pipefail`;
+- [ ] detect errors;
+- [ ] not require root;
+- [ ] use a temporary directory;
+- [ ] clean resources;
+- [ ] document dependencies;
+- [ ] generate checksums;
+- [ ] avoid including credentials;
+- [ ] verify the artifact.
+
+- [ ] Do not download binaries without verifying their origin and checksum.
+
+---
+
+## [ ] 19. Documentation
+
+- [ ] Documentation is a core feature of the project, not an optional final task.
+- [ ] Create and maintain documentation continuously as the application evolves.
+- [ ] English documentation must be written first.
+- [ ] Spanish translations must follow after the English documentation is stable.
+
+### 19.1 Main project documentation
+
+Create:
+
+- [ ] `README.md`
+- [ ] `INSTALL.md`
+- [ ] `USER_GUIDE.md`
+- [ ] `DEVELOPER_GUIDE.md`
+- [ ] `ARCHITECTURE.md`
+- [ ] `SECURITY.md`
+- [ ] `CONTRIBUTING.md`
+- [ ] `CHANGELOG.md`
+- [ ] `ROADMAP.md`
+
+Also create:
+
+- [ ] `docs/en/developers/debian-packaging.md`
+- [ ] `docs/en/developers/debian-dependencies.md`
+- [ ] `docs/en/developers/exchange-adapters.md`
+- [ ] `docs/en/developers/backtesting-methodology.md`
+- [ ] `docs/en/developers/risk-management.md`
+- [ ] `docs/en/developers/data-formats.md`
+- [ ] `docs/en/developers/i18n.md`
+- [ ] `docs/en/developers/threat-model.md`
+
+### 19.2 “For Dummies” beginner documentation
+
+- [x] Create a complete beginner-friendly documentation series in English. (started: start-here + glossary; series continues)
+
+The writing style must be similar to a good “For Dummies” guide:
+
+- [x] welcoming;
+- [x] patient;
+- [x] non-judgmental;
+- [x] clear;
+- [x] practical;
+- [x] step-by-step;
+- [x] free from unnecessary jargon;
+- [x] full of simple examples;
+- [x] full of warnings before risky actions;
+- [x] suitable for readers who know nothing about cryptocurrency;
+- [x] suitable for readers who know nothing about trading;
+- [x] suitable for readers who know nothing about technical analysis;
+- [x] suitable for readers who have never used an exchange;
+- [x] suitable for readers who have never used a backtesting program.
+
+- [ ] Do not assume prior knowledge.
+
+Whenever a technical word is introduced:
+
+- [ ] 1. define it immediately;
+- [ ] 2. provide a simple example;
+- [ ] 3. explain why it matters;
+- [ ] 4. link it to the glossary;
+- [ ] 5. mention common misunderstandings.
+
+Create this documentation structure:
+
+- [ ] `docs/en/beginners/00-start-here.md`
+- [ ] `docs/en/beginners/01-what-is-money.md`
+- [ ] `docs/en/beginners/02-what-is-digital-money.md`
+- [ ] `docs/en/beginners/03-what-is-cryptocurrency.md`
+- [ ] `docs/en/beginners/04-what-is-bitcoin.md`
+- [ ] `docs/en/beginners/05-what-is-a-blockchain.md`
+- [ ] `docs/en/beginners/06-wallets-explained.md`
+- [ ] `docs/en/beginners/07-private-keys-and-seed-phrases.md`
+- [ ] `docs/en/beginners/08-what-is-an-exchange.md`
+- [ ] `docs/en/beginners/09-centralized-and-decentralized-exchanges.md`
+- [ ] `docs/en/beginners/10-spot-markets.md`
+- [ ] `docs/en/beginners/11-trading-pairs.md`
+- [ ] `docs/en/beginners/12-bid-ask-and-spread.md`
+- [ ] `docs/en/beginners/13-order-books.md`
+- [ ] `docs/en/beginners/14-market-orders.md`
+- [ ] `docs/en/beginners/15-limit-orders.md`
+- [ ] `docs/en/beginners/16-fees.md`
+- [ ] `docs/en/beginners/17-slippage.md`
+- [ ] `docs/en/beginners/18-liquidity.md`
+- [ ] `docs/en/beginners/19-volatility.md`
+- [ ] `docs/en/beginners/20-candlestick-charts.md`
+- [ ] `docs/en/beginners/21-ohlcv-data.md`
+- [ ] `docs/en/beginners/22-timeframes.md`
+- [ ] `docs/en/beginners/23-support-and-resistance.md`
+- [ ] `docs/en/beginners/24-trends.md`
+- [ ] `docs/en/beginners/25-technical-indicators.md`
+- [ ] `docs/en/beginners/26-moving-averages.md`
+- [ ] `docs/en/beginners/27-rsi.md`
+- [ ] `docs/en/beginners/28-macd.md`
+- [ ] `docs/en/beginners/29-bollinger-bands.md`
+- [ ] `docs/en/beginners/30-atr-and-volatility.md`
+- [ ] `docs/en/beginners/31-what-is-a-trading-strategy.md`
+- [ ] `docs/en/beginners/32-risk-management.md`
+- [ ] `docs/en/beginners/33-position-sizing.md`
+- [ ] `docs/en/beginners/34-stop-loss.md`
+- [ ] `docs/en/beginners/35-take-profit.md`
+- [ ] `docs/en/beginners/36-drawdown.md`
+- [ ] `docs/en/beginners/37-paper-trading.md`
+- [ ] `docs/en/beginners/38-backtesting.md`
+- [ ] `docs/en/beginners/39-look-ahead-bias.md`
+- [ ] `docs/en/beginners/40-overfitting.md`
+- [ ] `docs/en/beginners/41-training-validation-and-testing.md`
+- [ ] `docs/en/beginners/42-why-backtests-can-lie.md`
+- [ ] `docs/en/beginners/43-why-paper-trading-is-different.md`
+- [ ] `docs/en/beginners/44-api-keys.md`
+- [ ] `docs/en/beginners/45-api-key-security.md`
+- [ ] `docs/en/beginners/46-common-scams.md`
+- [ ] `docs/en/beginners/47-emotional-trading.md`
+- [ ] `docs/en/beginners/48-common-beginner-mistakes.md`
+- [ ] `docs/en/beginners/49-when-not-to-trade.md`
+- [ ] `docs/en/beginners/50-learning-roadmap.md`
+- [ ] `docs/en/beginners/51-why-most-traders-lose-money.md`
+- [ ] `docs/en/beginners/52-trading-is-not-an-income.md`
+- [ ] `docs/en/beginners/glossary.md`
+
+### 19.3 Program usage guide
+
+- [ ] Create a complete beginner user guide:
+
+- [ ] `docs/en/user-guide/00-welcome.md`
+- [ ] `docs/en/user-guide/01-installing-on-debian.md`
+- [ ] `docs/en/user-guide/02-first-launch.md`
+- [ ] `docs/en/user-guide/03-interface-tour.md`
+- [ ] `docs/en/user-guide/04-changing-the-language.md`
+- [ ] `docs/en/user-guide/05-using-the-learning-center.md`
+- [ ] `docs/en/user-guide/06-importing-csv-data.md`
+- [ ] `docs/en/user-guide/07-opening-a-market-chart.md`
+- [ ] `docs/en/user-guide/08-reading-a-candlestick-chart.md`
+- [ ] `docs/en/user-guide/09-adding-an-indicator.md`
+- [ ] `docs/en/user-guide/10-creating-a-simple-strategy.md`
+- [ ] `docs/en/user-guide/11-running-your-first-backtest.md`
+- [ ] `docs/en/user-guide/12-understanding-backtest-results.md`
+- [ ] `docs/en/user-guide/13-starting-paper-trading.md`
+- [ ] `docs/en/user-guide/14-placing-a-simulated-order.md`
+- [ ] `docs/en/user-guide/15-reading-your-portfolio.md`
+- [ ] `docs/en/user-guide/16-using-risk-profiles.md`
+- [ ] `docs/en/user-guide/17-using-the-kill-switch.md`
+- [ ] `docs/en/user-guide/18-exporting-a-report.md`
+- [ ] `docs/en/user-guide/19-backing-up-your-data.md`
+- [ ] `docs/en/user-guide/20-troubleshooting.md`
+- [ ] `docs/en/user-guide/21-safe-next-steps.md`
+
+Each guide must contain:
+
+- [ ] objective;
+- [ ] prerequisites;
+- [ ] numbered steps;
+- [ ] expected result;
+- [ ] screenshots or screenshot placeholders;
+- [ ] common mistakes;
+- [ ] troubleshooting;
+- [ ] safety notes;
+- [ ] glossary links;
+- [ ] a short knowledge check.
+
+### 19.4 Spanish documentation
+
+- [ ] After the English documentation is created and reviewed, create Spanish translations under `docs/es/`.
+- [ ] The Spanish structure should mirror the English structure where practical.
+- [ ] Do not automatically translate technical content without review.
+- [ ] Use clear, neutral Spanish suitable for Latin American users.
+- [ ] Maintain terminology consistently.
+
+### 19.5 Documentation rules
+
+Documentation must:
+
+- [ ] evolve with each feature;
+- [ ] be updated in the same change as the feature;
+- [ ] never describe nonexistent features as completed;
+- [ ] clearly label planned or experimental features;
+- [ ] clearly distinguish paper trading from real trading;
+- [ ] clearly distinguish education from financial advice;
+- [ ] include version information where useful;
+- [ ] include links between related topics;
+- [ ] avoid unexplained abbreviations.
+
+The README must clearly explain:
+
+- [ ] that the application does not guarantee profits;
+- [ ] that simulation is the default mode;
+- [ ] that real trading is disabled initially;
+- [ ] how to install Debian dependencies;
+- [ ] how to run the application;
+- [ ] how to run tests;
+- [ ] how to build the `.deb`;
+- [ ] how to contribute;
+- [ ] where beginners should start learning.
+
+---
+
+## [ ] 20. Multilingual support and Qt Linguist
+
+The application must be multilingual from the beginning.
+
+### 20.1 Language order
+
+The language implementation order must be:
+
+- [x] 1. English as the primary and default language;
+- [x] 2. Spanish as the second supported language;
+- [ ] 3. additional languages may be added later.
+
+- [x] The application must start in English on first launch unless the user has previously selected another language.
+- [ ] The user must be able to change the language from the interface.
+- [ ] The application should support either:
+  - [ ] immediate language switching at runtime; or
+  - [ ] language switching after restart if runtime switching creates excessive complexity.
+
+- [ ] The chosen behavior must be documented.
+
+### 20.2 Qt translation system
+
+Use:
+
+- [x] `QTranslator`;
+- [x] `.ts` translation source files;
+- [x] `.qm` compiled translation files;
+- [ ] Qt Linguist;
+- [x] `pylupdate6`;
+- [x] `lrelease`;
+- [x] `self.tr()` or the correct PyQt6 translation mechanism.
+
+Suggested translation files:
+
+- [x] `src/crypto_trading_lab/i18n/translations/crypto_trading_lab_en.ts`
+- [x] `src/crypto_trading_lab/i18n/translations/crypto_trading_lab_es.ts`
+
+- [x] English is the source and default application language.
+- [ ] Spanish must be maintained as a complete translation.
+- [ ] Do not use Spanish source strings and translate them into English.
+- [ ] Do not hard-code visible strings outside the translation system.
+- [ ] Do not concatenate sentence fragments that are difficult to translate.
+
+Translate:
+
+- [x] menus;
+- [x] buttons;
+- [x] labels;
+- [ ] dialogs;
+- [ ] warnings;
+- [ ] errors;
+- [ ] metric names;
+- [ ] strategy descriptions;
+- [ ] report text;
+- [ ] units;
+- [x] connection states;
+- [x] risk messages;
+- [ ] educational lessons;
+- [ ] glossary terms;
+- [ ] tutorials;
+- [ ] onboarding screens;
+- [ ] help text;
+- [x] accessibility labels.
+
+Document commands such as:
+
+- [x] `pylupdate6`
+- [ ] `linguist`
+- [x] `lrelease`
+
+- [ ] Do not use absolute paths.
+
+### 20.3 Translation workflow
+
+- [ ] Create `docs/en/developers/translation-workflow.md` covering:
+  - [ ] how source strings are marked;
+  - [ ] how `.ts` files are updated;
+  - [ ] how Qt Linguist is used;
+  - [ ] how translations are reviewed;
+  - [ ] how `.qm` files are generated;
+  - [ ] how missing translations are detected;
+  - [ ] how plural forms are handled;
+  - [ ] how translator comments are added;
+  - [ ] how screenshots are used for translation context.
+
+- [ ] Create the Spanish equivalent:
+  - [ ] `docs/es/developers/flujo-de-traduccion.md`
+
+- [ ] Add automated checks for untranslated critical strings.
+
+---
+
+## [ ] 21. Main interface, themes, and accessibility
+
+### 21.1 Main interface
+
+Design a professional, clear, responsive interface.
+
+#### Sidebar
+
+Include:
+
+- [ ] Overview;
+- [ ] Markets;
+- [ ] Charts;
+- [ ] Strategies;
+- [ ] Backtesting;
+- [ ] Research Lab;
+- [ ] Paper Trading;
+- [ ] Portfolio;
+- [ ] Orders;
+- [ ] Risk;
+- [ ] Reports;
+- [ ] Learning Center;
+- [ ] Glossary;
+- [ ] Tutorials;
+- [ ] Logs;
+- [ ] Settings;
+- [ ] Help.
+
+#### Top toolbar
+
+Include:
+
+- [ ] exchange;
+- [ ] environment;
+- [ ] trading pair;
+- [ ] interval;
+- [ ] connection status;
+- [ ] last-data time;
+- [ ] current mode;
+- [ ] kill-switch status;
+- [ ] selected language.
+
+#### Status bar
+
+Include:
+
+- [ ] connectivity;
+- [ ] latency;
+- [ ] active tasks;
+- [ ] pending data;
+- [ ] database status;
+- [ ] risk warnings;
+- [ ] educational hints.
+
+Use:
+
+- [ ] `QMainWindow`;
+- [ ] `QDockWidget` where appropriate;
+- [ ] `QAbstractTableModel`;
+- [ ] proxy models for filtering and sorting;
+- [ ] delegates for editing;
+- [ ] `QSettings` only for non-sensitive preferences;
+- [ ] clear dialogs;
+- [ ] keyboard accessibility.
+
+Avoid:
+
+- [ ] overloaded interfaces;
+- [ ] using color as the only status indicator;
+- [ ] unnecessary modal dialogs;
+- [ ] rebuilding entire tables for every update.
+
+### 21.2 Themes and appearance
+
+Include:
+
+- [ ] system theme;
+- [ ] light theme;
+- [ ] dark theme;
+- [ ] interface scaling;
+- [ ] saved window state;
+- [ ] support for small screens;
+- [ ] bundled SVG icons;
+- [ ] good behavior under XFCE;
+- [ ] good behavior under Fluxbox;
+- [ ] good behavior under KDE;
+- [ ] good behavior under GNOME;
+- [ ] good behavior under LXQt.
+
+- [ ] Do not depend on one desktop theme.
+- [ ] Verify contrast and readability.
+- [ ] Do not download icons at runtime.
+
+### 21.3 Accessibility
+
+Include:
+
+- [ ] full keyboard navigation;
+- [ ] accessible labels;
+- [ ] logical tab order;
+- [ ] tooltips;
+- [ ] messages that do not depend only on color;
+- [ ] interface scaling;
+- [ ] reasonable screen-reader support;
+- [ ] configurable shortcuts;
+- [ ] reduced-animation support;
+- [ ] readable beginner documentation;
+- [ ] clear heading structures;
+- [ ] descriptive link text.
+
+---
+
+## [ ] 22. Complementary CLI
+
+- [ ] Add a basic CLI without duplicating business logic:
+
+- [ ] `crypto-trading-lab --version`
+- [ ] `crypto-trading-lab doctor`
+- [ ] `crypto-trading-lab database check`
+- [ ] `crypto-trading-lab import-csv file.csv`
+- [ ] `crypto-trading-lab backtest strategy.yaml`
+- [ ] `crypto-trading-lab list-strategies`
+- [ ] `crypto-trading-lab list-lessons`
+- [ ] `crypto-trading-lab glossary search "slippage"`
+
+- [ ] The CLI must reuse the same use cases as the GUI.
+
+The `doctor` command must check:
+
+- [ ] Python version;
+- [ ] required modules;
+- [ ] database;
+- [ ] permissions;
+- [ ] keyring;
+- [ ] public connectivity;
+- [ ] system clock;
+- [ ] Qt resources;
+- [ ] translations;
+- [ ] XDG paths;
+- [ ] English documentation;
+- [ ] Spanish translation availability.
+
+- [ ] It must never display secrets.
+
+---
+
+## [ ] 23. Built-in Learning Center
+
+- [x] Create a Learning Center inside the application.
+
+It must include:
+
+- [x] beginner lessons;
+- [x] glossary;
+- [ ] tutorials;
+- [ ] examples;
+- [ ] simple quizzes;
+- [ ] progress tracking;
+- [ ] bookmarks;
+- [ ] links to relevant application screens.
+
+The Learning Center should allow a user to:
+
+- [ ] read a lesson;
+- [ ] open the related chart or tool;
+- [ ] try an example using simulated data;
+- [ ] answer a short quiz;
+- [ ] mark the lesson as completed;
+- [ ] continue from the last lesson.
+
+Initial learning path:
+
+- [ ] 1. What is cryptocurrency?
+- [ ] 2. What is a market?
+- [ ] 3. What is a trading pair?
+- [ ] 4. What is a candlestick?
+- [ ] 5. What is volume?
+- [ ] 6. What is a market order?
+- [ ] 7. What is a limit order?
+- [ ] 8. What are fees?
+- [ ] 9. What is risk?
+- [ ] 10. What is paper trading?
+- [ ] 11. What is backtesting?
+- [ ] 12. Build your first simple strategy.
+- [ ] 13. Run your first backtest.
+- [ ] 14. Understand a loss.
+- [ ] 15. Understand drawdown.
+- [ ] 16. Learn why profits are never guaranteed.
+- [ ] 17. Why most traders lose money.
+- [ ] 18. Trading is not a reliable income.
+- [ ] 19. When not to trade.
+- [ ] 20. Protecting the money you need for living.
+
+- [x] The Learning Center must work offline.
+- [x] Do not require an internet connection for core educational content.
+
+---
+
+## [ ] 24. Glossary
+
+- [x] Create an English glossary first, followed by Spanish. (English initial version done; Spanish pending)
+
+The glossary must include terms such as:
+
+- [ ] asset;
+- [x] cryptocurrency;
+- [x] Bitcoin;
+- [ ] altcoin;
+- [ ] blockchain;
+- [ ] wallet;
+- [ ] private key;
+- [ ] seed phrase;
+- [ ] exchange;
+- [ ] trading pair;
+- [ ] base asset;
+- [ ] quote asset;
+- [ ] bid;
+- [ ] ask;
+- [ ] spread;
+- [ ] liquidity;
+- [x] volatility;
+- [ ] order book;
+- [ ] market order;
+- [ ] limit order;
+- [ ] stop-loss;
+- [ ] take-profit;
+- [ ] commission;
+- [x] fee;
+- [x] slippage;
+- [x] candle;
+- [ ] OHLCV;
+- [ ] timeframe;
+- [ ] indicator;
+- [x] strategy;
+- [ ] signal;
+- [ ] position;
+- [ ] portfolio;
+- [ ] drawdown;
+- [ ] backtest;
+- [ ] paper trading;
+- [ ] overfitting;
+- [ ] look-ahead bias;
+- [ ] API;
+- [ ] API key;
+- [ ] WebSocket;
+- [ ] REST;
+- [ ] rate limit;
+- [ ] dataset;
+- [ ] out-of-sample;
+- [ ] walk-forward;
+- [ ] robustness;
+- [ ] benchmark.
+
+Every glossary entry must include:
+
+- [ ] a short definition;
+- [x] a plain-language explanation;
+- [ ] an example;
+- [ ] related terms;
+- [ ] a warning when appropriate.
+
+---
+
+## [ ] 25. Reference projects
+
+The repositories under `external/` are **technical and architectural references**.
+
+- [ ] They should be consulted to study concepts, gather ideas, or, if possible, adapt the code for use.
+- [ ] If a feature in a reference project is assumed, verify it in that project's documentation first; never assume a feature exists because the project name suggests it.
+
+Technical references:
+
+- [ ] **Backtrader** (`external/backtrader`): study event-driven backtesting design, analyzers (Sharpe, drawdown, trade analysis, SQN, VWR, Calmar), broker simulation, and feed handling. Use as inspiration for Chapter 37, not as a runtime dependency.
+- [ ] **CCXT** (`external/ccxt`): study the unified exchange API design, market metadata normalization (precision, limits), REST/WebSocket abstraction, and the many exchange quirks handled. Use as inspiration for Chapter 26 exchange adapters; verify Debian/PyPI packaging before use.
+- [ ] **Freqtrade** (`external/freqtrade`): study strategy/execution separation, dry-run (paper) mode, hyperopt (parameter optimization), persistence, and its cautious default posture. Inspect for Chapters 33, 39, and 57.
+- [ ] **Hummingbot** (`external/hummingbot`): study execution and order-management design, market-making/arbitrage logic, and connector architecture. Inspect for Chapters 56 and 26.
+- [ ] **Jesse** (`external/jesse`): study its research loop: backtest, optimization, Monte Carlo simulation, rule significance testing, and machine-learning pipeline. Inspect for Chapters 43–50; note that Jesse's feature set must be verified per feature.
+- [ ] **TA-Lib** (`external/ta-lib`): study the indicator catalog and naming. It is a C library; check whether the Python wrapper is available as a Debian package before use. Indicator requirements remain defined by Chapter 31.
+- [ ] **VectorBT** (`external/vectorbt`): study vectorized backtesting, walk-forward optimization, and portfolio analytics concepts. Inspect for Chapters 37 and 45; verify Debian/PyPI packaging.
+- [ ] **Advances in Financial Machine Learning — exercises** (`external/adv-financial-ml-marcos-exercises`): study the exercise solutions and the book's own snippets: event-based bars, triple-barrier labeling, sample weighting, purged/embargoed cross-validation, feature importance, and parallelization. Reference for Chapters 29, 38, and 43–50; the code is MIT-licensed and may be adapted with attribution after review and testing.
+- [ ] **Advances in Financial Machine Learning** (Marcos López de Prado, Wiley, 2018) — the printed reference behind the exercise repository. Conceptual authority for Chapters 43–50, especially the False Strategy theorem, the Deflated Sharpe Ratio, the Probability of Backtest Overfitting, and combinatorial purged cross-validation. Verify every technique against the exercise repository before implementing it.
+
+- [ ] Document the conclusions of this study in `docs/en/developers/reference-projects.md`.
+- [ ] When studying each reference project, explicitly note which mechanisms protect capital (risk limits, position sizing, kill switches, dry-run modes, conservative defaults) and which mechanisms only optimize historical performance. Only the former may be adopted for capital-protection features; the latter belong to research chapters (Chapters 39, 44–45).
+
+# PART II — MARKET DATA
+
+---
+
+## [ ] 26. Market-data sources and exchange adapters
+
+Create an `ExchangeAdapter` interface or equivalent.
+
+It must define separate operations for:
+
+- [ ] retrieving markets;
+- [ ] retrieving tickers;
+- [ ] retrieving historical candles;
+- [ ] subscribing to tickers;
+- [ ] subscribing to candles;
+- [ ] subscribing to trades;
+- [ ] subscribing to the order book;
+- [ ] retrieving balances;
+- [ ] retrieving orders;
+- [ ] creating an order;
+- [ ] cancelling an order;
+- [ ] receiving order updates;
+- [ ] checking API permissions.
+
+### 26.1 MockExchange
+
+Implement a fully local provider for:
+
+- [ ] automated tests;
+- [ ] demonstrations;
+- [ ] paper trading;
+- [ ] historical replay;
+- [ ] simulated failures;
+- [ ] simulated disconnections;
+- [ ] simulated latency;
+- [ ] simulated slippage;
+- [ ] partially filled orders;
+- [ ] rejected orders;
+- [ ] rate-limit simulations.
+
+### 26.2 Binance Spot Testnet
+
+Add initial support for Binance Spot Testnet using current official documentation.
+
+- [ ] Endpoints must be configurable.
+- [ ] Do not scatter endpoint strings throughout the codebase.
+
+Include:
+
+- [ ] REST;
+- [ ] WebSocket;
+- [ ] automatic reconnection;
+- [ ] ping/pong handling;
+- [ ] connection renewal;
+- [ ] rate-limit management;
+- [ ] time synchronization;
+- [ ] out-of-order message detection;
+- [ ] duplicate message tolerance;
+- [ ] secure logging.
+
+- [ ] Do not implement Binance Futures.
+
+### 26.3 Coinbase
+
+Initially add:
+
+- [ ] public market data;
+- [ ] an architecture prepared for Advanced Trade;
+- [ ] clearly labeled experimental support.
+
+- [ ] Document that the Coinbase sandbox may return static or predefined data and must not be treated as a realistic profitability simulation.
+- [ ] Do not mix Coinbase-specific models with the central domain.
+
+---
+
+## [ ] 27. Connection state management
+
+Create a connection state machine with:
+
+- [ ] DISCONNECTED
+- [ ] CONNECTING
+- [ ] AUTHENTICATING
+- [ ] SUBSCRIBING
+- [ ] CONNECTED
+- [ ] DEGRADED
+- [ ] RECONNECTING
+- [ ] RATE_LIMITED
+- [ ] ERROR
+- [ ] STOPPED
+
+Implement:
+
+- [ ] exponential backoff with jitter;
+- [ ] a maximum number of consecutive retries;
+- [ ] a circuit breaker;
+- [ ] stale-data detection;
+- [ ] subscription recovery;
+- [ ] reconciliation after reconnection;
+- [ ] visible warnings when data is outdated.
+
+- [ ] Never generate buy or sell signals from stale data.
+
+Every connection state must have:
+
+- [ ] a technical description;
+- [ ] a beginner-friendly explanation;
+- [ ] a visible status label;
+- [ ] a troubleshooting link.
+
+---
+
+## [ ] 28. Data import
+
+Allow candle import from CSV.
+
+Provide a wizard for mapping:
+
+- [x] timestamp;
+- [x] open;
+- [x] high;
+- [x] low;
+- [x] close;
+- [x] volume;
+- [x] symbol;
+- [x] interval.
+
+Validate:
+
+- [x] duplicate timestamps;
+- [x] unordered timestamps;
+- [x] irregular intervals;
+- [x] negative values;
+- [x] high below low;
+- [x] open outside the high-low range;
+- [x] close outside the high-low range;
+- [x] missing values;
+- [x] unknown timezone;
+- [x] unrecognized columns.
+
+- [x] Display a summary before importing.
+- [ ] Include a beginner explanation of OHLCV columns.
+
+---
+
+## [ ] 29. Data quality management
+
+Market data quality is a research prerequisite, not an afterthought.
+
+The system must support:
+
+- [ ] dataset identity and versioning (dataset ID, dataset version, source, exchange, pair, interval, time range);
+- [ ] dataset checksums for reproducibility (see Chapter 53);
+- [ ] validation on import and on storage (see Chapter 28);
+- [ ] detection of gaps and missing candles;
+- [ ] detection of duplicate candles;
+- [ ] detection of out-of-order timestamps;
+- [ ] detection of invalid OHLCV values;
+- [ ] detection of stale or frozen data;
+- [ ] detection of suspicious volume anomalies where data allows;
+- [ ] handling of delisted assets where historical data is available;
+- [ ] handling of changes in market liquidity where historical data is available;
+- [ ] explicit handling of survivorship bias when composing datasets;
+- [ ] a visible data-quality report per dataset;
+- [ ] warnings when a dataset is incomplete for the requested analysis.
+
+- [ ] Every research result must record the exact dataset version and checksum used (see Chapters 38, 52, and 53).
+- [ ] The application must never silently fill missing candles in a way that could affect research conclusions; any filling policy must be explicit, documented, and recorded.
+
+### 29.1 Advanced bar types (research)
+
+Beyond time-based candles, the system may support event-based bars for research (see 49.1):
+
+- [ ] volume bars (a new bar after a fixed amount of volume);
+- [ ] dollar bars (a new bar after a fixed traded value);
+- [ ] imbalance bars where the data source provides trade-level data;
+- [ ] every bar type must be a first-class dataset with its own ID, version, and checksum;
+- [ ] bar construction must record its thresholds and parameters;
+- [ ] event-based bars must be clearly distinguishable from time candles in the UI and the database;
+- [ ] missing-data policies for event-based bars must be explicit (their cadence is irregular by design and must not be treated as gaps in a time series).
+
+---
+
+# PART III — MARKET MODEL
+
+---
+
+## [ ] 30. Market precision and exchange rules
+
+Every exchange adapter must retrieve and respect:
+
+- [ ] minimum quantity;
+- [ ] minimum order value/notional;
+- [ ] tick size;
+- [ ] step size;
+- [ ] price precision;
+- [ ] quantity precision;
+- [ ] supported order states;
+- [ ] supported order types;
+- [ ] known fees;
+- [ ] rate limits;
+- [ ] timestamp formats;
+- [ ] time synchronization requirements.
+
+Before creating an order:
+
+- [ ] 1. normalize the price;
+- [ ] 2. normalize the quantity;
+- [ ] 3. apply tick-size rules;
+- [ ] 4. apply step-size rules;
+- [ ] 5. verify minimum notional value;
+- [ ] 6. estimate fees;
+- [ ] 7. verify available balance;
+- [ ] 8. verify risk limits;
+- [ ] 9. verify market-data freshness;
+- [ ] 10. verify connection state;
+- [ ] 11. prevent duplicate orders;
+- [ ] 12. create an idempotency identifier;
+- [ ] 13. produce a beginner-readable explanation of any rejection.
+
+---
+
+## [ ] 31. Technical indicators
+
+Initially implement:
+
+- [x] SMA;
+- [x] EMA;
+- [x] RSI;
+- [x] MACD;
+- [x] Bollinger Bands;
+- [x] ATR;
+- [x] ROC;
+- [ ] historical volatility;
+- [ ] average volume;
+- [ ] rolling highs and lows;
+- [x] drawdown.
+
+Every indicator must:
+
+- [x] use a common interface;
+- [x] validate parameters;
+- [x] document its formula;
+- [x] describe its warm-up period;
+- [x] handle missing values;
+- [x] avoid look-ahead bias;
+- [x] support batch calculation;
+- [ ] support incremental updates where practical;
+- [x] include tests using small datasets with manually verifiable results.
+
+- [ ] Do not add dozens of indicators without tests.
+
+Every indicator must also include beginner documentation:
+
+- [x] what it measures;
+- [x] what its name means;
+- [ ] a plain-language explanation;
+- [x] common parameter values;
+- [x] typical misuse;
+- [x] limitations;
+- [x] a visual example;
+- [x] a warning that it does not guarantee future price movements.
+
+---
+
+## [ ] 32. Financial charts
+
+Implement charts for:
+
+- [x] OHLC candlesticks;
+- [ ] volume;
+- [ ] price lines;
+- [x] moving averages;
+- [ ] bands;
+- [ ] RSI;
+- [ ] MACD;
+- [ ] entry points;
+- [ ] exit points;
+- [ ] stop-loss levels;
+- [ ] take-profit levels;
+- [ ] equity curves;
+- [ ] drawdowns;
+- [ ] return distributions.
+
+Requirements:
+
+- [x] zoom;
+- [x] panning;
+- [x] crosshair;
+- [x] OHLC information under the cursor;
+- [ ] interval selection;
+- [x] auto-scaling;
+- [ ] optional logarithmic scale;
+- [ ] incremental updates;
+- [x] do not rebuild the entire chart on every tick;
+- [x] limit the number of visible points;
+- [x] separate chart data from visual representation;
+- [x] handle missing time intervals correctly.
+
+- [ ] Do not update widgets directly from worker threads.
+- [ ] Workers must emit Qt signals containing immutable data or safe copies.
+
+Each chart must include an optional beginner explanation panel describing:
+
+- [x] what the chart shows;
+- [x] how to read it;
+- [x] what beginners often misunderstand;
+- [x] what the chart cannot predict;
+- [x] a simple example;
+- [x] a glossary link.
+
+# PART IV — STRATEGIES AND SIGNALS
+
+---
+
+## [ ] 33. Strategies
+
+Strategies must use explicit, testable, versioned, and declarative rules.
+
+The purpose of a strategy is to define **when a trading signal should be generated**. A strategy must not be responsible for exchange communication, order execution, credential handling, or direct risk-limit modification.
+
+Initial strategies:
+
+* [x] 1. Moving-average crossover.
+* [ ] 2. RSI with configurable filters.
+* [ ] 3. Rolling high/low breakout.
+* [ ] 4. Bollinger Bands mean reversion as an educational example.
+* [x] 5. Buy-and-hold benchmark.
+* [ ] 6. Null strategy that never trades.
+
+Each strategy must declare:
+
+### 33.1 Identity
+
+* [ ] Name.
+* [ ] Unique identifier.
+* [ ] Version.
+* [ ] Author or source.
+* [ ] Description.
+* [ ] Strategy category.
+* [ ] Beginner-oriented explanation.
+* [ ] Known weaknesses.
+* [ ] Risk warnings.
+
+### 33.2 Market requirements
+
+* [ ] Compatible markets.
+* [ ] Supported asset types.
+* [ ] Required timeframe.
+* [ ] Required market-data fields.
+* [ ] Required indicators.
+* [ ] Warm-up period.
+* [ ] Minimum amount of historical data required.
+
+### 33.3 Trading rules
+
+* [ ] Entry conditions.
+* [ ] Exit conditions.
+* [ ] Invalidation conditions.
+* [ ] Stop-loss rules.
+* [ ] Take-profit rules.
+* [ ] Trailing-stop rules where applicable.
+* [ ] Cooldown rules.
+* [ ] Time-based restrictions where applicable.
+* [ ] Position-sizing rules (subject to the risk manager; see Chapter 58).
+
+### 33.4 Parameters
+
+Every configurable parameter must define:
+
+* [ ] Name.
+* [ ] Type.
+* [ ] Default value.
+* [ ] Minimum value.
+* [ ] Maximum value.
+* [ ] Allowed values where applicable.
+* [ ] Description.
+* [ ] Validation rules.
+* [ ] Parameters must be versioned with the strategy.
+* [ ] Invalid parameter combinations must be rejected before execution.
+* [ ] Strategy parameters must never silently change during a backtest or live session.
+
+### 33.5 Signal generation
+
+Strategies must generate explicit signals such as:
+
+* [ ] Enter long.
+* [ ] Exit long.
+* [ ] Enter short where supported.
+* [ ] Exit short where supported.
+* [ ] Hold.
+* [ ] No signal.
+
+Signals must include:
+
+* [ ] Timestamp.
+* [ ] Strategy identifier.
+* [ ] Strategy version.
+* [ ] Market.
+* [ ] Timeframe.
+* [ ] Signal type.
+* [ ] Relevant indicator values.
+* [ ] Strategy parameters or parameter-set identifier.
+
+### 33.6 Mandatory architecture
+
+The execution flow must be:
+
+```text
+Market Data
+    ↓
+Strategy
+    ↓
+Signal
+    ↓
+Portfolio / Risk Manager
+    ↓
+Approved Order Request
+    ↓
+Execution Engine
+    ↓
+Broker / Exchange
+```
+
+* [ ] Strategies generate signals but do not create exchange orders directly.
+* [ ] No strategy may communicate directly with an exchange API.
+* [ ] No strategy may bypass the `RiskManager`.
+* [ ] No strategy may modify global risk limits.
+* [ ] No strategy may access API credentials directly.
+
+### 33.7 Strategy validation
+
+Before a strategy can be backtested or paper-traded:
+
+* [ ] Validate its configuration.
+* [ ] Validate its required indicators.
+* [ ] Validate its timeframe.
+* [ ] Validate its warm-up period.
+* [ ] Validate its market compatibility.
+* [ ] Validate all parameters.
+* [ ] Detect impossible or contradictory rules.
+* [ ] Report warnings before execution.
+
+### 33.8 Strategy research warnings
+
+The application must warn users that:
+
+* [ ] A strategy can perform well historically by chance.
+* [ ] More parameters increase the risk of overfitting.
+* [ ] Adding filters does not necessarily improve a strategy.
+* [ ] A higher historical profit does not necessarily mean a better strategy.
+* [ ] A strategy must be evaluated on data that was not used to design or optimize it.
+* [ ] Strategy complexity should be recorded (see Chapter 35).
+* [ ] The system should favor simpler strategies when performance is otherwise comparable.
+
+### 33.9 Beginner documentation
+
+Every strategy must explain:
+
+* [ ] What the strategy attempts to do.
+* [ ] What market behavior it assumes.
+* [ ] What indicators it uses.
+* [ ] What causes an entry.
+* [ ] What causes an exit.
+* [ ] How position sizing works.
+* [ ] How stop-loss and take-profit work.
+* [ ] What market conditions may favor it.
+* [ ] What market conditions may hurt it.
+* [ ] Why historical profitability does not guarantee future profitability.
+
+---
+
+## [ ] 34. Visual strategy builder
+
+Create a basic no-code strategy builder using blocks or forms for:
+
+- [ ] indicator;
+- [ ] operator;
+- [ ] value;
+- [ ] crossover;
+- [ ] AND condition;
+- [ ] OR condition;
+- [ ] entry;
+- [ ] exit;
+- [ ] stop-loss;
+- [ ] take-profit;
+- [ ] time filter;
+- [ ] volatility filter;
+- [ ] cooldown.
+
+- [ ] Do not use `eval()`.
+- [ ] Convert rules into a validated expression tree.
+
+Allow users to:
+
+- [ ] save;
+- [ ] duplicate;
+- [ ] export;
+- [ ] import;
+- [ ] validate;
+- [ ] view a natural-language explanation;
+- [ ] view a beginner-friendly explanation;
+- [ ] view warnings about possible overfitting.
+
+- [ ] Use a versioned schema for strategy files.
+
+---
+
+## [ ] 35. Strategy complexity control
+
+The system must consider strategy complexity explicitly.
+
+- [ ] Record for every strategy version:
+  - [ ] number of parameters;
+  - [ ] number of rules;
+  - [ ] number of indicators;
+  - [ ] number of filters;
+  - [ ] number of conditions;
+  - [ ] optimization complexity;
+  - [ ] model complexity where machine learning is used (see Chapter 48).
+
+- [ ] A strategy with many parameters, indicators, and filters must not be considered automatically superior to a simpler one.
+- [ ] When two strategies provide comparable evidence, the simpler strategy must be favored.
+- [ ] Complexity metrics must be displayed in strategy reports and qualification reviews (see Chapter 66).
+- [ ] The application must warn when complexity grows without a corresponding evidence improvement.
+
+---
+
+## [ ] 36. Strategy registry
+
+The system must maintain a central registry of strategies and their evidence.
+
+Each strategy must be able to record:
+
+- [ ] strategy ID;
+- [ ] name;
+- [ ] version;
+- [ ] code/configuration;
+- [ ] parameters;
+- [ ] datasets used;
+- [ ] results;
+- [ ] benchmarks;
+- [ ] validations;
+- [ ] robustness tests;
+- [ ] experiment history (see Chapter 52);
+- [ ] status;
+- [ ] qualification report reference (see Chapter 66);
+- [ ] complexity metrics (see Chapter 35).
+
+Suggested statuses:
+
+```text
+Draft
+Research
+Backtested
+Validated
+Paper Trading
+Qualified
+Rejected
+Retired
+Live
+```
+
+- [ ] Status transitions must follow the promotion pipeline (see Chapter 65).
+- [ ] A strategy must never skip from `Backtested` directly to `Live`.
+- [ ] Every status change must be audited with timestamp and reason.
+- [ ] The registry must support searching, filtering, and comparing strategies.
+- [ ] The registry must clearly distinguish a strategy's current status from its historical statuses.
+
+---
+
+# PART V — BACKTESTING AND VALIDATION
+
+---
+
+## [ ] 37. Backtesting
+
+The backtesting engine must be deterministic, reproducible, realistic, and explicitly protected against look-ahead bias and other forms of historical-data leakage.
+
+A backtest must simulate the complete sequence from market data to signal, risk decision, order creation, execution, position update, and portfolio valuation.
+
+### 37.1 Capital and trading costs
+
+The engine must support:
+
+* [x] Initial capital.
+* [x] Commissions.
+* [x] Trading fees.
+* [x] Spread.
+* [x] Slippage.
+* [ ] Funding costs where applicable (not applicable to the spot-only MVP).
+* [ ] Borrowing costs where applicable.
+* [x] Configurable trading costs.
+* [ ] Cost changes over time where historical fee data is available.
+
+The report must show:
+
+* [x] Total commissions and fees.
+* [x] Estimated spread cost.
+* [x] Estimated slippage cost.
+* [ ] Other applicable trading costs.
+* [x] Performance before costs.
+* [x] Performance after costs.
+
+### 37.2 Market and exchange constraints
+
+The engine must model, where applicable:
+
+* [ ] Available liquidity.
+* [ ] Maximum position size.
+* [x] Minimum order quantity.
+* [x] Minimum order value/notional.
+* [ ] Tick size.
+* [x] Step size.
+* [ ] Price precision.
+* [x] Quantity precision.
+* [ ] Exchange-specific trading constraints.
+* [ ] Market-specific restrictions.
+
+The backtest must never assume that an arbitrary quantity or price can be submitted to an exchange.
+
+### 37.3 Order types
+
+The engine must support, at minimum:
+
+* [x] Market orders.
+* [ ] Limit orders.
+* [ ] Stop orders.
+* [ ] Stop-loss.
+* [ ] Take-profit.
+* [ ] Trailing stop.
+* [ ] Partial fills.
+* [ ] Rejected orders.
+* [ ] Order cancellation where applicable.
+
+### 37.4 Execution simulation
+
+The engine must explicitly model the difference between:
+
+```text
+Signal generated
+        ↓
+Order requested
+        ↓
+Order accepted/rejected
+        ↓
+Order executed
+        ↓
+Position updated
+```
+
+It must support:
+
+* [ ] Simulated execution latency.
+* [x] Conservative slippage assumptions.
+* [x] Spread.
+* [ ] Available liquidity.
+* [ ] Partial execution.
+* [ ] Rejected orders.
+* [ ] Delayed execution.
+* [ ] Order cancellation.
+* [ ] Different execution models.
+
+Implement at least two execution models:
+
+* [x] 1. Execution at the opening price of the next candle.
+* [ ] 2. A documented conservative intrabar execution model.
+
+The selected execution model must be recorded in every backtest.
+
+- [ ] Advanced execution realism (fills, latency, liquidity models) is specified in Chapter 56 and must remain a separate component.
+
+### 37.5 Intrabar ambiguity
+
+When historical data does not provide enough information to determine the exact sequence of events inside a candle:
+
+* [ ] Never invent an execution sequence.
+* [ ] Use a configurable conservative policy.
+* [ ] Document the policy.
+* [ ] Record the policy in the backtest metadata.
+* [ ] Clearly identify ambiguous executions in the report.
+
+When a candle reaches both stop-loss and take-profit during the same interval:
+
+* [ ] Apply the configured conservative policy.
+* [ ] Record which policy was used.
+* [ ] Never assume an execution order that cannot be established from the available data.
+
+### 37.6 Historical data handling
+
+The engine must correctly handle:
+
+* [ ] Missing data.
+* [ ] Missing candles.
+* [ ] Incomplete candles.
+* [ ] Duplicate candles.
+* [ ] Out-of-order timestamps.
+* [ ] Invalid OHLCV values.
+* [ ] Zero or invalid volume where applicable.
+* [ ] Chronological data ordering.
+* [ ] Warm-up periods.
+* [ ] Dataset boundaries.
+* [ ] Delisted assets where historical data is available.
+* [ ] Changes in market liquidity where historical data is available.
+
+All internal timestamps must use a clearly defined convention, preferably UTC.
+
+- [ ] Data-quality policies are specified in Chapter 29 and must be shared with the backtest engine.
+
+### 37.7 Bias and leakage prevention
+
+The engine must explicitly prevent:
+
+* [ ] Look-ahead bias.
+* [ ] Data leakage.
+* [ ] Survivorship bias where applicable.
+* [ ] Future information entering historical signals.
+* [ ] Future candles being used to calculate historical indicators.
+* [ ] Using a known closing price to execute at that same close without an explicit model.
+* [ ] Assuming all orders execute instantly.
+* [ ] Ignoring commissions, fees, spread, slippage, or liquidity constraints.
+
+> **The backtesting engine must never use information that was unavailable at the exact moment when the simulated trading decision was made.**
+
+### 37.8 Determinism and reproducibility
+
+A backtest must produce the same result when executed again with the same:
+
+* [ ] Dataset version.
+* [ ] Strategy version.
+* [ ] Strategy parameters.
+* [ ] Initial capital.
+* [ ] Fee configuration.
+* [ ] Spread configuration.
+* [ ] Slippage configuration.
+* [ ] Execution model.
+* [ ] Software configuration.
+* [ ] Random seed when randomness is used.
+
+Every backtest must record enough metadata to reproduce the experiment (see Chapter 53).
+
+### 37.9 Backtest results
+
+Every backtest must record:
+
+* [ ] Initial capital.
+* [ ] Final equity.
+* [ ] Net profit/loss.
+* [ ] Total return.
+* [ ] Number of trades.
+* [ ] Win rate.
+* [ ] Average winning trade.
+* [ ] Average losing trade.
+* [ ] Profit factor.
+* [ ] Maximum drawdown.
+* [ ] Maximum drawdown duration.
+* [ ] Sharpe ratio where statistically appropriate.
+* [ ] Sortino ratio where statistically appropriate.
+* [ ] Buy-and-hold performance (see Chapter 42).
+* [ ] Total commissions/fees.
+* [ ] Estimated slippage.
+* [ ] Execution model.
+* [ ] Dataset period.
+* [ ] Dataset version.
+* [ ] Strategy version.
+* [ ] Strategy parameters.
+
+- [ ] Metric definitions and statistical validity rules are specified in Chapter 40.
+
+### 37.10 Beginner-oriented explanation
+
+Every backtest result must explain:
+
+* [ ] What was tested.
+* [ ] Which asset and timeframe were tested.
+* [ ] Which strategy and parameters were used.
+* [ ] Which historical period was used.
+* [ ] What assumptions were made.
+* [ ] Which execution model was used.
+* [ ] What commissions and fees mean.
+* [ ] What spread and slippage mean.
+* [ ] Why liquidity affects execution.
+* [ ] Why historical results can be misleading.
+* [ ] Why backtesting cannot guarantee future profitability.
+* [ ] Why real trading results may differ.
+* [ ] Whether the result is in-sample, validation, or out-of-sample.
+
+- [ ] A profitable backtest must never be presented as proof that a strategy will be profitable in the future.
+
+---
+
+## [ ] 38. Data splitting
+
+Financial time-series data must be divided chronologically.
+
+The system must support at least:
+
+* [ ] Training (strategy-development) period.
+* [ ] Validation period.
+* [ ] Out-of-sample test period.
+
+The default data flow must be:
+
+```text
+Historical Data
+      ↓
+Training (Strategy Development)
+      ↓
+Validation
+      ↓
+Out-of-Sample Test
+```
+
+### 38.1 Chronological integrity
+
+* [ ] Never randomly shuffle financial time-series data for strategy evaluation.
+* [ ] Preserve temporal ordering.
+* [ ] Prevent future observations from entering earlier periods.
+* [ ] Respect dataset boundaries.
+* [ ] Respect indicator warm-up periods.
+* [ ] Record the exact timestamp boundaries of every split.
+
+### 38.2 Training (strategy-development) period
+
+This period may be used for:
+
+* [ ] Strategy development.
+* [ ] Indicator selection.
+* [ ] Rule development.
+* [ ] Initial parameter selection.
+* [ ] Hypothesis generation.
+
+It must not be presented as independent evidence of future performance.
+
+### 38.3 Validation period
+
+The validation period may be used for:
+
+* [ ] Comparing candidate strategies.
+* [ ] Selecting among limited parameter sets.
+* [ ] Detecting obvious overfitting.
+* [ ] Refining a research hypothesis.
+
+Repeated use of the validation set must be recorded because it can gradually become part of the optimization process.
+
+### 38.4 Out-of-sample test period
+
+The out-of-sample period must:
+
+* [ ] Remain isolated from strategy development as much as possible.
+* [ ] Not be used repeatedly for parameter selection.
+* [ ] Be used as the final historical evaluation of a strategy version.
+* [ ] Be clearly identified in reports.
+
+### 38.5 Data leakage protection
+
+The system must detect or warn about:
+
+* [ ] Indicators calculated using future data.
+* [ ] Features containing future observations.
+* [ ] Optimization using the test period.
+* [ ] Repeated evaluation of the test period.
+* [ ] Using future market information.
+* [ ] Randomized time-series splitting.
+* [ ] Incorrect warm-up handling.
+
+### 38.6 Optimization separation
+
+When a strategy has been optimized:
+
+* [ ] The optimization period must be recorded.
+* [ ] The validation period must be recorded.
+* [ ] The out-of-sample period must be recorded.
+* [ ] The application must warn if the same period is used for both optimization and final evaluation.
+
+- [ ] Rolling-window validation (walk-forward) is a distinct concept and is specified in Chapter 45.
+
+### 38.7 Beginner explanation
+
+The application must explain:
+
+* [ ] Why historical data is divided.
+* [ ] Why testing on the same data used for optimization is misleading.
+* [ ] What out-of-sample means.
+* [ ] Why repeatedly checking the test period can cause overfitting.
+* [ ] Why chronological order matters.
+* [ ] Why good out-of-sample performance is stronger evidence than in-sample performance.
+
+The system must clearly distinguish:
+
+> **“The strategy worked on historical data used to design it”**
+
+from:
+
+> **“The strategy continued to work on data that was not used to design it.”**
+
+### 38.8 Purged and embargoed cross-validation (research)
+
+Standard K-Fold cross-validation is invalid for financial time series when labels overlap in time (e.g., multi-bar holding periods) or when features are serially dependent.
+
+The system may support, as a research capability (see 49.4):
+
+- [ ] purged cross-validation: remove training observations whose label windows overlap validation-label windows;
+- [ ] embargo: additionally delete a documented buffer after each validation block before resuming training;
+- [ ] the embargo length must be an explicit, recorded parameter, never implicit;
+- [ ] warn whenever labels span multiple bars and plain K-Fold or plain walk-forward splits are requested, because leakage is likely;
+- [ ] explain in beginner terms why a trade that is still open at a boundary leaks information across it.
+
+---
+
+## [ ] 39. Parameter optimization
+
+Parameter optimization is a research tool, not a guarantee of better future performance.
+
+Initially include:
+
+* [ ] Limited grid search.
+* [ ] Limited random search.
+
+Do not include unrestricted automatic optimization in the MVP.
+
+### 39.1 Optimization inputs
+
+Every optimization experiment must record:
+
+* [ ] Strategy version.
+* [ ] Parameter ranges.
+* [ ] Parameter combinations.
+* [ ] Dataset version.
+* [ ] Optimization period.
+* [ ] Validation period.
+* [ ] Out-of-sample period.
+* [ ] Initial capital.
+* [ ] Fee configuration.
+* [ ] Slippage configuration.
+* [ ] Execution model.
+* [ ] Random seed where applicable.
+
+### 39.2 Safety limits
+
+The optimizer must enforce:
+
+* [ ] Maximum number of combinations.
+* [ ] Maximum execution time where practical.
+* [ ] Maximum memory usage where practical.
+* [ ] Cancel button.
+* [ ] Progress indicator.
+* [ ] Background execution.
+* [ ] Safe cancellation.
+* [ ] Persisted results.
+
+### 39.3 Optimization objective
+
+The optimizer must not select a strategy solely because it has the highest net profit.
+
+Supported objectives may include:
+
+* [ ] Net profit.
+* [ ] Total return.
+* [ ] Maximum drawdown.
+* [ ] Profit factor.
+* [ ] Sharpe ratio where appropriate.
+* [ ] Sortino ratio where appropriate.
+* [ ] Calmar ratio where appropriate.
+* [ ] Risk-adjusted return.
+* [ ] Composite score.
+
+The objective and ranking method must always be visible.
+
+### 39.4 Overfitting protection
+
+The optimizer must:
+
+* [ ] Warn about excessive parameter combinations.
+* [ ] Warn when parameter ranges are excessively broad.
+* [ ] Penalize unnecessary complexity where appropriate (see Chapter 35).
+* [ ] Compare in-sample and validation performance.
+* [ ] Require out-of-sample evaluation before a strategy can be considered robust.
+* [ ] Show performance degradation between datasets.
+* [ ] Identify unstable parameter regions where practical.
+
+### 39.5 Parameter stability
+
+The system should identify whether:
+
+* [ ] A broad region of parameters produces similar results.
+* [ ] Performance depends on one extremely specific parameter combination.
+* [ ] Small parameter changes cause large performance changes.
+* [ ] The optimized result is substantially better than neighboring configurations.
+
+A strategy whose performance exists only at one highly specific parameter combination must receive an overfitting warning.
+
+### 39.6 Optimization results
+
+Each experiment must preserve:
+
+* [ ] Parameter set.
+* [ ] Performance metrics.
+* [ ] Dataset.
+* [ ] Execution assumptions.
+* [ ] Ranking objective.
+* [ ] Optimization timestamp.
+* [ ] Software version.
+* [ ] Experiment identifier.
+
+- [ ] Experiments must be recorded in the research experiment manager (see Chapter 52).
+
+### 39.7 Beginner explanation
+
+The application must explain:
+
+* [ ] What parameter optimization is.
+* [ ] Why optimization can help.
+* [ ] Why optimization can also overfit historical data.
+* [ ] Why the best historical parameter set is not necessarily the best future parameter set.
+* [ ] Why out-of-sample testing is necessary.
+* [ ] Why simpler parameter sets may be preferable.
+
+> **Optimization searches historical possibilities. It does not predict which parameter values will be optimal in the future.**
+
+# PART VI — PERFORMANCE, REPORTING, AND BENCHMARKING
+
+---
+
+## [ ] 40. Performance metrics
+
+The application must calculate performance metrics consistently, transparently, and with appropriate statistical safeguards.
+
+No single metric must be presented as proof that a strategy is good, safe, or profitable in the future.
+
+### 40.1 Return and profit metrics
+
+Calculate where applicable:
+
+* [ ] Initial capital.
+* [ ] Final equity.
+* [ ] Net profit/loss.
+* [ ] Gross profit.
+* [ ] Gross loss.
+* [ ] Total return.
+* [ ] Annualized return.
+* [ ] Buy-and-hold return.
+* [ ] Excess return relative to benchmark.
+
+### 40.2 Trade statistics
+
+Calculate:
+
+* [ ] Number of trades.
+* [ ] Winning trades.
+* [ ] Losing trades.
+* [ ] Win rate.
+* [ ] Average winning trade.
+* [ ] Average losing trade.
+* [ ] Largest winning trade.
+* [ ] Largest losing trade.
+* [ ] Average trade.
+* [ ] Median trade where appropriate.
+* [ ] Profit factor.
+* [ ] Expectancy.
+* [ ] Average holding time.
+* [ ] Maximum consecutive wins.
+* [ ] Maximum consecutive losses.
+
+### 40.3 Risk metrics
+
+Calculate where statistically appropriate:
+
+* [ ] Maximum drawdown.
+* [ ] Maximum drawdown duration.
+* [ ] Average drawdown.
+* [ ] Volatility.
+* [ ] Downside volatility.
+* [ ] Sharpe ratio.
+* [ ] Sortino ratio.
+* [ ] Calmar ratio.
+* [ ] Risk-adjusted return.
+* [ ] Market exposure.
+* [ ] Long exposure.
+* [ ] Short exposure where applicable.
+
+### 40.4 Trading activity
+
+Calculate:
+
+* [ ] Turnover.
+* [ ] Number of orders.
+* [ ] Number of rejected orders.
+* [ ] Number of partially filled orders.
+* [ ] Commissions.
+* [ ] Trading fees.
+* [ ] Estimated spread cost.
+* [ ] Estimated slippage.
+* [ ] Funding costs where applicable.
+
+### 40.5 Benchmark comparison
+
+- [ ] Every applicable strategy evaluation must compare against a benchmark (see Chapter 42).
+
+The report must clearly distinguish:
+
+* [ ] Absolute performance.
+* [ ] Benchmark performance.
+* [ ] Difference from benchmark.
+
+### 40.6 Statistical validity
+
+The application must avoid displaying misleading metrics when there is insufficient data.
+
+For example:
+
+* [ ] Do not present annualized metrics for inappropriate periods.
+* [ ] Do not present Sharpe or Sortino as reliable conclusions with insufficient observations.
+* [ ] Identify metrics affected by small sample sizes.
+* [ ] Display warnings when the number of trades is very small.
+* [ ] Distinguish descriptive statistics from statistically supported conclusions (see Chapter 43).
+
+### 40.7 Metric configuration
+
+Every metric must record:
+
+* [ ] Periodicity.
+* [ ] Annualization method where applicable.
+* [ ] Assumed risk-free rate where applicable.
+* [ ] Return calculation method.
+* [ ] Missing-data treatment.
+* [ ] Treatment of zero returns.
+* [ ] Relevant assumptions.
+
+### 40.8 Documentation
+
+Every metric must provide:
+
+* [ ] Technical definition.
+* [ ] Beginner-friendly definition.
+* [ ] Worked example.
+* [ ] Warning about misuse.
+* [ ] Explanation of whether higher or lower values are generally preferred.
+* [ ] Limitations.
+* [ ] Required assumptions.
+
+Every report must explain:
+
+> **No single metric proves that a strategy is good.**
+
+Performance must be interpreted together with:
+
+* [ ] Risk.
+* [ ] Drawdown.
+* [ ] Trading costs.
+* [ ] Number of trades.
+* [ ] Market conditions.
+* [ ] Out-of-sample performance.
+* [ ] Robustness tests.
+
+---
+
+## [ ] 41. Reports
+
+Generate backtesting, paper-trading, research, and qualification reports in:
+
+- [ ] HTML;
+- [ ] CSV;
+- [ ] JSON;
+- [ ] optional PDF.
+
+Reports must include:
+
+- [ ] strategy;
+- [ ] version;
+- [ ] parameters;
+- [ ] dataset checksum or identifier;
+- [ ] time range;
+- [ ] exchange;
+- [ ] trading pair;
+- [ ] interval;
+- [ ] initial capital;
+- [ ] fees;
+- [ ] slippage;
+- [ ] execution model;
+- [ ] metrics;
+- [ ] trades;
+- [ ] equity curve;
+- [ ] drawdown;
+- [ ] benchmark;
+- [ ] warnings;
+- [ ] Crypto Trading Lab version;
+- [ ] generation date.
+
+- [ ] Reports must not claim future profitability.
+- [ ] Include an optional beginner summary that explains the results in plain language.
+- [ ] Reports must clearly label the evidence level of any conclusion (observed result, statistical evidence, hypothesis, validated evidence; see Chapters 1 and 43).
+- [ ] Research and qualification reports must cite the experiment identifier (see Chapter 52).
+
+---
+
+## [ ] 42. Benchmarking
+
+The system must compare strategies against:
+
+- [ ] buy-and-hold;
+- [ ] simple benchmarks;
+- [ ] eventually other strategies.
+
+- [ ] Do not assume that an active strategy is good simply because it makes money.
+
+Every comparison must ask:
+
+> **Does the strategy offer enough improvement over a passive alternative, considering risk, costs, and complexity?**
+
+### 42.1 Benchmark requirements
+
+- [ ] Same evaluation period for strategy and benchmark.
+- [ ] Same initial capital for strategy and benchmark.
+- [ ] Comparable cost assumptions where appropriate.
+- [ ] Comparative performance metrics.
+- [ ] Relative performance.
+- [ ] Buy-and-hold must be the default benchmark for every strategy backtest.
+- [ ] The chosen benchmark must be recorded in every report.
+- [ ] Benchmark selection must be visible and changeable by the user.
+- [ ] The application must warn when a benchmark is inappropriate for the strategy's market or timeframe.
+
+### 42.2 Benchmark comparison views
+
+- [ ] Equity curve comparison.
+- [ ] Drawdown comparison.
+- [ ] Risk-adjusted comparison where appropriate.
+- [ ] Cost-adjusted comparison.
+- [ ] A plain-language summary of whether the active strategy beat the passive alternative.
+
+- [ ] Benchmarking results feed the strategy qualification process (see Chapter 66).
+
+---
+
+# PART VII — STATISTICAL RESEARCH AND ROBUSTNESS
+
+---
+
+## [ ] 43. Statistical edge and evidence
+
+The roadmap must incorporate a fundamental concept:
+
+> **A historically profitable strategy does not necessarily have a real statistical edge.**
+
+The system must allow investigating:
+
+- [ ] mathematical expectation;
+- [ ] distribution of returns;
+- [ ] distribution of trades;
+- [ ] variability;
+- [ ] confidence;
+- [ ] uncertainty;
+- [ ] stability;
+- [ ] statistical significance where appropriate;
+- [ ] sample size;
+- [ ] temporal dependence;
+- [ ] autocorrelation;
+- [ ] bootstrap;
+- [ ] sensitivity analysis;
+- [ ] comparison against benchmarks (see Chapter 42).
+
+### 43.1 Evidence levels
+
+The interface must distinguish:
+
+```text
+Observed result
+Statistical evidence
+Research hypothesis
+Validated evidence
+```
+
+- [ ] A single backtest result is an observed result, never validated evidence.
+- [ ] Statistical evidence requires explicit, documented methods and sufficient sample sizes.
+- [ ] A research hypothesis must always be labeled as such.
+- [ ] Validated evidence requires out-of-sample, robustness, walk-forward, and qualification checks (see Chapters 44–46 and 66).
+- [ ] Account for the number of trials actually performed when interpreting a result: the more configurations tested, the more likely a good historical result is pure chance (the multiple-testing problem, related to the False Strategy theorem).
+- [ ] Support deflated performance evaluation as a research capability (see 49.5): correct Sharpe-ratio-type estimates for the number of trials, non-normal returns, and sample length before comparing strategies.
+- [ ] Where statistically justifiable, offer probabilistic statements about metrics (e.g., probabilistic Sharpe Ratio) instead of single-point values; label them as model-based estimates with their assumptions.
+
+### 43.2 Statistical significance
+
+- [ ] Significance tests must only be applied when their assumptions are valid.
+- [ ] The application must warn when sample sizes are too small for a given test.
+- [ ] The application must warn about multiple-testing problems when many strategies or parameters are compared.
+- [ ] Never promise “significance” when the statistical assumptions are not satisfied.
+- [ ] Report effect size and uncertainty alongside any p-value where appropriate.
+- [ ] Prefer confidence intervals or bootstrap ranges over binary “significant / not significant” verdicts where practical.
+
+### 43.3 Correlation and dependence
+
+- [ ] Check for autocorrelation in returns.
+- [ ] Check for dependence between trades.
+- [ ] Check for overlapping trade effects.
+- [ ] Document the implications of dependence for statistical conclusions.
+
+### 43.4 Distribution analysis
+
+- [ ] Plot and summarize return and trade distributions.
+- [ ] Compare observed distributions with appropriate reference distributions only when justified.
+- [ ] Do not assume normality without checking.
+- [ ] Explain heavy tails and skewness in plain language.
+
+### 43.5 Interface and honesty
+
+- [ ] Every statistical analysis must include its assumptions and limitations.
+- [ ] The interface must not present statistical tools as “proof of profitability”.
+- [ ] Statistical analyses are research features, not trading-signal generators.
+
+---
+
+## [ ] 44. Robustness and sensitivity analysis
+
+Robustness answers:
+
+> **Does the result still exist when we change the conditions?**
+
+Optimization (Chapter 39) finds configurations that worked on given data; robustness checks whether the result persists under changed conditions. Do not mix both responsibilities.
+
+### 44.1 Robustness methods
+
+The system must support:
+
+- [ ] parameter perturbation;
+- [ ] Monte Carlo simulation (see 44.4);
+- [ ] bootstrap;
+- [ ] randomized execution;
+- [ ] slippage variation;
+- [ ] fee variation;
+- [ ] market variation;
+- [ ] out-of-sample degradation analysis;
+- [ ] sensitivity analysis.
+
+### 44.2 Parameter perturbation
+
+- [ ] Perturb each parameter within a documented neighborhood.
+- [ ] Show how metrics change when parameters move away from the optimized values.
+- [ ] Identify parameter regions where performance collapses.
+- [ ] Compare perturbed results against the optimized result.
+
+### 44.3 Sensitivity analysis
+
+- [ ] Vary one factor at a time where appropriate.
+- [ ] Vary combinations of factors where practical.
+- [ ] Sweep trading-cost assumptions (fees, slippage, spread).
+- [ ] Sweep execution assumptions (latency, fill rate).
+- [ ] Sweep dataset variations (time ranges, markets) where appropriate.
+- [ ] Present results as ranges or heatmaps, not single numbers.
+
+### 44.4 Monte Carlo simulation
+
+Monte Carlo must clearly explain **what is being simulated**.
+
+Supported modes may include:
+
+- [ ] reshuffling of trade sequences where statistically justifiable;
+- [ ] bootstrap resampling of trades;
+- [ ] variation of results under alternative trade sequences;
+- [ ] randomized slippage and fees;
+- [ ] execution uncertainty;
+- [ ] drawdown distributions;
+- [ ] risk-of-ruin estimates (see Chapter 60).
+
+Requirements:
+
+- [ ] The scenario definition must be explicit and documented.
+- [ ] The random seed must be recorded.
+- [ ] The number of scenarios must be recorded.
+- [ ] The distribution of outcomes must be shown, not only the average.
+- [ ] Confidence ranges must be labeled as estimates under the stated assumptions.
+- [ ] Warn when reshuffling destroys the temporal structure of the data and therefore may not be statistically justifiable.
+- [ ] Never present Monte Carlo as a prediction of the future.
+
+### 44.5 Bootstrap
+
+- [ ] Support bootstrap resampling where statistically appropriate.
+- [ ] Support block bootstrap for dependent data; document the block scheme and block length.
+- [ ] Report bootstrap confidence intervals with their assumptions.
+- [ ] Warn when independence assumptions are violated.
+
+### 44.6 Randomized execution
+
+- [ ] Support randomized execution simulations to test execution sensitivity.
+- [ ] Record the random seed and distribution used.
+- [ ] Compare execution-sensitive metrics across scenarios.
+
+### 44.7 Out-of-sample degradation
+
+- [ ] Compare in-sample, validation, and out-of-sample performance.
+- [ ] Quantify performance degradation between periods.
+- [ ] Flag strategies whose out-of-sample performance collapses.
+
+### 44.8 Backtest overfitting probability (research)
+
+The system may support estimation of the probability that a selected configuration is overfit (see 49.6):
+
+- [ ] combinatorial cross-validation on the same data used for selection, comparing in-sample against symmetric out-of-sample performance;
+- [ ] the probability of backtest overfitting (PBO) must always be reported together with the number of trials and the selection method;
+- [ ] a high PBO must visibly degrade the evidence level of the result (see Chapter 43.1);
+- [ ] explain in beginner terms: "how often would random pickers among these candidates have looked this good?";
+- [ ] never present PBO as an exact probability of future failure — it is an estimate under stated assumptions.
+
+### 44.9 Robustness report
+
+- [ ] Produce a robustness report summarizing all tests.
+- [ ] Include assumptions, seeds, and scenario counts.
+- [ ] Feed results into strategy qualification (see Chapter 66).
+
+---
+
+## [ ] 45. Walk-forward analysis
+
+Walk-forward must be clearly separated from a simple training/validation/test split (Chapter 38).
+
+It must allow:
+
+```text
+Train
+   ↓
+Validate
+   ↓
+Forward Test
+   ↓
+Move Window
+   ↓
+Train
+   ↓
+Validate
+   ↓
+Forward Test
+```
+
+### 45.1 Requirements
+
+- [ ] Define rolling training windows.
+- [ ] Define validation windows.
+- [ ] Define forward test windows.
+- [ ] Define the window step size.
+- [ ] Record every window.
+- [ ] Prevent information from later windows entering earlier windows.
+- [ ] Respect indicator warm-up periods at each window boundary.
+- [ ] Aggregate results across walk-forward periods.
+- [ ] Allow inspection of each individual period.
+- [ ] Show the distribution of per-window results, not only the aggregate.
+- [ ] Report the number of windows and their time coverage.
+- [ ] Record the exact parameters selected per window.
+- [ ] Flag windows where the strategy degraded materially.
+
+### 45.2 Reproducibility
+
+- [ ] Record dataset version, strategy version, window configuration, and seed.
+- [ ] Re-running walk-forward with identical inputs must produce identical results.
+
+### 45.3 Combinatorial purged cross-validation (research)
+
+Walk-forward uses one chronological path through history. As an optional research capability, the system may support combinatorial purged cross-validation (CPCV, see 49.4):
+
+- [ ] generate multiple train/test combinations over the same historical period instead of a single path;
+- [ ] apply purging and embargo (see 38.8) at every boundary;
+- [ ] report the distribution of results across paths, not only the mean;
+- [ ] record the combination scheme and the number of paths;
+- [ ] explain that CPCV produces many more backtest paths from the same data, which raises re-use concerns that must be disclosed;
+- [ ] CPCV complements, but does not replace, walk-forward and a final untouched out-of-sample period (Chapter 38.4).
+
+### 45.4 Interpretation
+
+- [ ] Never present aggregate walk-forward results as proof of future profitability.
+- [ ] Explain that walk-forward reduces, but does not eliminate, overfitting risk.
+- [ ] Feed walk-forward results into strategy qualification (see Chapter 66).
+
+---
+
+## [ ] 46. Market regime analysis
+
+Regime analysis studies different market conditions. It must not assume that regimes can be identified perfectly.
+
+The system must support the analysis of:
+
+- [ ] trending;
+- [ ] ranging;
+- [ ] high volatility;
+- [ ] low volatility;
+- [ ] high liquidity;
+- [ ] low liquidity;
+- [ ] bull/bear conditions where appropriate.
+
+### 46.1 Regime detection as a model
+
+- [ ] Treat regime detection as a hypothesis/model subject to error.
+- [ ] Never present a detected regime as a ground-truth label.
+- [ ] Document the detection method and its parameters.
+- [ ] Report regime classifications with confidence or uncertainty where practical.
+
+### 46.2 Regime-conditional analysis
+
+- [ ] Compute performance metrics per regime where appropriate.
+- [ ] Compare strategy behavior across regimes.
+- [ ] Detect whether a strategy depends on one specific regime.
+- [ ] Warn when a strategy's historical performance is concentrated in a single regime.
+- [ ] Evaluate benchmarks within each regime (see Chapter 42).
+
+### 46.3 Regime changes
+
+- [ ] Detect and visualize regime changes over time.
+- [ ] Explain that regime changes can invalidate historical results.
+- [ ] Support the comparison of out-of-sample behavior against the dominant regimes of the training period.
+
+### 46.4 Beginner explanation
+
+- [ ] Explain what market regimes are in plain language.
+- [ ] Explain why a strategy that works in one regime may fail in another.
+- [ ] Explain why regime detection is uncertain.
+
+# PART VIII — FEATURE ENGINEERING, MACHINE LEARNING, AFML, AND ENSEMBLES
+
+---
+
+## [ ] 47. Feature engineering
+
+Feature engineering is a research activity that supports machine learning and statistical studies. It is not part of the backtesting engine.
+
+### 47.1 Feature catalog
+
+- [ ] Maintain a catalog of features with:
+  - [ ] name;
+  - [ ] formula/definition;
+  - [ ] source data;
+  - [ ] parameters;
+  - [ ] version;
+  - [ ] warm-up period;
+  - [ ] intended interpretation;
+  - [ ] known limitations.
+
+### 47.2 Feature validation
+
+- [ ] Every feature must be computed without look-ahead bias.
+- [ ] Every feature must be computable at the exact time it is used.
+- [ ] Features must handle missing data explicitly.
+- [ ] Feature computation must be reproducible (same input → same output).
+
+### 47.3 Feature leakage prevention
+
+- [ ] Never use future information in a feature.
+- [ ] Normalize/scale features only on training data, then apply the same transform to validation and out-of-sample data.
+- [ ] Detect and warn about features containing future observations.
+- [ ] Detect and warn about redundant or nearly duplicate features.
+
+### 47.4 Advanced feature families (research)
+
+As optional research capabilities (see Chapter 49), the feature catalog may include:
+
+- [ ] fractionally differentiated series: retain memory while achieving stationarity; the differentiation order `d` must be a recorded, documented parameter;
+- [ ] structural-break features (for example CUSUM-style tests) with their parameters documented;
+- [ ] information-content features (for example Shannon entropy of return signs or quantized returns) with the quantization scheme documented;
+- [ ] every advanced feature must pass the same validation, leakage, and documentation rules as any other feature (47.2–47.3);
+- [ ] explain in beginner terms why over-differentiated series lose predictive memory.
+
+### 47.5 Feature documentation
+
+- [ ] Document the economic or statistical rationale of each feature.
+- [ ] Document when and why a feature may break (regime changes, illiquid markets).
+- [ ] Provide a beginner-friendly explanation of feature importance results (see Chapter 48; methods and pitfalls in 49.7).
+
+---
+
+## [ ] 48. Machine learning
+
+Machine learning is a research tool, not a magical predictive machine.
+
+- [ ] ML must not be presented as a way to predict the market with certainty.
+- [ ] ML is an optional research capability; it must not be required for the MVP.
+- [ ] Favor simple models when they provide comparable evidence to complex ones (see Chapter 35).
+
+### 48.1 Scope
+
+- [ ] Feature engineering (Chapter 47).
+- [ ] Labels/targets.
+- [ ] Leakage prevention.
+- [ ] Time-series validation.
+- [ ] Walk-forward validation (Chapter 45).
+- [ ] Model versioning.
+- [ ] Reproducibility.
+- [ ] Hyperparameter control.
+- [ ] Overfitting detection.
+- [ ] Feature importance.
+- [ ] Model degradation tracking.
+- [ ] Out-of-sample testing.
+
+### 48.2 Labels and targets
+
+- [ ] Labels must be defined explicitly and documented.
+- [ ] Labels must not use future information.
+- [ ] Label definitions must be versioned.
+
+### 48.3 Validation discipline
+
+- [ ] Use time-series-aware validation, never random shuffling.
+- [ ] Use walk-forward validation where appropriate (Chapter 45).
+- [ ] Never tune hyperparameters on the out-of-sample period.
+- [ ] Record all hyperparameters, seeds, and data splits.
+
+### 48.4 Overfitting control
+
+- [ ] Compare training, validation, and out-of-sample performance.
+- [ ] Warn when the gap between training and out-of-sample performance is large.
+- [ ] Warn when performance depends on a specific random seed.
+- [ ] Prefer simpler models when evidence is comparable.
+
+### 48.5 Model management
+
+- [ ] Every model must be versioned.
+- [ ] Every model must record its training dataset version, features, labels, hyperparameters, and software versions.
+- [ ] Models must be reproducible from recorded metadata.
+- [ ] Track model degradation over time (see Chapter 64).
+
+### 48.6 Interpretation
+
+- [ ] Report feature importance where appropriate.
+- [ ] Present importance with uncertainty and caveats.
+- [ ] Do not treat feature importance as causal evidence.
+- [ ] A model output is a research signal candidate, never an order by itself (see Chapter 33.6).
+
+### 48.7 Advanced ML research capabilities
+
+Advanced, leakage-aware ML techniques are specified in their own chapter (Chapter 49): triple-barrier labeling, sample weighting, meta-labeling, purged cross-validation, and feature-importance methods. Those capabilities are optional research extensions, not MVP requirements, and must follow the same validation discipline as this chapter.
+
+---
+
+## [ ] 49. Advanced financial machine learning (AFML)
+
+This chapter consolidates the advanced research techniques from *Advances in Financial Machine Learning* (Marcos López de Prado, Wiley, 2018) that the platform may implement. Reference implementations and exercise solutions are available under `external/adv-financial-ml-marcos-exercises`.
+
+These techniques are **research-tier capabilities**: none of them is required for the MVP, none of them may generate orders by itself, and every one of them must obey the evidence rules of Chapter 43 and the leakage rules of Chapters 38 and 48.
+
+- [ ] Every technique in this chapter must be verified against the exercise repository (and, where necessary, additional research) before implementation; never implement from memory of the book alone.
+- [ ] Every technique must record its parameters, versions, seeds, and dataset identity like any other research artifact (Chapters 52–53).
+- [ ] The UI must label these features as advanced research tools with their assumptions and limitations visible.
+
+### 49.1 Event-based bars and monetary sampling
+
+Canonical specification for the bar types introduced in 29.1:
+
+- [ ] volume bars: sample after a fixed traded volume;
+- [ ] dollar bars: sample after a fixed traded value;
+- [ ] imbalance bars: sample after a directional-imbalance threshold, only where trade-level data is available;
+- [ ] document why event-based bars often stabilize variance compared with fixed-time candles;
+- [ ] bar thresholds and parameters must be recorded and versioned;
+- [ ] study the exercises' reference implementation of bars before implementing.
+
+### 49.2 Triple-barrier labeling
+
+Labels must describe the trading decision, not just the next price change.
+
+- [ ] define two horizontal barriers: take-profit and stop-loss;
+- [ ] define a vertical (time) barrier: the maximum holding period;
+- [ ] the label is which barrier is touched first (or the sign/magnitude of the return at the vertical barrier);
+- [ ] barrier distances and the time barrier must be explicit, documented parameters;
+- [ ] barrier evaluation must respect intrabar ambiguity rules (see 37.5) and must state whether the high/low path or close-only paths are used;
+- [ ] labels must be computed without look-ahead (a barrier touched by later data must never leak into earlier features);
+- [ ] explain in beginner terms what the three barriers mean.
+
+### 49.3 Sample weighting and uniqueness
+
+Consecutive overlapping positions make observations non-independent and must not be treated as equal:
+
+- [ ] compute the average uniqueness of each labeled observation based on the overlap of its holding interval with others;
+- [ ] weight observations by uniqueness and by return magnitude where appropriate;
+- [ ] record the weighting scheme as part of the model/experiment metadata;
+- [ ] warn when many labels share the same time intervals because effective sample size is then much smaller than the nominal count.
+
+### 49.4 Purged K-Fold cross-validation and embargo (canonical)
+
+This subsection owns the canonical requirements; 38.8 and 45.3 reference it.
+
+- [ ] implement purging: exclude training observations whose label intervals overlap any test-set label interval;
+- [ ] implement embargo: additionally remove a documented buffer of observations after each test block;
+- [ ] embargo length must be an explicit parameter, recorded with the experiment;
+- [ ] provide combinatorial split generation for CPCV (used by 45.3);
+- [ ] warn when applied to labels that do not overlap but features are highly serially dependent;
+- [ ] never present a purged-CV score as a substitute for a true untouched out-of-sample test.
+
+### 49.5 Probabilistic and deflated Sharpe ratios
+
+Support rigorous evaluation of Sharpe-ratio-type metrics as research capabilities:
+
+- [ ] probabilistic Sharpe ratio (PSR): the probability that the true Sharpe ratio exceeds a stated benchmark, given skewness, kurtosis, and sample length;
+- [ ] deflated Sharpe ratio (DSR): corrects the best-of-N trials Sharpe ratio for selection bias across the configurations actually tested;
+- [ ] the number of trials must be recorded wherever DSR is computed — an experiment that cannot count its trials cannot claim a deflated estimate;
+- [ ] both estimates must be labeled as model-based with their assumptions (non-normality, independence) visible;
+- [ ] feed both into the evidence levels of Chapter 43.1 and into strategy qualification (Chapter 66).
+
+### 49.6 Probability of backtest overfitting (PBO)
+
+Canonical specification for 44.8:
+
+- [ ] implement combinatorially symmetric cross-validation (CSCV) to estimate PBO for a set of candidate configurations;
+- [ ] report PBO next to any optimization or selection result that used multiple trials (see Chapter 39);
+- [ ] a high PBO must be displayed as a prominent warning and must lower the evidence level of the result;
+- [ ] document the rank-logit/combinatorial method actually implemented;
+- [ ] never present PBO as an exact prediction — it is an estimate under stated assumptions.
+
+### 49.7 Feature-importance methods
+
+Complement Chapter 48.6 with techniques that respect temporal dependence:
+
+- [ ] mean-decrease accuracy via purged/embargoed cross-validation (not plain K-Fold);
+- [ ] mean-decrease impurity for tree ensembles, reported with the same caveats;
+- [ ] document that clustered features (highly correlated groups) distort single-feature importance and report clustered importance where practical;
+- [ ] never interpret importance as causal evidence;
+- [ ] explain in beginner terms what feature importance can and cannot say.
+
+### 49.8 Meta-labeling
+
+Meta-labeling is a research capability that filters an existing primary signal instead of generating one:
+
+- [ ] the primary strategy produces the directional signal exactly as specified in Chapter 33.6;
+- [ ] a secondary model predicts whether the primary signal is likely to succeed, using features that contain no future information;
+- [ ] labels for the secondary model must come from triple-barrier outcomes (49.2), not from arbitrary future returns;
+- [ ] evaluate the primary strategy alone, the filtered version alone, and the filter's marginal contribution;
+- [ ] meta-labeling must never bypass the signal → order separation of 33.6, and its output is still only a research signal candidate;
+- [ ] bet sizing derived from model probabilities is a research study that must satisfy the risk limits of Chapter 58 before it can ever inform anything operational.
+
+### 49.9 Research code references
+
+- [ ] Map each implemented technique to its exercise-repository reference and record the mapping in `docs/en/developers/reference-projects.md`;
+- [ ] review any adapted code for correctness against the book's definitions before merging;
+- [ ] the printed book is the conceptual authority for disputes between implementations; it must be cited in documentation but never redistributed.
+
+### 49.10 Implementation guardrails
+
+- [ ] These capabilities must not be required by any other MVP chapter; chapters that reference them must mark the dependency as research-tier.
+- [ ] A failure or unavailability of these features must never block backtesting, optimization, paper trading, or risk management.
+- [ ] All advanced features must be clearly separated in the UI from beginner workflows.
+
+---
+
+## [ ] 50. Ensembles
+
+- [ ] Support combining multiple strategies or models into ensembles where appropriate.
+
+### 50.1 Ensemble design
+
+- [ ] Document the combination method (voting, averaging, weighted combination).
+- [ ] Document the diversity rationale of the members.
+- [ ] Record each member's version and parameters.
+- [ ] Evaluate each member independently before evaluating the ensemble.
+- [ ] Compare the ensemble against its best member and against benchmarks.
+- [ ] Warn when the ensemble adds complexity without improving evidence (see Chapter 35).
+
+### 50.2 Ensemble validation
+
+- [ ] Validate the ensemble with the same discipline as individual strategies (out-of-sample, walk-forward, robustness).
+- [ ] Check that the ensemble does not concentrate risk in one regime (see Chapter 46).
+- [ ] Never present ensemble performance as proof of future profitability.
+
+---
+
+# PART IX — PORTFOLIO
+
+---
+
+## [ ] 51. Portfolio construction and correlations
+
+### 51.1 Multi-asset support
+
+- [ ] Support evaluating strategies across multiple assets.
+- [ ] Support portfolio-level backtesting where appropriate.
+- [ ] Track portfolio value, positions, and balances across assets.
+
+### 51.2 Correlations
+
+- [ ] Calculate correlation between strategy returns where appropriate.
+- [ ] Calculate correlation between assets where appropriate.
+- [ ] Warn when correlations are unstable over time.
+- [ ] Explain that correlations can change in different market regimes.
+- [ ] Do not present correlation as causation.
+
+### 51.3 Portfolio metrics
+
+- [ ] Portfolio return.
+- [ ] Portfolio drawdown.
+- [ ] Portfolio volatility where appropriate.
+- [ ] Risk contributions per asset or strategy where appropriate.
+- [ ] Diversification effect where appropriate.
+- [ ] Combined exposure.
+
+### 51.4 Position sizing at portfolio level
+
+- [ ] Portfolio-level position sizing must pass through the risk manager (see Chapter 58).
+- [ ] The portfolio must never bypass risk limits per asset or per strategy.
+- [ ] Record all portfolio construction assumptions.
+
+---
+
+# PART X — RESEARCH INFRASTRUCTURE
+
+---
+
+## [ ] 52. Research experiment manager
+
+The system must maintain a clear entity for experiments.
+
+Each experiment must record:
+
+- [ ] experiment ID;
+- [ ] hypothesis;
+- [ ] strategy version;
+- [ ] dataset version;
+- [ ] parameters;
+- [ ] metrics;
+- [ ] execution assumptions;
+- [ ] software version;
+- [ ] random seed;
+- [ ] timestamp;
+- [ ] results;
+- [ ] notes;
+- [ ] conclusion.
+
+### 52.1 Experiment lifecycle
+
+- [ ] Draft.
+- [ ] Running.
+- [ ] Completed.
+- [ ] Failed.
+- [ ] Cancelled.
+- [ ] Archived.
+
+### 52.2 Reproducibility
+
+- [ ] An experiment must be reproducible from its recorded metadata (see Chapter 53).
+- [ ] Re-running an experiment with identical inputs must produce identical results.
+- [ ] The experiment manager must link to the strategy registry (see Chapter 36).
+- [ ] The experiment manager must link to the dataset versions used.
+- [ ] Experiments must be searchable and filterable.
+
+### 52.3 Research automation
+
+- [ ] Support batch/bulk experiment runs where appropriate.
+- [ ] Support queued research jobs with progress and cancellation.
+- [ ] Support comparing experiments side by side.
+- [ ] Support exporting experiment histories.
+- [ ] Support tagging experiments (e.g., by hypothesis, strategy, regime).
+- [ ] Automated experiments must never trigger orders; they are research-only.
+
+---
+
+## [ ] 53. Reproducibility
+
+Reproducibility is a core research requirement, not an optional feature.
+
+### 53.1 Backtest reproducibility
+
+Every backtest must store:
+
+- [ ] application version;
+- [ ] strategy version;
+- [ ] parameters;
+- [ ] dataset checksum;
+- [ ] commission configuration;
+- [ ] slippage model;
+- [ ] execution model;
+- [ ] random seed;
+- [ ] time range;
+- [ ] schema version;
+- [ ] environment information.
+
+- [ ] Repeating a backtest with identical data and configuration must produce identical results.
+
+### 53.2 Research reproducibility
+
+- [ ] Every experiment must record the environment (Python version, dependency versions, platform).
+- [ ] Every result must reference its experiment ID (see Chapter 52).
+- [ ] Every dataset must have a checksum (see Chapter 29).
+- [ ] Every machine-learning model must record training data, features, labels, hyperparameters, and seed (see Chapter 48).
+
+### 53.3 Reproducibility verification
+
+- [ ] Provide a command or workflow to re-run a recorded experiment.
+- [ ] Provide a way to compare a re-run result with the original result.
+- [ ] Document known sources of non-determinism and how they are controlled.
+
+---
+
+## [ ] 54. Research notebooks
+
+- [ ] Provide research notebooks for exploratory analysis where practical.
+
+### 54.1 Notebook requirements
+
+- [ ] Notebooks must run against the application's stored datasets and domain models.
+- [ ] Notebooks must not bypass the risk manager or execution engine.
+- [ ] Notebooks are research tools; they must not submit orders.
+- [ ] Notebooks must record their runtime environment for reproducibility (see Chapter 52).
+- [ ] Notebooks must be able to reference experiments from the experiment manager (see Chapter 52).
+
+### 54.2 Notebook safety
+
+- [ ] Do not expose credentials to notebooks.
+- [ ] Do not allow notebooks to modify risk settings.
+- [ ] Clearly label notebook results as research artifacts, not trading signals.
+
+---
+
+## [ ] 55. AI research assistant
+
+The AI assistant must be presented as:
+
+> **An assistant for research and analysis, not an AI that knows which trade to make.**
+
+It may help with:
+
+- [ ] explaining results;
+- [ ] generating hypotheses;
+- [ ] comparing experiments;
+- [ ] detecting inconsistencies;
+- [ ] analyzing documentation;
+- [ ] suggesting experiments;
+- [ ] generating reports.
+
+### 55.1 Hard restrictions
+
+The AI research assistant must:
+
+- [ ] not execute real operations automatically by default;
+- [ ] not modify strategies silently;
+- [ ] not bypass the `RiskManager`;
+- [ ] not have direct access to credentials;
+- [ ] not present predictions as certainties;
+- [ ] not present a backtest as proof of future profitability;
+- [ ] require explicit user confirmation for any action beyond analysis;
+- [ ] record its suggestions in the audit log (see Chapter 10);
+- [ ] clearly label generated content as assistant-generated where appropriate.
+
+### 55.2 Educational role
+
+- [ ] The assistant must explain concepts in plain language.
+- [ ] The assistant must point out when evidence is insufficient.
+- [ ] The assistant must not invent statistics or metric values.
+- [ ] Any metric it reports must come from recorded experiments.
+
+---
+
+# PART XI — EXECUTION AND PAPER TRADING
+
+---
+
+## [ ] 56. Execution realism
+
+Execution realism models how orders behave in real markets. It must remain separate from strategy logic and from the risk manager.
+
+### 56.1 Execution components
+
+- [ ] Fills.
+- [ ] Latency.
+- [ ] Slippage.
+- [ ] Liquidity.
+- [ ] Partial fills.
+- [ ] Rejections.
+- [ ] Order cancellations.
+- [ ] Exchange rules (see Chapter 30).
+- [ ] Fee models.
+- [ ] Order-book depth where data is available.
+
+### 56.2 Execution models
+
+- [ ] At least two documented execution models must be available to backtests, paper trading, and simulations (see Chapter 37.4).
+- [ ] The selected execution model must be recorded in every run.
+- [ ] Execution models must be configurable and comparable.
+
+### 56.3 Latency and slippage
+
+- [ ] Simulated execution latency.
+- [ ] Conservative slippage assumptions.
+- [ ] Slippage variation across scenarios (see Chapter 44).
+- [ ] Document that real latency and slippage depend on market conditions.
+
+### 56.4 Liquidity
+
+- [ ] Model available liquidity where data is available.
+- [ ] Never assume unlimited liquidity.
+- [ ] Warn when simulated order size exceeds plausible liquidity.
+
+### 56.5 Execution realism report
+
+- [ ] Reports must state which execution model was used.
+- [ ] Reports must quantify the impact of execution assumptions on results where practical.
+- [ ] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results.
+
+---
+
+## [ ] 57. Paper trading
+
+Paper trading must use real-time or replayed market data while using simulated money.
+
+The purpose is to test the complete trading workflow without risking real capital.
+
+### 57.1 Account simulation
+
+The paper account must model:
+
+- [ ] Initial balance.
+- [ ] Balances by asset.
+- [ ] Positions.
+- [ ] Portfolio value.
+- [ ] Unrealized profit/loss.
+- [ ] Realized profit/loss.
+- [ ] Fees.
+- [ ] Slippage.
+- [ ] Spread.
+- [ ] Complete account history.
+
+### 57.2 Order simulation
+
+Support:
+
+- [ ] Market orders.
+- [ ] Limit orders.
+- [ ] Stop orders where applicable.
+- [ ] Stop-loss.
+- [ ] Take-profit.
+- [ ] Trailing stops where applicable.
+- [ ] Partially filled orders.
+- [ ] Rejected orders.
+- [ ] Cancellations.
+- [ ] Simulated latency.
+- [ ] Liquidity constraints where data is available.
+
+### 57.3 Execution consistency
+
+Paper trading should use the same major components used by backtesting and future live trading:
+
+```text
+Market Data
+    ↓
+Strategy
+    ↓
+Signal
+    ↓
+Risk Manager
+    ↓
+Order Request
+    ↓
+Execution Simulator
+    ↓
+Paper Account
+```
+
+- [ ] Do not create a separate simplified trading logic that behaves fundamentally differently from the backtesting engine.
+- [ ] Reuse common domain and execution components where practical (see Chapter 56).
+
+### 57.4 Modes
+
+Include:
+
+- [ ] Real-time paper trading.
+- [ ] Historical replay.
+- [ ] Configurable playback speed.
+- [ ] Pause.
+- [ ] Resume.
+- [ ] Step-by-step advancement.
+- [ ] Account reset.
+- [ ] Snapshot creation.
+- [ ] Session recording.
+
+### 57.5 Comparison
+
+The application should allow comparison between:
+
+- [ ] Backtest.
+- [ ] Paper trading.
+- [ ] Buy-and-hold.
+- [ ] Expected execution assumptions.
+- [ ] Actual simulated execution.
+
+### 57.6 Monitoring
+
+Display:
+
+- [ ] Current portfolio value.
+- [ ] Open positions.
+- [ ] Pending orders.
+- [ ] Executed orders.
+- [ ] Fees.
+- [ ] Slippage.
+- [ ] Drawdown.
+- [ ] Exposure.
+- [ ] Risk-manager decisions.
+- [ ] Connection state.
+- [ ] Data freshness.
+
+### 57.7 Evidence limitations
+
+- [ ] Do not present paper trading as proof of future profitability.
+- [ ] Explain that paper trading cannot perfectly reproduce real liquidity.
+- [ ] Explain that simulated fills may differ from real fills.
+- [ ] Explain that real markets can change between simulation and deployment.
+
+### 57.8 Beginner tutorial
+
+Explain:
+
+- [ ] What paper trading is.
+- [ ] Why it is useful.
+- [ ] What it can test.
+- [ ] What it cannot reproduce perfectly.
+- [ ] Why it should precede real-money trading.
+- [ ] How to reset the simulated account.
+- [ ] How to interpret gains and losses.
+- [ ] Why a paper profit is not guaranteed to become a real profit.
+
+---
+
+# PART XII — RISK AND CAPITAL PROTECTION
+
+---
+
+## [ ] 58. Risk manager
+
+Create a central `RiskManager` service.
+
+The `RiskManager` must operate independently from individual strategies and must be able to reject or modify proposed orders before execution.
+
+### 58.1 Position and exposure limits
+
+Configurable rules:
+
+* [ ] Maximum risk per trade.
+* [ ] Maximum position size.
+* [ ] Maximum percentage of portfolio in one asset.
+* [ ] Maximum total exposure.
+* [ ] Maximum long exposure where applicable.
+* [ ] Maximum short exposure where applicable.
+* [ ] Maximum leverage where applicable.
+
+### 58.2 Loss limits
+
+Support:
+
+* [ ] Maximum daily loss.
+* [ ] Maximum weekly loss.
+* [ ] Maximum drawdown.
+* [ ] Maximum consecutive losses.
+* [ ] Cooldown after losses.
+
+### 58.3 Operational limits
+
+Support:
+
+* [ ] Maximum trades per day.
+* [ ] Maximum open orders.
+* [ ] Maximum order frequency.
+* [ ] Maximum position changes.
+* [ ] Duplicate-order protection.
+
+### 58.4 Market-condition protections
+
+Block or restrict trading on:
+
+* [ ] Stale market data.
+* [ ] Data-feed failure.
+* [ ] Exchange disconnection.
+* [ ] Excessive volatility.
+* [ ] Excessive spread.
+* [ ] Insufficient liquidity.
+* [ ] Time-synchronization errors.
+* [ ] Inconsistent balances.
+* [ ] Invalid market metadata.
+
+### 58.5 System-state protections
+
+The `RiskManager` must be able to reject orders when:
+
+* [ ] The emergency kill switch is active (see Chapter 58).
+* [ ] The selected trading environment is invalid.
+* [ ] Required credentials are unavailable.
+* [ ] Account state cannot be verified.
+* [ ] Market data is considered unsafe.
+* [ ] The execution engine reports an unsafe state.
+
+### 58.6 Profiles
+
+Include:
+
+* [ ] Conservative.
+* [ ] Moderate.
+* [ ] Custom.
+
+* [ ] Do not include an “Aggressive” profile in the first version.
+
+### 58.7 Decision result
+
+The `RiskManager` must return a structured result containing:
+
+* [ ] Approved.
+* [ ] Rejected.
+* [ ] Modified.
+* [ ] Reason.
+* [ ] Triggered rule.
+* [ ] Permitted size.
+* [ ] Timestamp.
+* [ ] Audit identifier.
+* [ ] Beginner-friendly explanation.
+
+### 58.8 Strategy isolation
+
+* [ ] A strategy must never bypass the `RiskManager`.
+* [ ] A strategy must never disable a risk rule.
+* [ ] A strategy must never modify global risk limits.
+* [ ] Imported strategies must inherit the active risk configuration.
+* [ ] Real trading must always pass through the same central risk layer.
+
+### 58.9 Risk calculations
+
+Where applicable, the risk manager should consider:
+
+* [ ] Account equity.
+* [ ] Available balance.
+* [ ] Current exposure.
+* [ ] Existing positions.
+* [ ] Pending orders.
+* [ ] Stop-loss distance.
+* [ ] Estimated execution price.
+* [ ] Fees.
+* [ ] Slippage.
+* [ ] Market liquidity.
+
+### 58.10 Auditability
+
+Every risk decision must be recorded with:
+
+* [ ] Timestamp.
+* [ ] Strategy.
+* [ ] Signal.
+* [ ] Proposed order.
+* [ ] Account state used.
+* [ ] Risk rules evaluated.
+* [ ] Final decision.
+* [ ] Reason.
+* [ ] Risk-manager version.
+
+### 58.11 Education
+
+Every risk rule must include beginner documentation explaining:
+
+* [ ] What the rule does.
+* [ ] Why it exists.
+* [ ] What problem it attempts to prevent.
+* [ ] What happens when it is triggered.
+* [ ] Its limitations.
+
+---
+
+## [ ] 59. Emergency kill switch
+
+Implement a visible, accessible, and clearly identifiable emergency kill switch.
+
+The kill switch must be designed as a **capital-protection mechanism**, not merely as a user-interface feature.
+
+### 59.1 When activated
+
+* [ ] No new orders may be created.
+* [ ] Automatic strategies must stop generating executable orders.
+* [ ] Pending internal trading tasks must be cancelled where safely possible.
+* [ ] New order requests must be rejected by the central risk/execution layer.
+* [ ] The application must clearly display the emergency state.
+* [ ] The event must be logged.
+* [ ] An audit identifier must be created.
+* [ ] The activation timestamp must be recorded.
+
+### 59.2 Exchange orders
+
+The kill switch must distinguish between:
+
+```text
+Local application state
+        and
+Orders already accepted by the exchange
+```
+
+Therefore:
+
+* [ ] Open exchange orders must not be cancelled automatically by default.
+* [ ] Automatic cancellation may be implemented as an explicit configurable policy.
+* [ ] Any automatic cancellation policy must require additional confirmation during configuration.
+* [ ] The application must clearly inform the user whether exchange orders remain active.
+
+### 59.3 Activation sources
+
+Support:
+
+* [ ] GUI button.
+* [ ] Configurable keyboard shortcut.
+* [ ] Programmatic activation by the risk system.
+* [ ] Automatic activation when configured critical safety conditions are triggered.
+
+### 59.4 Recovery
+
+To deactivate the kill switch:
+
+* [ ] Require explicit user action.
+* [ ] Display the reason for activation.
+* [ ] Display current account and market state.
+* [ ] Revalidate connectivity.
+* [ ] Revalidate balances.
+* [ ] Revalidate market-data freshness.
+* [ ] Revalidate risk limits.
+* [ ] Require confirmation before resuming automated trading.
+
+### 59.5 Logging
+
+Record:
+
+* [ ] Activation timestamp.
+* [ ] Deactivation timestamp.
+* [ ] Activation source.
+* [ ] Reason.
+* [ ] Active strategy.
+* [ ] Account/environment.
+* [ ] Open positions.
+* [ ] Pending orders known by the application.
+* [ ] Result of any cancellation attempt.
+
+### 59.6 Beginner explanation
+
+Explain:
+
+* [ ] What the kill switch does.
+* [ ] When it should be used.
+* [ ] What it does not do.
+* [ ] Why exchange orders may remain active.
+* [ ] Why the user must verify the account after an emergency.
+* [ ] Why stopping new orders is not necessarily the same as closing positions.
+
+---
+
+## [ ] 60. Risk of ruin and capital depletion
+
+The system must differentiate:
+
+- [ ] maximum historical drawdown;
+- [ ] expected drawdown;
+- [ ] probability of ruin;
+- [ ] capital depletion;
+- [ ] position sizing.
+
+### 60.1 Definitions
+
+- [ ] **Maximum historical drawdown**: the largest peak-to-trough decline observed in the analyzed period.
+- [ ] **Expected drawdown**: an estimate of drawdown under stated assumptions.
+- [ ] **Probability of ruin**: an estimate of the probability that capital falls below a defined threshold.
+- [ ] **Capital depletion**: the point at which trading cannot continue because capital is exhausted or restricted.
+- [ ] **Position sizing**: the rule that determines how much capital a trade risks.
+
+### 60.2 Estimation discipline
+
+- [ ] Never present a risk-of-ruin estimate as mathematical certainty if its assumptions are not valid.
+- [ ] Document all assumptions (distribution, independence, costs, sample size).
+- [ ] Prefer ranges or scenario distributions over single numbers.
+- [ ] Use Monte Carlo and bootstrap methods where appropriate (see Chapter 44).
+- [ ] Warn when estimates depend on unrealistically favorable assumptions.
+- [ ] Risk-of-ruin estimates are research/risk-analysis outputs; they must never be the only basis for an order.
+
+---
+
+## [ ] 61. Capital protection
+
+The system must adopt the principle:
+
+> **Capital preservation takes priority over strategy execution.**
+
+A strategy must never be able to ignore:
+
+- [ ] risk limits;
+- [ ] kill switch;
+- [ ] exposure limits;
+- [ ] account restrictions;
+- [ ] safety gates.
+
+### 61.1 Enforcement
+
+- [ ] The risk manager enforces capital-protection rules for every environment (see Chapter 58).
+- [ ] The kill switch remains available in every environment (see Chapter 58).
+- [ ] Safety gates verify capital-protection conditions before real orders (see Chapter 67).
+- [ ] No component may disable a capital-protection mechanism.
+- [ ] Capital-protection rule changes require explicit user action and are audited.
+
+### 61.2 Education
+
+- [ ] Explain why capital preservation comes first.
+- [ ] Explain that drawdowns are harder to recover from as they grow.
+- [ ] Explain the relationship between position sizing, drawdown, and risk of ruin (see Chapter 60).
+
+### 61.3 Protection of essential funds
+
+- [ ] Before enabling real trading, the user must confirm that they are not using essential funds (money needed for living expenses, rent, food, or emergencies).
+- [ ] The application must warn when a user's stated risk capacity suggests financial hardship.
+- [ ] The application must recommend paper trading only for users who cannot afford losses.
+- [ ] The application must never offer credit, leverage, or margin as a "solution" (see Chapter 5).
+- [ ] The application must provide clear guidance on how to stop trading and walk away.
+
+# PART XIII — MONITORING AND STRATEGY LIFECYCLE
+
+---
+
+## [ ] 62. Live monitoring
+
+Live monitoring covers paper trading, testnet, and real trading sessions.
+
+### 62.1 Monitored state
+
+Display:
+
+- [ ] current portfolio value;
+- [ ] open positions;
+- [ ] pending orders;
+- [ ] executed orders;
+- [ ] fees;
+- [ ] slippage;
+- [ ] drawdown;
+- [ ] exposure;
+- [ ] risk-manager decisions;
+- [ ] connection state;
+- [ ] data freshness;
+- [ ] environment indicator (always visible);
+- [ ] kill-switch status;
+- [ ] recent alerts.
+
+### 62.2 Monitoring rules
+
+- [ ] The environment (backtest, paper, testnet, real) must be visible at all times.
+- [ ] Alerts must be understandable to a beginner.
+- [ ] Alerts must not depend only on color.
+- [ ] Monitoring must never bypass the risk manager.
+
+### 62.3 Historical comparisons
+
+- [ ] Compare live behavior against backtest expectations where appropriate (see Chapter 63).
+- [ ] Compare live behavior against paper-trading behavior.
+
+---
+
+## [ ] 63. Live vs backtest drift
+
+The system must explain and quantify differences between:
+
+- [ ] backtest expectations;
+- [ ] paper-trading behavior;
+- [ ] live behavior.
+
+### 63.1 Drift dimensions
+
+Analyze:
+
+- [ ] return drift;
+- [ ] drawdown drift;
+- [ ] slippage drift;
+- [ ] fill-rate drift;
+- [ ] latency drift;
+- [ ] volatility drift;
+- [ ] market-regime changes (see Chapter 46).
+
+### 63.2 Drift reporting
+
+- [ ] Compare realized metrics against expected ranges from the backtest.
+- [ ] Show drift over time, not only as a single value.
+- [ ] Explain likely causes for each drift dimension.
+- [ ] Distinguish expected variability from meaningful degradation.
+- [ ] The system must be able to mark a strategy as degraded or suspicious (see Chapter 64).
+
+### 63.3 Education
+
+- [ ] Explain why backtest, paper, and live results will never match exactly.
+- [ ] Explain which differences are normal and which are warning signs.
+
+---
+
+## [ ] 64. Strategy failure detection
+
+The system must detect when a strategy stops behaving as it did historically.
+
+### 64.1 Detection signals
+
+Consider:
+
+- [ ] performance degradation;
+- [ ] drawdown increase;
+- [ ] trade-distribution changes;
+- [ ] volatility changes;
+- [ ] execution degradation;
+- [ ] regime changes;
+- [ ] data-quality problems.
+
+### 64.2 Recommendations
+
+The system must be able to recommend:
+
+```text
+Continue
+Monitor
+Reduce exposure
+Pause
+Retire
+```
+
+- [ ] Every recommendation must show the reason.
+- [ ] Never hide the reason behind a recommendation.
+- [ ] Recommendations must be based on recorded evidence, not guesses.
+- [ ] Recommendations must never bypass the risk manager.
+- [ ] A “Retire” recommendation must update the strategy registry status (see Chapter 36).
+- [ ] Recommendations must include the data and thresholds used.
+
+### 64.3 Education
+
+- [ ] Explain why strategies degrade over time.
+- [ ] Explain that past performance does not guarantee continued performance.
+- [ ] Explain the difference between normal variability and genuine failure.
+
+---
+
+## [ ] 65. Strategy promotion pipeline
+
+A strategy must progress through explicit stages. It must never jump directly from `Backtest → Real Trading`.
+
+The progression is:
+
+```text
+Idea
+ ↓
+Prototype
+ ↓
+Backtest
+ ↓
+Validation
+ ↓
+Out-of-Sample
+ ↓
+Robustness
+ ↓
+Walk-Forward
+ ↓
+Paper Trading
+ ↓
+Qualification
+ ↓
+Safety Gates
+ ↓
+Small Live Deployment
+ ↓
+Monitoring
+```
+
+### 65.1 Stage requirements
+
+- [ ] Each stage requires the completion of the previous stage.
+- [ ] Each stage transition must be recorded with timestamp and evidence reference.
+- [ ] The strategy registry must reflect the current stage (see Chapter 36).
+- [ ] A strategy may return to an earlier stage when new evidence contradicts its current status.
+- [ ] Skipping stages must be impossible by default.
+- [ ] Any exception must require explicit, audited user confirmation.
+
+### 65.2 Promotion evidence
+
+- [ ] Promotion to `Paper Trading` requires backtest, validation, out-of-sample, robustness, and walk-forward evidence.
+- [ ] Promotion to `Qualification` requires paper-trading evidence.
+- [ ] Promotion to `Small Live Deployment` requires a positive qualification report (see Chapter 66).
+- [ ] Live deployment must start with limited exposure and be monitored (see Chapter 62).
+
+---
+
+## [ ] 66. Strategy qualification
+
+Qualification is a formal evaluation stage. A strategy must not be considered “qualified” merely because `Profit > 0`.
+
+### 66.1 Evaluation criteria
+
+The qualification process must consider, where applicable:
+
+- [ ] out-of-sample performance;
+- [ ] drawdown;
+- [ ] risk-adjusted metrics;
+- [ ] benchmark comparison (see Chapter 42);
+- [ ] sample size;
+- [ ] parameter stability (see Chapter 39);
+- [ ] robustness (see Chapter 44);
+- [ ] walk-forward (see Chapter 45);
+- [ ] paper trading (see Chapter 57);
+- [ ] execution realism (see Chapter 56);
+- [ ] data quality (see Chapter 29);
+- [ ] complexity (see Chapter 35);
+- [ ] statistical evidence (see Chapter 43);
+- [ ] operational stability (see Chapter 62).
+
+### 66.2 Qualification outcomes
+
+Qualification must produce one of:
+
+```text
+Qualified
+Conditionally Qualified
+Not Qualified
+```
+
+- [ ] “Conditionally Qualified” must list the conditions and their deadlines or thresholds.
+- [ ] “Not Qualified” must explain which criteria failed and why.
+- [ ] Qualification reports must be stored and referenced from the strategy registry (see Chapter 36).
+- [ ] Qualification is not a guarantee of future profitability.
+
+### 66.3 Qualification review
+
+- [ ] A qualified strategy must be re-qualified after material changes (parameters, data, execution model, market conditions).
+- [ ] Re-qualification intervals must be documented.
+
+---
+
+# PART XIV — SAFETY GATES AND REAL TRADING
+
+---
+
+## [ ] 67. Safety gates
+
+Safety gates are the executable protection layer between the application and a real exchange.
+
+> **Capital preservation takes priority over strategy execution** (see Chapter 61).
+
+Before an order reaches a real exchange:
+
+```text
+Strategy
+   ↓
+Signal
+   ↓
+Portfolio State
+   ↓
+Risk Manager
+   ↓
+Safety Gates
+   ↓
+Execution Engine
+   ↓
+Exchange
+```
+
+The safety layer must verify:
+
+- [ ] Correct environment.
+- [ ] Correct exchange.
+- [ ] Correct account.
+- [ ] Current balances.
+- [ ] Current market data.
+- [ ] Valid order parameters.
+- [ ] Valid market constraints.
+- [ ] Risk limits.
+- [ ] Position limits.
+- [ ] Exposure limits.
+- [ ] Kill-switch state.
+- [ ] Connection state.
+
+### 67.1 Safety-gate rules
+
+- [ ] A strategy can never disable a safety gate.
+- [ ] Safety gates must be verified on every order, not only on the first order.
+- [ ] Safety-gate failures must be audited with reason and timestamp.
+- [ ] Safety-gate configuration changes require explicit user confirmation.
+- [ ] The application must never silently disable a safety gate.
+
+### 67.2 Environment separation
+
+- [ ] Environments are: `Backtest`, `Historical Replay`, `Paper Trading`, `Exchange Testnet`, `Real Trading`.
+- [ ] The environment must be visible at all times.
+- [ ] Switching from testnet/paper to real trading must require explicit confirmation.
+- [ ] Importing a configuration must never silently switch environments.
+
+---
+
+## [ ] 68. Real trading
+
+Real trading support must remain behind multiple independent safety protections.
+
+The MVP may keep real trading completely disabled through a feature flag.
+
+Real trading must never become active simply because an API key or exchange configuration was imported.
+
+### 68.1 Activation requirements
+
+A future real-trading activation flow must require:
+
+- [ ] 1. Enabling an explicit advanced option.
+- [ ] 2. Displaying a prominent risk warning.
+- [ ] 3. Requiring written confirmation.
+- [ ] 4. Confirming that the API key has no withdrawal permission.
+- [ ] 5. Checking the selected environment.
+- [ ] 6. Displaying the selected exchange.
+- [ ] 7. Displaying the selected account/environment.
+- [ ] 8. Configuring strict risk limits.
+- [ ] 9. Testing connectivity.
+- [ ] 10. Verifying account balances.
+- [ ] 11. Verifying market-data freshness.
+- [ ] 12. Verifying system time synchronization.
+- [ ] 13. Confirming the emergency kill switch configuration.
+- [ ] 14. Requiring a confirmation phrase.
+- [ ] 15. Permanently displaying a clear `REAL TRADING` indicator while active.
+
+### 68.2 API credentials
+
+- [ ] Never store withdrawal-enabled credentials by default.
+- [ ] Recommend API keys without withdrawal permissions.
+- [ ] Store credentials using the platform's secure credential mechanism where available.
+- [ ] Never display complete credentials in logs.
+- [ ] Never include credentials in strategy files.
+- [ ] Never include credentials in exported reports.
+- [ ] Never include credentials in screenshots or diagnostic bundles.
+
+### 68.3 Strategy restrictions
+
+- [ ] Real trading strategies must use the same signal/risk/execution architecture.
+- [ ] Strategies must never modify risk limits.
+- [ ] Strategies must never bypass the `RiskManager`.
+- [ ] Strategies must never access credentials directly.
+- [ ] Strategies must never select a real account automatically.
+
+### 68.4 Testing restrictions
+
+- [ ] Never use a real account in automated tests.
+- [ ] Never send real orders from unit tests.
+- [ ] Never enable real trading automatically.
+- [ ] Never use real credentials in test fixtures.
+- [ ] Never require real credentials for CI.
+- [ ] Test real-trading logic against mocks, simulators, or testnet environments.
+
+### 68.5 Monitoring
+
+While real trading is active, display:
+
+- [ ] `REAL TRADING` status.
+- [ ] Exchange.
+- [ ] Account/environment.
+- [ ] Current balance.
+- [ ] Available balance.
+- [ ] Open positions.
+- [ ] Open orders.
+- [ ] Exposure.
+- [ ] Current drawdown.
+- [ ] Risk limits.
+- [ ] Connection state.
+- [ ] Market-data freshness.
+- [ ] Recent executions.
+- [ ] Recent risk decisions.
+- [ ] Emergency kill-switch status.
+
+### 68.6 Failure handling
+
+If a critical safety condition occurs:
+
+- [ ] Stop creating new orders.
+- [ ] Notify the user clearly.
+- [ ] Log the event.
+- [ ] Activate the appropriate risk protection.
+- [ ] Preserve the audit trail.
+- [ ] Do not silently continue trading.
+
+### 68.7 Beginner protection
+
+The beginner documentation must strongly recommend:
+
+1. [ ] Learning the fundamentals.
+2. [ ] Testing strategies historically.
+3. [ ] Using out-of-sample evaluation.
+4. [ ] Testing strategy robustness.
+5. [ ] Paper trading.
+6. [ ] Using testnet where supported.
+7. [ ] Starting with very limited exposure if the user eventually chooses to trade real funds.
+
+The application must clearly state:
+
+> **Real trading involves the possibility of losing money. Historical performance, backtesting, paper trading, or statistical analysis cannot guarantee future profits.**
+
+---
+
+# PART XV — DEVELOPMENT PROCESS AND ETHICS
+
+---
+
+## [ ] 69. Development phases
+
+- [ ] Do not try to implement the entire application in one change.
+
+### Phase 0: Research
+
+Before programming:
+
+- [ ] 1. inspect the system;
+- [ ] 2. confirm software versions;
+- [ ] 3. verify Debian packages;
+- [ ] 4. review official documentation;
+- [ ] 5. propose the architecture;
+- [ ] 6. create a dependency matrix;
+- [ ] 7. identify risks;
+- [ ] 8. write Architecture Decision Records;
+- [ ] 9. define the documentation architecture;
+- [ ] 10. define the translation workflow;
+- [ ] 11. define the beginner-learning roadmap.
+
+- [ ] Deliver a research report first.
+
+### Phase 1: Project foundation
+
+Create:
+
+- [ ] `pyproject.toml`;
+- [ ] project structure;
+- [x] minimal PyQt6 application;
+- [x] logging;
+- [ ] configuration;
+- [x] English default language;
+- [x] Spanish translation framework;
+- [x] tests;
+- [ ] SQLite;
+- [ ] initial Debian package;
+- [x] initial English beginner documentation;
+- [x] initial Learning Center shell.
+
+### Phase 2: Data and charts
+
+Implement:
+
+- [x] MockExchange;
+- [x] CSV import;
+- [ ] candles;
+- [x] storage;
+- [x] charts;
+- [x] basic indicators;
+- [ ] beginner chart tutorials.
+
+### Phase 3: Backtesting
+
+Implement:
+
+- [x] deterministic engine;
+- [x] initial strategies;
+- [ ] commissions;
+- [ ] slippage;
+- [ ] metrics;
+- [ ] reports;
+- [ ] beginner backtesting guide.
+
+### Phase 4: Paper trading
+
+Implement:
+
+- [ ] simulated account;
+- [ ] orders;
+- [ ] fills;
+- [ ] portfolio;
+- [ ] replay;
+- [ ] risk management;
+- [ ] beginner paper-trading guide.
+
+### Phase 5: Real-time public data
+
+Implement:
+
+- [ ] public Binance adapter;
+- [ ] WebSocket;
+- [ ] reconnection;
+- [ ] rate limiting;
+- [ ] stale-data detection;
+- [ ] beginner guide to live market data.
+
+### Phase 6: Testnet
+
+Implement:
+
+- [ ] secure credentials;
+- [ ] Binance Spot Testnet;
+- [ ] test orders;
+- [ ] reconciliation;
+- [ ] auditing;
+- [ ] beginner API-key security guide.
+
+### Phase 7: Maturity
+
+Improve:
+
+- [ ] accessibility;
+- [ ] performance;
+- [ ] complete English documentation;
+- [ ] Spanish documentation;
+- [ ] AppImage;
+- [ ] package testing;
+- [ ] complete translations;
+- [ ] Learning Center quizzes;
+- [ ] screenshots;
+- [ ] tutorials.
+
+### Phase 8+: Advanced research
+
+Implement after the core phases are stable:
+
+- [ ] statistical edge analysis (Chapter 43);
+- [ ] robustness and Monte Carlo (Chapter 44);
+- [ ] walk-forward analysis (Chapter 45);
+- [ ] regime analysis (Chapter 46);
+- [ ] feature engineering (Chapter 47);
+- [ ] machine learning (Chapter 48);
+- [ ] advanced financial machine learning (Chapter 49);
+- [ ] ensembles (Chapter 50);
+- [ ] portfolio construction (Chapter 51);
+- [ ] research infrastructure (Chapters 52–55);
+- [ ] monitoring and strategy lifecycle (Chapters 62–66);
+- [ ] qualification and safety gates (Chapters 66–67).
+
+- [ ] Do not proceed to a new phase if the previous phase does not compile or its tests fail.
+
+---
+
+## [ ] 70. Working method
+
+Before modifying files:
+
+- [ ] 1. inspect the repository;
+- [ ] 2. report what was found;
+- [ ] 3. list the files that will be created or changed;
+- [ ] 4. briefly explain the objective;
+- [ ] 5. make small changes;
+- [ ] 6. run tests;
+- [ ] 7. show the results;
+- [ ] 8. fix failures;
+- [ ] 9. update documentation;
+- [ ] 10. update translations where visible strings changed.
+
+- [ ] Do not replace entire files unnecessarily.
+- [ ] Do not hide errors.
+- [ ] Do not claim that a test passed unless it was actually executed.
+
+When a required tool is unavailable:
+
+- [ ] state that clearly;
+- [ ] provide the command the developer must run;
+- [ ] do not pretend the action succeeded.
+
+When a dependency must be installed (chapter 4.0):
+
+- [ ] STOP development at that task;
+- [ ] notify the developer with the package name, source (Debian or PyPI), reason, and exact install command;
+- [ ] wait for the developer to install it (via `apt`, or via a venv for PyPI-only packages);
+- [ ] never install packages or create virtual environments on your own.
+
+Every completed feature must include:
+
+- [ ] code;
+- [ ] tests;
+- [ ] English documentation;
+- [ ] translation-ready strings;
+- [ ] Spanish translation where feasible;
+- [ ] beginner-oriented explanation when the feature affects end users.
+
+---
+
+## [ ] 71. First concrete task and expected result
+
+### 71.1 First concrete task
+
+- [ ] Begin only with Phase 0 and the minimum foundation of Phase 1.
+
+Perform these tasks:
+
+- [ ] 1. inspect the development environment;
+- [ ] 2. verify dependencies available in Debian;
+- [ ] 3. create `docs/en/developers/debian-dependencies.md`;
+- [ ] 4. create `docs/en/developers/architecture-proposal.md`;
+- [ ] 5. create `docs/en/developers/threat-model.md`;
+- [ ] 6. create ADR-0001 for the architecture;
+- [ ] 7. create ADR-0002 for charting;
+- [ ] 8. create ADR-0003 for Qt and asyncio concurrency;
+- [ ] 9. create ADR-0004 for credential storage;
+- [ ] 10. create ADR-0005 for the packaging backend;
+- [ ] 11. create ADR-0006 for internationalization;
+- [ ] 12. create ADR-0007 for beginner documentation;
+- [ ] 13. create the initial project structure;
+- [x] 14. create a minimal PyQt6 window;
+- [x] 15. make English the default language;
+- [x] 16. create the Spanish translation infrastructure;
+- [x] 17. configure Qt Linguist files;
+- [x] 18. create XDG configuration handling;
+- [ ] 19. create logging with secret redaction;
+- [ ] 20. create a minimal SQLite database;
+- [ ] 21. create initial unit tests;
+- [ ] 22. create `pyproject.toml`;
+- [ ] 23. create an initial Debian package;
+- [x] 24. create the first English beginner guide;
+- [x] 25. create the initial glossary;
+- [x] 26. create the Learning Center placeholder;
+- [ ] 27. execute available tests.
+
+The initial application must open a window containing:
+
+- [x] the name “Crypto Trading Lab”;
+- [x] a File menu;
+- [x] a View menu;
+- [x] a Tools menu;
+- [x] a Help menu;
+- [x] a language selector;
+- [x] English selected by default;
+- [x] Spanish available as the second language;
+- [x] a visible “Mode: Paper Trading” indicator;
+- [x] a visible “Real trading: Disabled” indicator;
+- [x] a “Disconnected” status;
+- [x] a welcome panel;
+- [x] an educational warning;
+- [x] a button to load a CSV file;
+- [x] a button to open the Backtesting Lab, initially disabled;
+- [x] a button to open the Learning Center;
+- [x] a link to “Start Here: Cryptocurrency for Complete Beginners.”
+
+- [x] The first English beginner guide must be `docs/en/beginners/00-start-here.md`
+
+It must explain:
+
+- [x] what Crypto Trading Lab is;
+- [x] what it is not;
+- [x] that profits are not guaranteed;
+- [x] that paper trading is the default;
+- [x] where a complete beginner should begin;
+- [x] how to open the Learning Center;
+- [x] why real money should not be used while learning.
+
+- [x] The first glossary file must be `docs/en/beginners/glossary.md`
+
+It must initially define at least:
+
+- [ ] cryptocurrency;
+- [ ] Bitcoin;
+- [ ] exchange;
+- [ ] trading pair;
+- [ ] candle;
+- [ ] volume;
+- [x] order;
+- [ ] fee;
+- [ ] slippage;
+- [ ] volatility;
+- [ ] strategy;
+- [ ] backtesting;
+- [ ] paper trading;
+- [x] risk;
+- [ ] drawdown.
+
+### 71.2 Expected result of the first iteration
+
+At the end, provide:
+
+- [ ] 1. architecture summary;
+- [ ] 2. project file tree;
+- [ ] 3. dependencies used;
+- [ ] 4. dependencies rejected and the reasons;
+- [ ] 5. commands executed;
+- [ ] 6. test results;
+- [ ] 7. problems found;
+- [ ] 8. files created;
+- [ ] 9. documentation created;
+- [ ] 10. translation files created;
+- [ ] 11. next steps;
+- [ ] 12. exact Debian 12 execution instructions.
+
+- [ ] Do not implement real-money operations yet.
+- [ ] Do not include example keys that look real.
+- [ ] Do not use real funds.
+- [ ] Do not claim that Crypto Trading Lab can guarantee profits.
+- [ ] Do not leave beginner documentation until the end of the project.
+- [ ] Documentation, translation, education, tests, and code must evolve together.
+
+---
+
+## [ ] 72. Research ethics and honest reporting
+
+The project must maintain scientific and professional honesty at every stage.
+
+### 72.1 Honest evidence
+
+- [ ] Never present a backtest as proof of future profitability.
+- [ ] Never present Monte Carlo, bootstrap, or statistical results as predictions of the future.
+- [ ] Never hide assumptions behind results.
+- [ ] Never cherry-pick time periods, parameters, or datasets to make a result look better.
+- [ ] Always label evidence level: observed result, statistical evidence, research hypothesis, validated evidence (see Chapter 43).
+- [ ] Report failed experiments as faithfully as successful ones.
+
+### 72.2 Warnings and disclaimers
+
+- [ ] All warnings must be understandable to a complete beginner.
+- [ ] The application must explain the risks of cryptocurrency trading.
+- [ ] The application must explain that users can lose part or all of their capital.
+- [ ] The application must explain that most retail traders lose money and that trading is not a reliable income source.
+- [ ] The application must not present itself as a solution to financial hardship.
+- [ ] The application must not provide financial advice.
+
+### 72.3 Scientific discipline
+
+- [ ] Favor simpler explanations when they fit the evidence (see Chapter 35).
+- [ ] Document uncertainty instead of hiding it.
+- [ ] The interface must never present statistical tools as “proof of profitability”.
+- [ ] Research automation must never run real operations (see Chapter 52).
+- [ ] The AI assistant must never be presented as an oracle (see Chapter 55).
+
+### 72.4 Educational responsibility
+
+- [ ] Explain why backtests can be misleading.
+- [ ] Explain why profits are never guaranteed.
+- [ ] Explain why paper trading differs from real trading.
+- [ ] Keep education separate from financial advice.
+
+---
+
+# Final verification note
+
+This roadmap is complete when the following architectural checks hold:
+
+- [ ] The conceptual flow `FOUNDATION → DATA → MARKET MODEL → STRATEGIES → SIGNALS → BACKTESTING → DATA SPLITTING → OPTIMIZATION → PERFORMANCE → STATISTICAL RESEARCH → ROBUSTNESS → WALK-FORWARD → REGIME ANALYSIS → FEATURE ENGINEERING → MACHINE LEARNING → ADVANCED FINANCIAL ML → ENSEMBLES → PORTFOLIO → EXECUTION → PAPER TRADING → RISK → MONITORING → STRATEGY QUALIFICATION → SAFETY GATES → REAL TRADING` is respected.
+- [ ] Research, execution, and risk responsibilities are separated (see Chapter 6.1).
+- [ ] No feature appears twice with different owners.
+- [ ] Every cross-reference points to a chapter that exists.
+- [ ] Every chapter answers a concrete question.
+- [ ] Terminology is consistent (see Chapter 2).
+- [ ] A profitable backtest is never presented as evidence of future advantage.

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crypto-trading-lab"
+version = "0.0.0.spike"
+description = "Educational, research, and simulation platform for cryptocurrency markets (see ROADMAP.md)."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+# CCXT integration is optional until the chapter 4 packaging evaluation
+# concludes (no python3-ccxt Debian package exists; see the CCXT study
+# in docs/en/developers/reference-projects.md).
+ccxt = ["ccxt>=4.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
