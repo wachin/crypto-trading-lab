@@ -90,6 +90,12 @@ class BacktestingLabWidget(QWidget):
         self.run_button.clicked.connect(self.run_and_display)
         layout.addWidget(self.run_button)
 
+        self.save_button = QPushButton(self.tr("Save report (HTML/CSV/JSON)"))
+        self.save_button.setEnabled(False)
+        self.save_button.clicked.connect(self._save_dialog)
+        layout.addWidget(self.save_button)
+        self._last_export: tuple | None = None  # (result, report)
+
         self.results_view = QTextBrowser()
         self.results_view.setPlainText(
             self.tr(
@@ -143,9 +149,65 @@ class BacktestingLabWidget(QWidget):
         )
         report = compute_performance(result, benchmark=benchmark)
 
+        self._last_export = (result, report)
+        self.save_button.setEnabled(True)
         text = self._render(result, report)
         self.results_view.setPlainText(text)
         return text
+
+    # -- report export (chapter 41) --------------------------------------
+
+    def save_report(self, base_path: str) -> list[str]:
+        """Write the last run as ``.html``, ``.csv`` and ``.json``.
+
+        Returns the written file paths; empty list when nothing has
+        been run yet.
+        """
+        if self._last_export is None:
+            return []
+        from crypto_trading_lab.reporting.report import (
+            build_backtest_report,
+            render_csv,
+            render_html,
+            render_json,
+        )
+
+        result, performance = self._last_export
+        data = build_backtest_report(
+            result, performance, self._symbol, self._interval
+        )
+        written: list[str] = []
+        for suffix, render in (
+            (".html", render_html),
+            (".csv", render_csv),
+            (".json", render_json),
+        ):
+            path = base_path + suffix
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(render(data))
+            written.append(path)
+        return written
+
+    def _save_dialog(self) -> None:
+        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+
+        base, _filter = QFileDialog.getSaveFileName(
+            self,
+            self.tr("Save report"),
+            "backtest_report",
+            self.tr("Report base name (*)"),
+        )
+        if not base:
+            return
+        for suffix in (".html", ".csv", ".json"):
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+        written = self.save_report(base)
+        QMessageBox.information(
+            self,
+            self.tr("Report"),
+            self.tr("Saved: {files}").format(files=", ".join(written)),
+        )
 
     def _render(self, result, report) -> str:
         """Plain-language result report (chapters 37.9, 37.10, 40.8)."""

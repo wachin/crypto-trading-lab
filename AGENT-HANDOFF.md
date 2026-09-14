@@ -16,10 +16,10 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 248 passed, 2 skipped —
+- **Tests:** 255 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 42 Python files under `src/crypto_trading_lab/`
-- **Tests:** 39 Python files under `tests/`
+- **Source:** 44 Python files under `src/crypto_trading_lab/`
+- **Tests:** 41 Python files under `tests/`
 - **Documentation:** `docs/en/beginners/` (4 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`)
@@ -69,6 +69,7 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
 | Performance metrics (returns, trades, risk, activity, benchmark, validity) | `src/crypto_trading_lab/backtesting/metrics.py` | 40 |
 | Backtesting Lab UI (results + beginner explanation) | `src/crypto_trading_lab/ui/backtesting/lab.py` | 37.9, 37.10 |
+| Report generation (HTML/CSV/JSON, evidence levels) | `src/crypto_trading_lab/reporting/report.py` | 41 (partial) |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
 
 ### Domain-model naming and the chapter 7/26/30 reconciliation
@@ -211,7 +212,12 @@ Per `ROADMAP.md` and the last iteration report:
    `ui/backtesting/lab.py`, main-window button enabled, strategy/dataset
    reproducibility records added to the engine, Spanish translations
    compiled; 248 tests passing).
-3. Then: reports (41), benchmarking (42), robustness (43-46), paper trading
+3. ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-14
+   (`reporting/report.py`, HTML/CSV/JSON export from the Backtesting Lab,
+   evidence-level labels and disclaimers; 255 tests passing). Still open by
+   design: optional PDF (new dependency) and research/qualification
+   reports (need the chapter 52 experiment manager).
+4. Then: benchmarking (42), robustness (43-46), paper trading
    (57), risk manager (58). Note: §37.8 determinism checkboxes are still
    open; much of it is already engine-tested, reconciling them is a cheap
    documentation task.
@@ -242,4 +248,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 248 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 255 tests passing at time of writing.*

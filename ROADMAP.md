@@ -2974,38 +2974,40 @@ Performance must be interpreted together with:
 
 Generate backtesting, paper-trading, research, and qualification reports in:
 
-- [ ] HTML;
-- [ ] CSV;
-- [ ] JSON;
-- [ ] optional PDF.
+- [x] HTML;
+- [x] CSV;
+- [x] JSON;
+- [ ] optional PDF. — pending: would require a new dependency; stdlib
+  only so far. (Paper-trading/research/qualification reports will reuse
+  `reporting.report` once chapters 52 and 57 exist.)
 
 Reports must include:
 
-- [ ] strategy;
-- [ ] version;
-- [ ] parameters;
-- [ ] dataset checksum or identifier;
-- [ ] time range;
-- [ ] exchange;
-- [ ] trading pair;
-- [ ] interval;
-- [ ] initial capital;
-- [ ] fees;
-- [ ] slippage;
-- [ ] execution model;
-- [ ] metrics;
-- [ ] trades;
-- [ ] equity curve;
-- [ ] drawdown;
-- [ ] benchmark;
-- [ ] warnings;
-- [ ] Crypto Trading Lab version;
-- [ ] generation date.
+- [x] strategy;
+- [x] version;
+- [x] parameters;
+- [x] dataset checksum or identifier;
+- [x] time range;
+- [x] exchange;
+- [x] trading pair;
+- [x] interval;
+- [x] initial capital;
+- [x] fees;
+- [x] slippage;
+- [x] execution model;
+- [x] metrics;
+- [x] trades;
+- [x] equity curve;
+- [x] drawdown;
+- [x] benchmark;
+- [x] warnings;
+- [x] Crypto Trading Lab version;
+- [x] generation date.
 
-- [ ] Reports must not claim future profitability.
-- [ ] Include an optional beginner summary that explains the results in plain language.
-- [ ] Reports must clearly label the evidence level of any conclusion (observed result, statistical evidence, hypothesis, validated evidence; see Chapters 1 and 43).
-- [ ] Research and qualification reports must cite the experiment identifier (see Chapter 52).
+- [x] Reports must not claim future profitability.
+- [x] Include an optional beginner summary that explains the results in plain language.
+- [x] Reports must clearly label the evidence level of any conclusion (observed result, statistical evidence, hypothesis, validated evidence; see Chapters 1 and 43). — backtest reports are labelled "observed result" (single in-sample run; descriptive only).
+- [ ] Research and qualification reports must cite the experiment identifier (see Chapter 52). — pending: the experiment manager (ch. 52) does not exist yet.
 
 ---
 

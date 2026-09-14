@@ -38,217 +38,242 @@
       <translation>Ejecutar backtest</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="95" />
+      <location filename="../../ui/backtesting/lab.py" line="93" />
+      <source>Save report (HTML/CSV/JSON)</source>
+      <translation>Guardar informe (HTML/CSV/JSON)</translation>
+    </message>
+    <message>
+      <location filename="../../ui/backtesting/lab.py" line="101" />
       <source>Choose a strategy and press “Run backtest”. Every result is shown with its risks, costs and statistical warnings.</source>
       <translation>Elige una estrategia y pulsa «Ejecutar backtest». Cada resultado se muestra con sus riesgos, costes y avisos estadísticos.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="116" />
+      <location filename="../../ui/backtesting/lab.py" line="122" />
       <source>Initial capital must be a positive number, for example 10000.</source>
       <translation>El capital inicial debe ser un número positivo, por ejemplo 10000.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="127" />
+      <location filename="../../ui/backtesting/lab.py" line="133" />
       <source>The fast SMA period must be smaller than the slow one (for example 10 and 30).</source>
       <translation>El período de la SMA rápida debe ser menor que el de la lenta (por ejemplo 10 y 30).</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="154" />
+      <location filename="../../ui/backtesting/lab.py" line="196" />
+      <source>Save report</source>
+      <translation>Guardar informe</translation>
+    </message>
+    <message>
+      <location filename="../../ui/backtesting/lab.py" line="198" />
+      <source>Report base name (*)</source>
+      <translation>Nombre base del informe (*)</translation>
+    </message>
+    <message>
+      <location filename="../../ui/backtesting/lab.py" line="208" />
+      <source>Report</source>
+      <translation>Informe</translation>
+    </message>
+    <message>
+      <location filename="../../ui/backtesting/lab.py" line="209" />
+      <source>Saved: {files}</source>
+      <translation>Guardado: {files}</translation>
+    </message>
+    <message>
+      <location filename="../../ui/backtesting/lab.py" line="216" />
       <source>== What was tested ==</source>
       <translation>== Qué se probó ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="155" />
+      <location filename="../../ui/backtesting/lab.py" line="217" />
       <source>Strategy: {name} (version {version})</source>
       <translation>Estrategia: {name} (versión {version})</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="158" />
+      <location filename="../../ui/backtesting/lab.py" line="220" />
       <source>Asset and timeframe: {symbol}, {interval} candles</source>
       <translation>Activo y marco temporal: {symbol}, velas de {interval}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="161" />
+      <location filename="../../ui/backtesting/lab.py" line="223" />
       <source>Historical period: {period} ({n} candles)</source>
       <translation>Período histórico: {period} ({n} velas)</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="164" />
+      <location filename="../../ui/backtesting/lab.py" line="226" />
       <source>Dataset version: {version}</source>
       <translation>Versión del conjunto de datos: {version}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="167" />
+      <location filename="../../ui/backtesting/lab.py" line="229" />
       <source>Execution model: {model} (signals at a candle's close fill at the NEXT candle's open — no look-ahead)</source>
       <translation>Modelo de ejecución: {model} (las señales del cierre de una vela se ejecutan en la apertura de la SIGUIENTE vela — sin mirar al futuro)</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="171" />
+      <location filename="../../ui/backtesting/lab.py" line="233" />
       <source>Assumptions: long-only spot; every order fills completely at the modeled price (no rejections, no partial fills); taker fee {fee}, slippage {slip}, spread {spread} per trade.</source>
       <translation>Supuestos: solo posiciones largas al contado; cada orden se ejecuta completa al precio modelado (sin rechazos ni ejecuciones parciales); comisión taker {fee}, deslizamiento {slip} y diferencial {spread} por operación.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="180" />
+      <location filename="../../ui/backtesting/lab.py" line="242" />
       <source>== Money (all costs included) ==</source>
       <translation>== Dinero (todos los costes incluidos) ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="181" />
+      <location filename="../../ui/backtesting/lab.py" line="243" />
       <source>Initial capital: {x}</source>
       <translation>Capital inicial: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="182" />
+      <location filename="../../ui/backtesting/lab.py" line="244" />
       <source>Final equity: {x}</source>
       <translation>Capital final: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="183" />
+      <location filename="../../ui/backtesting/lab.py" line="245" />
       <source>Net profit/loss: {x}</source>
       <translation>Beneficio/pérdida neto: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="184" />
+      <location filename="../../ui/backtesting/lab.py" line="246" />
       <source>Total return: {x}</source>
       <translation>Rentabilidad total: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="185" />
+      <location filename="../../ui/backtesting/lab.py" line="247" />
       <source>Annualized return: {x}</source>
       <translation>Rentabilidad anualizada: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="189" />
+      <location filename="../../ui/backtesting/lab.py" line="251" />
       <source>== Trades ==</source>
       <translation>== Operaciones ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="190" />
+      <location filename="../../ui/backtesting/lab.py" line="252" />
       <source>Number of trades: {x}</source>
       <translation>Número de operaciones: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="191" />
+      <location filename="../../ui/backtesting/lab.py" line="253" />
       <source>Win rate: {x}</source>
       <translation>Tasa de aciertos: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="192" />
+      <location filename="../../ui/backtesting/lab.py" line="254" />
       <source>Average winning trade: {x}</source>
       <translation>Operación ganadora media: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="195" />
+      <location filename="../../ui/backtesting/lab.py" line="257" />
       <source>Average losing trade: {x}</source>
       <translation>Operación perdedora media: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="198" />
+      <location filename="../../ui/backtesting/lab.py" line="260" />
       <source>Profit factor: {x}</source>
       <translation>Factor de beneficio: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="200" />
+      <location filename="../../ui/backtesting/lab.py" line="262" />
       <source>== Risk ==</source>
       <translation>== Riesgo ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="201" />
+      <location filename="../../ui/backtesting/lab.py" line="263" />
       <source>Maximum drawdown: {x} (worst drop from a previous peak)</source>
       <translation>Caída máxima: {x} (peor caída desde un máximo anterior)</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="203" />
+      <location filename="../../ui/backtesting/lab.py" line="265" />
       <source>Maximum drawdown duration: {x} candles</source>
       <translation>Duración de la caída máxima: {x} velas</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="206" />
+      <location filename="../../ui/backtesting/lab.py" line="268" />
       <source>Sharpe ratio: {x}</source>
       <translation>Ratio de Sharpe: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="209" />
+      <location filename="../../ui/backtesting/lab.py" line="271" />
       <source>Sortino ratio: {x}</source>
       <translation>Ratio de Sortino: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="212" />
+      <location filename="../../ui/backtesting/lab.py" line="274" />
       <source>Market exposure: {x} of candles in the market</source>
       <translation>Exposición al mercado: {x} de las velas en el mercado</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="216" />
+      <location filename="../../ui/backtesting/lab.py" line="278" />
       <source>== Costs and benchmark ==</source>
       <translation>== Costes y referencia ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="217" />
+      <location filename="../../ui/backtesting/lab.py" line="279" />
       <source>Commissions and fees: {x}</source>
       <translation>Comisiones y tarifas: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="218" />
+      <location filename="../../ui/backtesting/lab.py" line="280" />
       <source>Estimated slippage: {x}</source>
       <translation>Deslizamiento estimado: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="219" />
+      <location filename="../../ui/backtesting/lab.py" line="281" />
       <source>Estimated spread cost: {x}</source>
       <translation>Coste estimado del diferencial: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="220" />
+      <location filename="../../ui/backtesting/lab.py" line="282" />
       <source>Benchmark (buy and hold) return: {x}</source>
       <translation>Rentabilidad de la referencia (comprar y mantener): {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="225" />
+      <location filename="../../ui/backtesting/lab.py" line="287" />
       <source>Excess return vs benchmark: {x}</source>
       <translation>Rentabilidad en exceso frente a la referencia: {x}</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="231" />
+      <location filename="../../ui/backtesting/lab.py" line="293" />
       <source>== Warnings ==</source>
       <translation>== Avisos ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="238" />
+      <location filename="../../ui/backtesting/lab.py" line="300" />
       <source>== Please read before trusting this ==</source>
       <translation>== Lee esto antes de confiar en el resultado ==</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="239" />
+      <location filename="../../ui/backtesting/lab.py" line="301" />
       <source>• This test used IN-SAMPLE historical data only; the strategy may simply have memorized the past.</source>
       <translation>• Esta prueba usó solo datos históricos DENTRO DE LA MUESTRA; la estrategia puede haberse limitado a memorizar el pasado.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="243" />
+      <location filename="../../ui/backtesting/lab.py" line="305" />
       <source>• Commissions and fees are what exchanges charge per trade; spread and slippage are the extra cost of buying a bit too high and selling a bit too low.</source>
       <translation>• Las comisiones y tarifas son lo que cobran los exchanges por operación; el diferencial y el deslizamiento son el coste extra de comprar un poco más caro y vender un poco más barato.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="248" />
+      <location filename="../../ui/backtesting/lab.py" line="310" />
       <source>• Liquidity matters: real orders move the price, so real fills can be worse than simulated ones.</source>
       <translation>• La liquidez importa: las órdenes reales mueven el precio, así que las ejecuciones reales pueden ser peores que las simuladas.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="252" />
+      <location filename="../../ui/backtesting/lab.py" line="314" />
       <source>• Historical results can be misleading: markets change, and a past pattern may never repeat.</source>
       <translation>• Los resultados históricos pueden engañar: los mercados cambian y un patrón pasado puede no repetirse nunca.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="256" />
+      <location filename="../../ui/backtesting/lab.py" line="318" />
       <source>• A profitable backtest is NOT proof of future profitability, and real trading results often differ from simulations.</source>
       <translation>• Un backtest rentable NO es prueba de rentabilidad futura, y los resultados reales suelen diferir de las simulaciones.</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="268" />
+      <location filename="../../ui/backtesting/lab.py" line="330" />
       <source>n/a (insufficient data)</source>
       <translation>n/d (datos insuficientes)</translation>
     </message>
     <message>
-      <location filename="../../ui/backtesting/lab.py" line="274" />
+      <location filename="../../ui/backtesting/lab.py" line="336" />
       <source>  (descriptive only, not statistically supported)</source>
       <translation>  (solo descriptivo, sin respaldo estadístico)</translation>
     </message>

@@ -119,6 +119,19 @@ def test_invalid_parameters_are_explained(qapp):
     widget.close()
 
 
+def test_report_export_writes_three_formats(lab, tmp_path):
+    assert lab.save_report(str(tmp_path / "x")) == []  # nothing run yet
+    lab.run_and_display()
+    base = tmp_path / "report"
+    written = lab.save_report(str(base))
+    assert sorted(p.rsplit(".", 1)[-1] for p in written) == [
+        "csv", "html", "json"
+    ]
+    for suffix in (".html", ".csv", ".json"):
+        content = (tmp_path / f"report{suffix}").read_text()
+        assert "No single metric proves" in content
+
+
 def test_buy_and_hold_matches_itself_as_benchmark(qapp):
     widget = BacktestingLabWidget(_candles(_trending()))
     widget.strategy_combo.setCurrentIndex(1)  # Buy and hold
