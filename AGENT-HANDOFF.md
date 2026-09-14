@@ -16,7 +16,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 263 passed, 2 skipped —
+- **Tests:** 269 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
 - **Source:** 44 Python files under `src/crypto_trading_lab/`
 - **Tests:** 41 Python files under `tests/`
@@ -71,6 +71,7 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Backtesting Lab UI (results + beginner explanation) | `src/crypto_trading_lab/ui/backtesting/lab.py` | 37.9, 37.10 |
 | Report generation (HTML/CSV/JSON, evidence levels) | `src/crypto_trading_lab/reporting/report.py` | 41 (partial) |
 | Robustness (seeded Monte Carlo, perturbation, cost sweeps) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 (partial) |
+| Chronological data splitting (train/validation/test) | `src/crypto_trading_lab/market_data/splitting.py` | 38 |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
 
 ### Domain-model naming and the chapter 7/26/30 reconciliation
@@ -234,7 +235,14 @@ Per `ROADMAP.md` and the last iteration report:
    ch. 38 splitting), PBO (44.8, needs ch. 39 optimization), the
    consolidated robustness report (44.9) and all of chapter 45
    (walk-forward).
-6. Next: chapter 38 (data splitting) unblocks 44.7 and 45; then paper
+6. ~~Data splitting (chapter 38)~~ — core done on 2026-09-14:
+   `market_data/splitting.py` (chronological 3-period split, exact
+   recorded boundaries, borrow-only warm-up prefixes, shuffled input
+   rejected, test-period reuse recorded and warned) +
+   `docs/en/beginners/data-splitting.md`; 269 tests passing. Still
+   open: 38.6 optimization-separation records (needs ch. 39), 38.8
+   purged/embargoed CV (research, ch. 49.4).
+7. Next: walk-forward (45), out-of-sample degradation (44.7), paper
    trading (57), risk manager (58). Note: §37.8 determinism checkboxes
    are still open; much of it is already engine-tested, reconciling
    them is a cheap documentation task.
@@ -265,4 +273,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 263 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 269 tests passing at time of writing.*

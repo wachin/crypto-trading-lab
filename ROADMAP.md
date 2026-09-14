@@ -2605,9 +2605,9 @@ Financial time-series data must be divided chronologically.
 
 The system must support at least:
 
-* [ ] Training (strategy-development) period.
-* [ ] Validation period.
-* [ ] Out-of-sample test period.
+* [x] Training (strategy-development) period.
+* [x] Validation period.
+* [x] Out-of-sample test period.
 
 The default data flow must be:
 
@@ -2623,12 +2623,12 @@ Out-of-Sample Test
 
 ### 38.1 Chronological integrity
 
-* [ ] Never randomly shuffle financial time-series data for strategy evaluation.
-* [ ] Preserve temporal ordering.
-* [ ] Prevent future observations from entering earlier periods.
-* [ ] Respect dataset boundaries.
-* [ ] Respect indicator warm-up periods.
-* [ ] Record the exact timestamp boundaries of every split.
+* [x] Never randomly shuffle financial time-series data for strategy evaluation. (splitting is deterministic; shuffled input is rejected)
+* [x] Preserve temporal ordering.
+* [x] Prevent future observations from entering earlier periods.
+* [x] Respect dataset boundaries.
+* [x] Respect indicator warm-up periods. (borrowed warm-up prefixes, excluded from the recorded boundaries)
+* [x] Record the exact timestamp boundaries of every split.
 
 ### 38.2 Training (strategy-development) period
 
@@ -2666,13 +2666,13 @@ The out-of-sample period must:
 
 The system must detect or warn about:
 
-* [ ] Indicators calculated using future data.
-* [ ] Features containing future observations.
-* [ ] Optimization using the test period.
-* [ ] Repeated evaluation of the test period.
-* [ ] Using future market information.
-* [ ] Randomized time-series splitting.
-* [ ] Incorrect warm-up handling.
+* [x] Indicators calculated using future data. (engine guarantee: signals at close i fill at open i+1, ch. 37)
+* [x] Features containing future observations. (same construction)
+* [ ] Optimization using the test period. — pending: optimization is chapter 39; the evaluation log is the guardrail in place.
+* [x] Repeated evaluation of the test period. (`DatasetSplit.record_evaluation` warns from the second use)
+* [x] Using future market information. (same construction as above)
+* [x] Randomized time-series splitting. (never shuffles; shuffled input is rejected)
+* [x] Incorrect warm-up handling. (borrowed prefixes excluded from recorded boundaries)
 
 ### 38.6 Optimization separation
 
@@ -2689,12 +2689,12 @@ When a strategy has been optimized:
 
 The application must explain:
 
-* [ ] Why historical data is divided.
-* [ ] Why testing on the same data used for optimization is misleading.
-* [ ] What out-of-sample means.
-* [ ] Why repeatedly checking the test period can cause overfitting.
-* [ ] Why chronological order matters.
-* [ ] Why good out-of-sample performance is stronger evidence than in-sample performance.
+* [x] Why historical data is divided.
+* [x] Why testing on the same data used for optimization is misleading.
+* [x] What out-of-sample means.
+* [x] Why repeatedly checking the test period can cause overfitting.
+* [x] Why chronological order matters.
+* [x] Why good out-of-sample performance is stronger evidence than in-sample performance.
 
 The system must clearly distinguish:
 
