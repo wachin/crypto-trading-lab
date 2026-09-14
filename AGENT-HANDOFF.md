@@ -16,7 +16,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 255 passed, 2 skipped —
+- **Tests:** 257 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
 - **Source:** 44 Python files under `src/crypto_trading_lab/`
 - **Tests:** 41 Python files under `tests/`
@@ -214,13 +214,19 @@ Per `ROADMAP.md` and the last iteration report:
    compiled; 248 tests passing).
 3. ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-14
    (`reporting/report.py`, HTML/CSV/JSON export from the Backtesting Lab,
-   evidence-level labels and disclaimers; 255 tests passing). Still open by
+   evidence-level labels and disclaimers). Still open by
    design: optional PDF (new dependency) and research/qualification
    reports (need the chapter 52 experiment manager).
-4. Then: benchmarking (42), robustness (43-46), paper trading
-   (57), risk manager (58). Note: §37.8 determinism checkboxes are still
-   open; much of it is already engine-tested, reconciling them is a cheap
-   documentation task.
+4. ~~Benchmarking (chapter 42)~~ — core done on 2026-09-14:
+   `compare_reports()` (relative return/volatility/drawdown/Sharpe/
+   Sortino differences, gross vs net excess, cost drag), benchmark
+   selector in the Backtesting Lab (buy-and-hold default, null, none)
+   with an identical-strategy warning, and the plain-language verdict;
+   257 tests passing. Still open: graphical equity/drawdown comparison
+   views, and feeding qualification (ch. 66).
+5. Next: robustness (43-46), paper trading (57), risk manager (58).
+   Note: §37.8 determinism checkboxes are still open; much of it is
+   already engine-tested, reconciling them is a cheap documentation task.
 
 Do not start a task before reading the chapter that owns it, and do not tick
 a requirement until it is implemented **and tested**.
@@ -248,4 +254,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 255 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 257 tests passing at time of writing.*

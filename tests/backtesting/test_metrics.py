@@ -211,6 +211,31 @@ def test_activity_metrics_from_trades():
     assert activity.spread_cost == Decimal(0)
 
 
+def test_compare_reports_relative_metrics():
+    """Chapter 42.2: relative comparison is exact, Decimals."""
+    from crypto_trading_lab.backtesting.metrics import compare_reports
+
+    # Strategy: 100 → 115 (+15%), one winning trade, zero costs.
+    strategy = compute_performance(
+        _result(["100", "100", "115"], [_trade(Decimal("15"))])
+    )
+    # Benchmark: 100 → 110 (+10%), no trades.
+    benchmark = compute_performance(_result(["100", "100", "110"]))
+    view = compare_reports(strategy, benchmark, "Buy and hold")
+    assert view.excess_return == Decimal("0.05")
+    assert view.gross_excess_return == Decimal("0.05")  # no costs
+    assert view.cost_drag == Decimal(0)
+    assert view.beats_benchmark
+
+    # Losing case: strategy +5% vs benchmark +10%.
+    weaker = compute_performance(
+        _result(["100", "100", "105"], [_trade(Decimal("5"))])
+    )
+    view = compare_reports(weaker, benchmark, "Buy and hold")
+    assert view.excess_return == Decimal("-0.05")
+    assert not view.beats_benchmark
+
+
 def test_benchmark_comparison():
     strategy = _result(["100", "110"])  # +10%
     benchmark = _result(["100", "105"])  # +5%

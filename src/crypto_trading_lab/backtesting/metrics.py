@@ -26,8 +26,10 @@ __all__ = [
     "RiskMetrics",
     "ActivityMetrics",
     "BenchmarkComparison",
+    "BenchmarkView",
     "PerformanceReport",
     "compute_performance",
+    "compare_reports",
 ]
 
 #: Mandatory report disclaimer (ROADMAP 40.8).
@@ -155,6 +157,82 @@ class BenchmarkComparison:
     absolute_return: Decimal
     benchmark_return: Decimal
     excess_return: Decimal                      # absolute minus benchmark
+
+
+@dataclass(frozen=True)
+class BenchmarkView:
+    """Relative comparison against the benchmark (chapter 42.2).
+
+    All fields are strategy minus benchmark. Positive excess_return
+    means the active strategy beat the passive alternative net of
+    costs; gross_excess_return shows the same comparison as if all
+    costs had been zero (the cost drag is their difference).
+    """
+
+    benchmark_name: str
+    excess_return: Decimal
+    gross_excess_return: Decimal
+    cost_drag: Decimal
+    volatility_difference: Decimal | None
+    max_drawdown_difference: Decimal | None
+    sharpe_difference: Decimal | None
+    sortino_difference: Decimal | None
+
+    @property
+    def beats_benchmark(self) -> bool:
+        return self.excess_return > 0
+
+
+def compare_reports(
+    strategy: PerformanceReport,
+    benchmark: PerformanceReport,
+    benchmark_name: str,
+) -> BenchmarkView:
+    """Relative strategy-vs-benchmark comparison (chapter 42.2).
+
+    Both reports must come from the same dataset period, initial
+    capital and cost assumptions (chapter 42.1); the application layer
+    guarantees this by running both on the same candles and config.
+    """
+
+    def gross_return(report: PerformanceReport) -> Decimal:
+        capital = report.returns.initial_capital
+        if capital == 0:
+            return Decimal(0)
+        activity = report.activity
+        gross_net = (
+            report.returns.net_profit
+            + activity.trading_fees
+            + activity.spread_cost
+            + activity.slippage_cost
+        )
+        return gross_net / capital
+
+    def difference(a, b):
+        return None if a is None or b is None else a - b
+
+    excess = (
+        strategy.returns.total_return - benchmark.returns.total_return
+    )
+    gross_excess = gross_return(strategy) - gross_return(benchmark)
+    return BenchmarkView(
+        benchmark_name=benchmark_name,
+        excess_return=excess,
+        gross_excess_return=gross_excess,
+        cost_drag=gross_excess - excess,
+        volatility_difference=difference(
+            strategy.risk.volatility, benchmark.risk.volatility
+        ),
+        max_drawdown_difference=difference(
+            strategy.risk.max_drawdown, benchmark.risk.max_drawdown
+        ),
+        sharpe_difference=difference(
+            strategy.risk.sharpe_ratio, benchmark.risk.sharpe_ratio
+        ),
+        sortino_difference=difference(
+            strategy.risk.sortino_ratio, benchmark.risk.sortino_ratio
+        ),
+    )
 
 
 @dataclass

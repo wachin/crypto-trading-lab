@@ -81,7 +81,7 @@ def test_results_show_all_mandatory_fields(lab):
         "Historical period:",
         "Dataset version:",
         "version 1.0.0",
-        "Benchmark (buy and hold) return:",
+        "Benchmark (Buy and hold) return:",
         "Excess return vs benchmark:",
     ):
         assert needle in text, needle
@@ -137,7 +137,31 @@ def test_buy_and_hold_matches_itself_as_benchmark(qapp):
     widget.strategy_combo.setCurrentIndex(1)  # Buy and hold
     text = widget.run_and_display()
     assert "Excess return vs benchmark: 0" in text
+    # Chapter 42.1: identical benchmark must be flagged as useless.
+    assert "benchmark is the same strategy" in text
     widget.close()
+
+
+def test_benchmark_is_selectable_and_compared(lab):
+    # Default benchmark (buy and hold) reports a full comparison (42.2).
+    text = lab.run_and_display()
+    assert "== Benchmark comparison (vs Buy and hold) ==" in text
+    assert "Excess return (net of costs):" in text
+    assert "Excess return (before costs):" in text
+    assert "Cost drag on the comparison:" in text
+    assert "Max drawdown difference:" in text
+    assert "Sharpe difference:" in text
+    # Plain-language verdict (mandatory in 42.2).
+    assert ("beat the passive alternative" in text
+            or "did NOT beat the passive alternative" in text)
+
+    lab.benchmark_combo.setCurrentIndex(2)  # None
+    text = lab.run_and_display()
+    assert "No benchmark selected" in text
+
+    lab.benchmark_combo.setCurrentIndex(1)  # Null
+    text = lab.run_and_display()
+    assert "== Benchmark comparison (vs Null (never trades)) ==" in text
 
 
 # -- flow through the main window (mirrors test_chart_flow) -------------

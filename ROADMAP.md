@@ -3015,11 +3015,12 @@ Reports must include:
 
 The system must compare strategies against:
 
-- [ ] buy-and-hold;
-- [ ] simple benchmarks;
-- [ ] eventually other strategies.
+- [x] buy-and-hold;
+- [x] simple benchmarks; (null strategy available)
+- [ ] eventually other strategies. — `compare_reports()` accepts any
+  strategy's report; the Lab UI offers buy-and-hold and null so far.
 
-- [ ] Do not assume that an active strategy is good simply because it makes money.
+- [x] Do not assume that an active strategy is good simply because it makes money. (plain-language verdict in the comparison view)
 
 Every comparison must ask:
 
@@ -3027,25 +3028,28 @@ Every comparison must ask:
 
 ### 42.1 Benchmark requirements
 
-- [ ] Same evaluation period for strategy and benchmark.
-- [ ] Same initial capital for strategy and benchmark.
-- [ ] Comparable cost assumptions where appropriate.
-- [ ] Comparative performance metrics.
-- [ ] Relative performance.
-- [ ] Buy-and-hold must be the default benchmark for every strategy backtest.
-- [ ] The chosen benchmark must be recorded in every report.
-- [ ] Benchmark selection must be visible and changeable by the user.
-- [ ] The application must warn when a benchmark is inappropriate for the strategy's market or timeframe.
+- [x] Same evaluation period for strategy and benchmark. (both are run on the same candles)
+- [x] Same initial capital for strategy and benchmark. (shared `BacktestConfig`)
+- [x] Comparable cost assumptions where appropriate. (shared `CostModel`)
+- [x] Comparative performance metrics.
+- [x] Relative performance.
+- [x] Buy-and-hold must be the default benchmark for every strategy backtest.
+- [x] The chosen benchmark must be recorded in every report. (chapter 41 report fields)
+- [x] Benchmark selection must be visible and changeable by the user. (Backtesting Lab benchmark selector)
+- [x] The application must warn when a benchmark is inappropriate for the strategy's market or timeframe. (identical-strategy benchmarks are flagged; other mismatches are impossible because both runs always share the same dataset)
 
 ### 42.2 Benchmark comparison views
 
-- [ ] Equity curve comparison.
-- [ ] Drawdown comparison.
-- [ ] Risk-adjusted comparison where appropriate.
-- [ ] Cost-adjusted comparison.
-- [ ] A plain-language summary of whether the active strategy beat the passive alternative.
+- [ ] Equity curve comparison. — textual differences implemented
+  (`compare_reports`); graphical overlay views pending.
+- [ ] Drawdown comparison. — textual max-drawdown difference
+  implemented; graphical underwater overlay pending.
+- [x] Risk-adjusted comparison where appropriate. (Sharpe/Sortino
+  differences, suppressed when statistically invalid)
+- [x] Cost-adjusted comparison. (gross excess return + cost drag)
+- [x] A plain-language summary of whether the active strategy beat the passive alternative.
 
-- [ ] Benchmarking results feed the strategy qualification process (see Chapter 66).
+- [ ] Benchmarking results feed the strategy qualification process (see Chapter 66). — pending: the qualification pipeline does not exist yet.
 
 ---
 

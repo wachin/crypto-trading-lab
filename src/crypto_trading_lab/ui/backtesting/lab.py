@@ -32,6 +32,7 @@ from crypto_trading_lab.backtesting.engine import (
 )
 from crypto_trading_lab.backtesting.metrics import (
     DISCLAIMER,
+    compare_reports,
     compute_performance,
 )
 from crypto_trading_lab.domain.models import Candle
@@ -84,6 +85,17 @@ class BacktestingLabWidget(QWidget):
 
         self.capital_edit = QLineEdit("10000")
         form.addRow(self.tr("Initial capital:"), self.capital_edit)
+
+        # Chapter 42.1: benchmark selection must be visible and changeable.
+        self.benchmark_combo = QComboBox()
+        self.benchmark_combo.addItem(
+            self.tr("Buy and hold (default)"), STRATEGY_BUY_HOLD
+        )
+        self.benchmark_combo.addItem(
+            self.tr("Null (never trades)"), STRATEGY_NULL
+        )
+        self.benchmark_combo.addItem(self.tr("None"), None)
+        form.addRow(self.tr("Benchmark:"), self.benchmark_combo)
         layout.addLayout(form)
 
         self.run_button = QPushButton(self.tr("Run backtest"))
@@ -94,7 +106,7 @@ class BacktestingLabWidget(QWidget):
         self.save_button.setEnabled(False)
         self.save_button.clicked.connect(self._save_dialog)
         layout.addWidget(self.save_button)
-        self._last_export: tuple | None = None  # (result, report)
+        self._last_export: tuple | None = None  # (result, report, warning)
 
         self.results_view = QTextBrowser()
         self.results_view.setPlainText(
@@ -144,14 +156,34 @@ class BacktestingLabWidget(QWidget):
 
         config = BacktestConfig(initial_capital=capital)
         result = run_backtest(self._candles, strategy, config)
-        benchmark = run_backtest(
-            self._candles, BuyAndHoldStrategy(), config
-        )
-        report = compute_performance(result, benchmark=benchmark)
 
-        self._last_export = (result, report)
+        benchmark_kind = self.benchmark_combo.currentData()
+        benchmark_warning: str | None = None
+        benchmark_result = None
+        benchmark_report = None
+        if benchmark_kind is not None:
+            benchmark_strategy = (
+                BuyAndHoldStrategy()
+                if benchmark_kind == STRATEGY_BUY_HOLD
+                else NullStrategy()
+            )
+            benchmark_result = run_backtest(
+                self._candles, benchmark_strategy, config
+            )
+            benchmark_report = compute_performance(benchmark_result)
+            if benchmark_kind == kind:
+                benchmark_warning = self.tr(
+                    "The chosen benchmark is the same strategy you are "
+                    "testing: the excess return is 0 by construction. "
+                    "Pick a different benchmark for a meaningful "
+                    "comparison."
+                )
+        report = compute_performance(result, benchmark=benchmark_result)
+
+        self._last_export = (result, report, benchmark_warning)
         self.save_button.setEnabled(True)
-        text = self._render(result, report)
+        text = self._render(result, report, benchmark_warning,
+                            benchmark_report)
         self.results_view.setPlainText(text)
         return text
 
@@ -172,7 +204,7 @@ class BacktestingLabWidget(QWidget):
             render_json,
         )
 
-        result, performance = self._last_export
+        result, performance = self._last_export[0], self._last_export[1]
         data = build_backtest_report(
             result, performance, self._symbol, self._interval
         )
@@ -209,7 +241,8 @@ class BacktestingLabWidget(QWidget):
             self.tr("Saved: {files}").format(files=", ".join(written)),
         )
 
-    def _render(self, result, report) -> str:
+    def _render(self, result, report, benchmark_warning: str | None = None,
+                benchmark_report=None) -> str:
         """Plain-language result report (chapters 37.9, 37.10, 40.8)."""
         r, s, risk, a = report.returns, report.trades, report.risk, report.activity
         lines = [
@@ -279,10 +312,13 @@ class BacktestingLabWidget(QWidget):
             self.tr("Commissions and fees: {x}").format(x=a.trading_fees),
             self.tr("Estimated slippage: {x}").format(x=a.slippage_cost),
             self.tr("Estimated spread cost: {x}").format(x=a.spread_cost),
-            self.tr("Benchmark (buy and hold) return: {x}").format(
+            self.tr("Benchmark ({name}) return: {x}").format(
+                name=report.benchmark.benchmark_name
+                if report.benchmark
+                else self.tr("none"),
                 x=report.benchmark.benchmark_return
                 if report.benchmark
-                else "n/a"
+                else "n/a",
             ),
             self.tr("Excess return vs benchmark: {x}").format(
                 x=report.benchmark.excess_return
@@ -290,11 +326,14 @@ class BacktestingLabWidget(QWidget):
                 else "n/a"
             ),
             "",
-            self.tr("== Warnings =="),
         ]
+        lines.extend(self._comparison_lines(report, benchmark_report))
+        lines.append(self.tr("== Warnings =="))
+        if benchmark_warning:
+            lines.append(f"  • {benchmark_warning}")
         lines.extend(f"  • {w}" for w in report.warnings)
         if not report.warnings:
-            lines.append(t("  (none)"))
+            lines.append(self.tr("  (none)"))
         lines += [
             "",
             self.tr("== Please read before trusting this =="),
@@ -324,6 +363,64 @@ class BacktestingLabWidget(QWidget):
             DISCLAIMER,
         ]
         return "\n".join(lines)
+
+    def _comparison_lines(self, report, benchmark_report) -> list[str]:
+        """Relative benchmark comparison (chapter 42.2)."""
+        if report.benchmark is None or benchmark_report is None:
+            return [
+                self.tr("== Benchmark comparison =="),
+                self.tr(
+                    "  No benchmark selected — absolute performance "
+                    "alone cannot tell you whether the strategy added "
+                    "value over doing nothing."
+                ),
+                "",
+            ]
+        view = compare_reports(
+            report, benchmark_report, report.benchmark.benchmark_name
+        )
+        lines = [
+            self.tr("== Benchmark comparison (vs {name}) ==").format(
+                name=view.benchmark_name
+            ),
+            self.tr("  Excess return (net of costs): {x}").format(
+                x=view.excess_return
+            ),
+            self.tr("  Excess return (before costs): {x}").format(
+                x=view.gross_excess_return
+            ),
+            self.tr("  Cost drag on the comparison: {x}").format(
+                x=view.cost_drag
+            ),
+            self.tr("  Volatility difference: {x}").format(
+                x=self._fmt(view.volatility_difference)
+            ),
+            self.tr("  Max drawdown difference: {x}").format(
+                x=self._fmt(view.max_drawdown_difference)
+            ),
+            self.tr("  Sharpe difference: {x}").format(
+                x=self._fmt(view.sharpe_difference)
+            ),
+        ]
+        # Plain-language verdict (chapter 42.2, 40.8).
+        if view.beats_benchmark:
+            lines.append(
+                self.tr(
+                    "  The strategy beat the passive alternative by "
+                    "{x} after costs — described, not proven."
+                ).format(x=view.excess_return)
+            )
+        else:
+            lines.append(
+                self.tr(
+                    "  The strategy did NOT beat the passive "
+                    "alternative after costs ({x}). The honest "
+                    "conclusion: this configuration added nothing over "
+                    "doing the simple thing."
+                ).format(x=view.excess_return)
+            )
+        lines.append("")
+        return lines
 
     def _fmt(self, value, valid: bool = True) -> str:
         if value is None:
