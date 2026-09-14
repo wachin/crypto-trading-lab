@@ -30,6 +30,10 @@ from crypto_trading_lab.backtesting.engine import (
     run_backtest,
 )
 from crypto_trading_lab.domain.models import Candle
+from crypto_trading_lab.market_data.splitting import (
+    PeriodKind,
+    split_candles,
+)
 
 __all__ = [
     "MonteCarloConfig",
@@ -39,7 +43,18 @@ __all__ = [
     "perturb_sma_crossover",
     "CostSweepRow",
     "sweep_costs",
+    "DegradationReport",
+    "out_of_sample_degradation",
+    "DEGRADATION_NOTE",
 ]
+
+#: Mandatory interpretation line (44.7).
+DEGRADATION_NOTE = (
+    "In-sample performance was used to build the strategy and is not "
+    "independent evidence; only the out-of-sample figure can support "
+    "(or kill) the hypothesis, and a single out-of-sample run stays an "
+    "observed result."
+)
 
 #: Mandatory honesty lines attached to every Monte Carlo report.
 MONTE_CARLO_WARNINGS = (
@@ -288,3 +303,70 @@ def sweep_costs(
             )
         )
     return rows
+
+
+# --- 44.7 Out-of-sample degradation --------------------------------------
+
+
+@dataclass(frozen=True)
+class DegradationReport:
+    """In-sample vs validation vs out-of-sample comparison (44.7)."""
+
+    train_return: Decimal
+    validation_return: Decimal
+    out_of_sample_return: Decimal
+    degradation: Decimal | None  # 1 - oos/train; None if train <= 0
+    collapsed: bool              # OOS sign/level collapse vs training
+    boundaries: dict[str, str]
+    note: str = DEGRADATION_NOTE
+
+
+def out_of_sample_degradation(
+    candles: Sequence[Candle],
+    strategy_factory: Callable[[], "object"],
+    backtest_config: BacktestConfig | None = None,
+    collapse_margin: Decimal = Decimal("0.5"),
+) -> DegradationReport:
+    """Compare the same strategy across the three periods (44.7).
+
+    One strategy, one config, three chronological periods (chapter 38
+    split). ``degradation`` measures how much of the in-sample return
+    disappears out of sample: 0 means no degradation, 1 means all of
+    it vanished. ``collapsed`` is the chapter's flag: positive training
+    performance whose out-of-sample return fell below
+    ``collapse_margin`` × training return (or turned negative).
+    """
+    backtest_config = backtest_config or BacktestConfig()
+    split = split_candles(candles)
+    split.record_evaluation(PeriodKind.OUT_OF_SAMPLE)
+
+    train = run_backtest(
+        split.training.candles, strategy_factory(), backtest_config
+    )
+    validation = run_backtest(
+        split.validation.candles, strategy_factory(), backtest_config
+    )
+    test = run_backtest(
+        split.out_of_sample.candles, strategy_factory(), backtest_config
+    )
+
+    if train.return_fraction > 0:
+        degradation = Decimal(1) - (
+            test.return_fraction / train.return_fraction
+        )
+        collapsed = (
+            test.return_fraction
+            < train.return_fraction * collapse_margin
+        )
+    else:
+        degradation = None
+        collapsed = False  # nothing positive to lose
+
+    return DegradationReport(
+        train_return=train.return_fraction,
+        validation_return=validation.return_fraction,
+        out_of_sample_return=test.return_fraction,
+        degradation=degradation,
+        collapsed=collapsed,
+        boundaries=split.boundaries(),
+    )

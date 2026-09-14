@@ -16,7 +16,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 275 passed, 2 skipped —
+- **Tests:** 276 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
 - **Source:** 44 Python files under `src/crypto_trading_lab/`
 - **Tests:** 41 Python files under `tests/`
@@ -251,10 +251,14 @@ Per `ROADMAP.md` and the last iteration report:
    deterministic, mandatory interpretation note); 275 tests passing.
    Still open: separate validation stage inside each window (45.1),
    CPCV (45.3, research), feeding qualification (ch. 66).
-8. Next: out-of-sample degradation (44.7, now unblocked by 38),
-   paper trading (57), risk manager (58). Note: §37.8 determinism
-   checkboxes are still open; much of it is already engine-tested,
-   reconciling them is a cheap documentation task.
+8. ~~Out-of-sample degradation (44.7)~~ — done on 2026-09-14:
+   `out_of_sample_degradation()` in `robustness.py` compares the same
+   strategy across the chapter-38 split, quantifies degradation and
+   flags collapse; 276 tests passing.
+9. Next: paper trading (57), risk manager (58), or remaining research
+   tier (43 evidence/statistics, 46 regimes, 49 AFML). Note: §37.8
+   determinism checkboxes are still open; much of it is already
+   engine-tested, reconciling them is a cheap documentation task.
 
 Do not start a task before reading the chapter that owns it, and do not tick
 a requirement until it is implemented **and tested**.
@@ -282,4 +286,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 275 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 276 tests passing at time of writing.*

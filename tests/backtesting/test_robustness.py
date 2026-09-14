@@ -184,3 +184,30 @@ def test_cost_sweep_is_monotonic_and_exact():
     profits = [r.net_profit for r in rows]
     assert profits == sorted(profits, reverse=True)  # costs only hurt
     assert isinstance(rows[0], CostSweepRow)
+
+
+# --- Out-of-sample degradation (44.7) -----------------------------------------
+
+
+def test_out_of_sample_degradation_exact_and_flagged():
+    from crypto_trading_lab.backtesting.robustness import (
+        out_of_sample_degradation,
+    )
+
+    closes = (
+        [300 - i for i in range(25)]                 # dip first: enables the cross
+        + [275 + 2 * i for i in range(95)]           # strong rally (training)
+        + [465 + (i % 4) - 2 for i in range(40)]     # chop (validation)
+        + [463 - 3 * i for i in range(40)]           # decline (out-of-sample)
+    )
+    report = out_of_sample_degradation(
+        _candles(closes), lambda: MACrossoverStrategy(fast=5, slow=20)
+    )
+    assert report.train_return > Decimal("0.5")  # strong in-sample gain
+    # Out of sample the edge vanishes: no positive return at all.
+    assert report.out_of_sample_return <= 0
+    assert report.degradation is not None
+    assert report.degradation >= 1  # all in-sample performance gone
+    assert report.collapsed
+    assert "out_of_sample_first_open" in report.boundaries
+    assert "final" not in report.note.lower()  # it must not oversell

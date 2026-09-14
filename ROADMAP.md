@@ -3207,9 +3207,9 @@ Requirements:
 
 ### 44.7 Out-of-sample degradation
 
-- [ ] Compare in-sample, validation, and out-of-sample performance.
-- [ ] Quantify performance degradation between periods.
-- [ ] Flag strategies whose out-of-sample performance collapses.
+- [x] Compare in-sample, validation, and out-of-sample performance. (`out_of_sample_degradation`)
+- [x] Quantify performance degradation between periods. (degradation = 1 − oos/train)
+- [x] Flag strategies whose out-of-sample performance collapses.
 
 ### 44.8 Backtest overfitting probability (research)
 
