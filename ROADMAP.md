@@ -3253,24 +3253,26 @@ Forward Test
 
 ### 45.1 Requirements
 
-- [ ] Define rolling training windows.
-- [ ] Define validation windows.
-- [ ] Define forward test windows.
-- [ ] Define the window step size.
-- [ ] Record every window.
-- [ ] Prevent information from later windows entering earlier windows.
-- [ ] Respect indicator warm-up periods at each window boundary.
-- [ ] Aggregate results across walk-forward periods.
-- [ ] Allow inspection of each individual period.
-- [ ] Show the distribution of per-window results, not only the aggregate.
-- [ ] Report the number of windows and their time coverage.
-- [ ] Record the exact parameters selected per window.
-- [ ] Flag windows where the strategy degraded materially.
+- [x] Define rolling training windows.
+- [ ] Define validation windows. — the current walker selects parameters
+  on the training window and tests on the forward window; a separate
+  validation stage inside each window is pending.
+- [x] Define forward test windows.
+- [x] Define the window step size.
+- [x] Record every window. (`WindowResult` per window)
+- [x] Prevent information from later windows entering earlier windows. (engine no-look-ahead + forward-only window generation)
+- [x] Respect indicator warm-up periods at each window boundary. (borrow-only warm-up prefixes, boundaries stay exact)
+- [x] Aggregate results across walk-forward periods. (compounded unit-stake aggregate, method documented)
+- [x] Allow inspection of each individual period.
+- [x] Show the distribution of per-window results, not only the aggregate. (`test_returns` per-window distribution)
+- [x] Report the number of windows and their time coverage. (window count + exact boundaries per window)
+- [x] Record the exact parameters selected per window.
+- [x] Flag windows where the strategy degraded materially. (`degraded` flag, documented threshold)
 
 ### 45.2 Reproducibility
 
-- [ ] Record dataset version, strategy version, window configuration, and seed.
-- [ ] Re-running walk-forward with identical inputs must produce identical results.
+- [x] Record dataset version, strategy version, window configuration, and seed. (`WalkForwardReport` metadata; no randomness is used — recorded as such)
+- [x] Re-running walk-forward with identical inputs must produce identical results. (tested determinism)
 
 ### 45.3 Combinatorial purged cross-validation (research)
 
@@ -3285,9 +3287,9 @@ Walk-forward uses one chronological path through history. As an optional researc
 
 ### 45.4 Interpretation
 
-- [ ] Never present aggregate walk-forward results as proof of future profitability.
-- [ ] Explain that walk-forward reduces, but does not eliminate, overfitting risk.
-- [ ] Feed walk-forward results into strategy qualification (see Chapter 66).
+- [x] Never present aggregate walk-forward results as proof of future profitability. (every report carries `WALK_FORWARD_NOTE`)
+- [x] Explain that walk-forward reduces, but does not eliminate, overfitting risk.
+- [ ] Feed walk-forward results into strategy qualification (see Chapter 66). — pending: qualification pipeline does not exist yet.
 
 ---
 
