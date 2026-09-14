@@ -119,7 +119,7 @@ validity flags and assumptions (ROADMAP chapter 40).
 | Drawdown | max, duration, average | $\mathrm{DD}_t = \dfrac{\max_{s \le t} E_s - E_t}{\max_{s \le t} E_s}$ |
 | Risk | volatility, downside | $\sigma \cdot \sqrt{n}$, $\quad \sigma^- = \sqrt{\tfrac{1}{n}\sum \min(r_i,0)^2}\cdot\sqrt{n}$ |
 | Ratios | Sharpe, Sortino, Calmar | $\mathrm{SR} = \dfrac{\bar r - r_f}{\sigma}\sqrt{n}$, $\;\mathrm{Sortino} = \dfrac{\bar r - r_f}{\sigma^-}\sqrt{n}$ |
-| Trades | profit factor, expectancy | $\mathrm{PF} = \dfrac{\sum \text{wins}}{\lvert\sum \text{losses}\rvert}$, $\;\mathbb{E}[\text{trade}] = \bar{\text{P\&L}}$ |
+| Trades | profit factor, expectancy | $\mathrm{PF} = \dfrac{\sum \mathrm{wins}}{\lvert\sum \mathrm{losses}\rvert}$, $\;\mathbb{E}[\mathrm{trade}] = \overline{\mathrm{PnL}}$ |
 | Activity | turnover, fees, spread, slippage | exact per-fill attribution |
 
 **Statistical safeguards baked in:**
