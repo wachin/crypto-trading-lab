@@ -9,27 +9,28 @@ A new AI Agent must read this file **before** doing anything else, then
 
 ---
 
-## 1. Project state (last updated 2026-09-13)
+## 1. Project state (last updated 2026-09-14)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`, pushed and in sync)
-- **State verified at commit:** `1906732 docs: specify the AFML research-tier
-  techniques` (an ancestor of the commit that carries this file)
-- **Tests:** 229 passed, 2 skipped —
+- **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
+  26, 27 and 30 against the code` (an ancestor of the commit that carries
+  this file)
+- **Tests:** 240 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 39 Python files under `src/crypto_trading_lab/`
-- **Tests:** 37 Python files under `tests/`
-- **Documentation:** `docs/en/beginners/` (3 files) and
+- **Source:** 40 Python files under `src/crypto_trading_lab/`
+- **Tests:** 38 Python files under `tests/`
+- **Documentation:** `docs/en/beginners/` (4 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`)
-- **Specification:** `ROADMAP.md` — 72 chapters; 310 requirements marked
+- **Specification:** `ROADMAP.md` — 72 chapters; 381 requirements marked
   `[x]` (reconciled item by item on 2026-09-13, including chapters 7, 26, 27
-  and 30)
+  and 30; chapter 40 added on 2026-09-14)
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
-- **Current phase:** Phase 3 (backtesting) in progress. The engine and the
-  initial strategies are done; the next task is **Chapter 40 (performance
-  metrics)**, followed by the Backtesting Lab UI (§37.9). See §5.
+- **Current phase:** Phase 3 (backtesting) in progress. The engine, the
+  initial strategies and the performance metrics (chapter 40) are done; the
+  next task is the **Backtesting Lab UI (§37.9)**. See §5.
 
 ### Honest status of the earlier phases
 
@@ -65,6 +66,7 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | CSV import + validation | `src/crypto_trading_lab/market_data/importer.py` | 28 |
 | Indicators (SMA/EMA/RSI/BB/ATR/ROC) | `src/crypto_trading_lab/indicators/library.py` | 31 |
 | Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
+| Performance metrics (returns, trades, risk, activity, benchmark, validity) | `src/crypto_trading_lab/backtesting/metrics.py` | 40 |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
 
 ### Domain-model naming and the chapter 7/26/30 reconciliation
@@ -197,17 +199,17 @@ These rules are canonical. The new Agent inherits them verbatim:
 
 Per `ROADMAP.md` and the last iteration report:
 
-1. **Performance metrics (Chapter 40)** — the canonical next task. Chapter 40
-   owns the metric catalogue: return and profit metrics (40.1), trade
-   statistics (40.2), risk metrics (40.3), trading activity (40.4), benchmark
-   comparison (40.5), statistical validity (40.6), configuration (40.7) and
-   documentation (40.8). Compute them from `BacktestResult`
-   (`src/crypto_trading_lab/backtesting/engine.py`), each with its own tests
-   (Chapter 14) and a beginner explanation (40.7 and Chapter 19.2).
-2. **Backtesting Lab UI** — enable the Backtesting Lab button in the main
-   window (it is currently disabled by design), run backtests over imported
-   candles, and show the results with the mandatory beginner-oriented
-   explanation (Chapter 37.9).
+1. ~~Performance metrics (Chapter 40)~~ — done on 2026-09-14
+   (`backtesting/metrics.py` + `tests/backtesting/test_metrics.py` +
+   `docs/en/beginners/performance-metrics.md`; 240 tests passing). Still open
+   in chapter 40, by design and with notes in ROADMAP: short exposure,
+   rejected/partial orders and funding costs — all require engine/paper-
+   trading capabilities that do not exist yet.
+2. **Backtesting Lab UI** — the canonical next task: enable the Backtesting
+   Lab button in the main window (it is currently disabled by design), run
+   backtests over imported candles, and show the results **including the
+   chapter 40 metrics** with the mandatory beginner-oriented explanation
+   (Chapter 37.9).
 3. Then: reports (41), benchmarking (42), robustness (43-46), paper trading
    (57), risk manager (58).
 
@@ -228,7 +230,7 @@ QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 229 passed expected
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
 #    2. AGENTS.md — the non-negotiable rules
-#    3. ROADMAP.md — the specification (start with Chapter 40, the next task)
+#    3. ROADMAP.md — the specification (start with §37.9, the next task)
 #    4. docs/en/developers/afml-techniques.md (when AFML is needed)
 #    5. docs/en/developers/reference-projects.md (reference-project studies)
 ```
@@ -237,4 +239,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-13. All 229 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 240 tests passing at time of writing.*

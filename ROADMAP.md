@@ -2842,76 +2842,81 @@ No single metric must be presented as proof that a strategy is good, safe, or pr
 
 Calculate where applicable:
 
-* [ ] Initial capital.
-* [ ] Final equity.
-* [ ] Net profit/loss.
-* [ ] Gross profit.
-* [ ] Gross loss.
-* [ ] Total return.
-* [ ] Annualized return.
-* [ ] Buy-and-hold return.
-* [ ] Excess return relative to benchmark.
+* [x] Initial capital.
+* [x] Final equity.
+* [x] Net profit/loss.
+* [x] Gross profit.
+* [x] Gross loss.
+* [x] Total return.
+* [x] Annualized return.
+* [x] Buy-and-hold return. (supplied as the benchmark run, see 40.5)
+* [x] Excess return relative to benchmark.
 
 ### 40.2 Trade statistics
 
 Calculate:
 
-* [ ] Number of trades.
-* [ ] Winning trades.
-* [ ] Losing trades.
-* [ ] Win rate.
-* [ ] Average winning trade.
-* [ ] Average losing trade.
-* [ ] Largest winning trade.
-* [ ] Largest losing trade.
-* [ ] Average trade.
-* [ ] Median trade where appropriate.
-* [ ] Profit factor.
-* [ ] Expectancy.
-* [ ] Average holding time.
-* [ ] Maximum consecutive wins.
-* [ ] Maximum consecutive losses.
+* [x] Number of trades.
+* [x] Winning trades.
+* [x] Losing trades.
+* [x] Win rate.
+* [x] Average winning trade.
+* [x] Average losing trade.
+* [x] Largest winning trade.
+* [x] Largest losing trade.
+* [x] Average trade.
+* [x] Median trade where appropriate.
+* [x] Profit factor.
+* [x] Expectancy.
+* [x] Average holding time.
+* [x] Maximum consecutive wins.
+* [x] Maximum consecutive losses.
 
 ### 40.3 Risk metrics
 
 Calculate where statistically appropriate:
 
-* [ ] Maximum drawdown.
-* [ ] Maximum drawdown duration.
-* [ ] Average drawdown.
-* [ ] Volatility.
-* [ ] Downside volatility.
-* [ ] Sharpe ratio.
-* [ ] Sortino ratio.
-* [ ] Calmar ratio.
-* [ ] Risk-adjusted return.
-* [ ] Market exposure.
-* [ ] Long exposure.
-* [ ] Short exposure where applicable.
+* [x] Maximum drawdown.
+* [x] Maximum drawdown duration.
+* [x] Average drawdown.
+* [x] Volatility.
+* [x] Downside volatility.
+* [x] Sharpe ratio.
+* [x] Sortino ratio.
+* [x] Calmar ratio.
+* [x] Risk-adjusted return.
+* [x] Market exposure.
+* [x] Long exposure.
+* [ ] Short exposure where applicable. — pending: the chapter 37 engine
+  is long-only spot by construction; there are no shorts to measure.
 
 ### 40.4 Trading activity
 
 Calculate:
 
-* [ ] Turnover.
-* [ ] Number of orders.
-* [ ] Number of rejected orders.
-* [ ] Number of partially filled orders.
-* [ ] Commissions.
-* [ ] Trading fees.
-* [ ] Estimated spread cost.
-* [ ] Estimated slippage.
-* [ ] Funding costs where applicable.
+* [x] Turnover.
+* [x] Number of orders.
+* [ ] Number of rejected orders. — pending: the engine always fills
+  or skips; rejections only exist once a paper-trading layer (ch. 57)
+  can produce them.
+* [ ] Number of partially filled orders. — pending: the engine fills
+  all-or-nothing; partial fills require a more detailed fill model.
+* [x] Commissions.
+* [x] Trading fees.
+* [x] Estimated spread cost.
+* [x] Estimated slippage.
+* [ ] Funding costs where applicable. — pending: spot trading has no
+  funding; requires futures/margin support.
 
 ### 40.5 Benchmark comparison
 
-- [ ] Every applicable strategy evaluation must compare against a benchmark (see Chapter 42).
+- [x] Every applicable strategy evaluation must compare against a benchmark (see Chapter 42). — implemented via the `benchmark` argument of `compute_performance` (chapter 42 owns the benchmark *selection* policy).
 
 The report must clearly distinguish:
 
-* [ ] Absolute performance.
-* [ ] Benchmark performance.
-* [ ] Difference from benchmark.
+* [x] Absolute performance.
+* [x] Benchmark performance.
+* [x] Difference from benchmark.
 
 ### 40.6 Statistical validity
 
@@ -2919,35 +2924,35 @@ The application must avoid displaying misleading metrics when there is insuffici
 
 For example:
 
-* [ ] Do not present annualized metrics for inappropriate periods.
-* [ ] Do not present Sharpe or Sortino as reliable conclusions with insufficient observations.
-* [ ] Identify metrics affected by small sample sizes.
-* [ ] Display warnings when the number of trades is very small.
-* [ ] Distinguish descriptive statistics from statistically supported conclusions (see Chapter 43).
+* [x] Do not present annualized metrics for inappropriate periods.
+* [x] Do not present Sharpe or Sortino as reliable conclusions with insufficient observations.
+* [x] Identify metrics affected by small sample sizes.
+* [x] Display warnings when the number of trades is very small.
+* [x] Distinguish descriptive statistics from statistically supported conclusions (see Chapter 43).
 
 ### 40.7 Metric configuration
 
 Every metric must record:
 
-* [ ] Periodicity.
-* [ ] Annualization method where applicable.
-* [ ] Assumed risk-free rate where applicable.
-* [ ] Return calculation method.
-* [ ] Missing-data treatment.
-* [ ] Treatment of zero returns.
-* [ ] Relevant assumptions.
+* [x] Periodicity.
+* [x] Annualization method where applicable.
+* [x] Assumed risk-free rate where applicable.
+* [x] Return calculation method.
+* [x] Missing-data treatment.
+* [x] Treatment of zero returns.
+* [x] Relevant assumptions.
 
 ### 40.8 Documentation
 
 Every metric must provide:
 
-* [ ] Technical definition.
-* [ ] Beginner-friendly definition.
-* [ ] Worked example.
-* [ ] Warning about misuse.
-* [ ] Explanation of whether higher or lower values are generally preferred.
-* [ ] Limitations.
-* [ ] Required assumptions.
+* [x] Technical definition.
+* [x] Beginner-friendly definition.
+* [x] Worked example.
+* [x] Warning about misuse.
+* [x] Explanation of whether higher or lower values are generally preferred.
+* [x] Limitations.
+* [x] Required assumptions.
 
 Every report must explain:
 
@@ -2955,13 +2960,13 @@ Every report must explain:
 
 Performance must be interpreted together with:
 
-* [ ] Risk.
-* [ ] Drawdown.
-* [ ] Trading costs.
-* [ ] Number of trades.
-* [ ] Market conditions.
-* [ ] Out-of-sample performance.
-* [ ] Robustness tests.
+* [x] Risk.
+* [x] Drawdown.
+* [x] Trading costs.
+* [x] Number of trades.
+* [x] Market conditions.
+* [x] Out-of-sample performance.
+* [x] Robustness tests.
 
 ---
 

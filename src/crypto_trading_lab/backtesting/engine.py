@@ -216,6 +216,8 @@ class BacktestResult:
     total_spread: Decimal
     equity_curve: tuple[Decimal, ...]
     candle_count: int
+    order_count: int = 0
+    exposure_curve: tuple[bool, ...] = ()  # True when in the market that candle
 
     @property
     def net_profit(self) -> Decimal:
@@ -265,6 +267,8 @@ def run_backtest(
 
     trades: list[TradeRecord] = []
     equity_curve: list[Decimal] = []
+    exposure_curve: list[bool] = []
+    order_count = 0
     total_fees = Decimal(0)
     total_slippage = Decimal(0)
     total_spread = Decimal(0)
@@ -289,6 +293,7 @@ def run_backtest(
                     spread = quantity * fill_price * config.costs.spread_fraction
                     slip = quantity * fill_price * config.costs.slippage_fraction
                     cash -= quantity * price + fee
+                    order_count += 1
                     position = quantity
                     avg_entry = price
                     entry_time = current.open_time.isoformat()
@@ -297,6 +302,7 @@ def run_backtest(
             elif pending_signal is OrderSide.SELL and position > 0:
                 price = config.costs.sell_price(fill_price)
                 fee = position * price * config.costs.taker_fee
+                order_count += 1
                 spread = position * fill_price * config.costs.spread_fraction
                 slip = position * fill_price * config.costs.slippage_fraction
                 cash += position * price - fee
@@ -324,6 +330,7 @@ def run_backtest(
         # 2. Value the portfolio at this candle's close.
         equity = cash + position * current.close
         equity_curve.append(equity)
+        exposure_curve.append(position > 0)
 
         # 3. Ask the strategy — it only sees candles up to ``index``.
         signal = strategy.on_candle(index, candles)
@@ -344,4 +351,6 @@ def run_backtest(
         total_spread=total_spread,
         equity_curve=tuple(equity_curve),
         candle_count=len(candles),
+        order_count=order_count,
+        exposure_curve=tuple(exposure_curve),
     )
