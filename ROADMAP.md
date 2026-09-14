@@ -122,9 +122,12 @@ How to read the checkboxes:
 
 - `- [x]` marks a requirement that is implemented **and tested**.
 - Chapter headers use the `[ ]` template; progress is tracked in the sub-items.
-- Some partially implemented chapters (**7, 26, 27, 30**) have not yet been
-  reconciled item by item, so their sub-items understate what already exists;
-  for those, `AGENT-HANDOFF.md` §1 is authoritative.
+- Chapters **7, 26, 27 and 30** were reconciled item by item on 2026-09-13, so
+  their boxes reflect what the code implements and what the tests exercise.
+  Their remaining open items are genuine pending work: chapter 26.2/26.3 (the
+  Binance WebSocket side and all of Coinbase), chapter 27 (retry/backoff,
+  circuit breaker, stale-data machinery), chapter 30 (tick size, step size and
+  the rest of the pre-trade pipeline).
 - Phase roll-up lives in Chapter 69; the working method is Chapter 70.
 
 ---
@@ -667,27 +670,27 @@ This is a mandatory architectural rule (see also Chapter 2):
 Implement explicit, strongly validated models for:
 
 - [ ] Exchange;
-- [ ] Market;
-- [ ] TradingPair;
+- [x] Market;
+- [x] TradingPair;
 - [ ] Asset;
-- [ ] Candle;
+- [x] Candle;
 - [ ] Trade;
 - [ ] OrderBook;
 - [ ] OrderBookLevel;
-- [ ] Ticker;
-- [ ] Balance;
+- [x] Ticker;
+- [x] Balance;
 - [ ] Position;
 - [ ] Portfolio;
 - [ ] Order;
-- [ ] OrderRequest;
-- [ ] OrderResult;
-- [ ] Fill;
+- [x] OrderRequest;
+- [x] OrderResult;
+- [x] Fill;
 - [ ] Fee;
 - [ ] Strategy;
 - [ ] StrategySignal;
 - [ ] RiskDecision;
 - [ ] Backtest;
-- [ ] BacktestResult;
+- [x] BacktestResult;
 - [ ] PaperAccount;
 - [ ] PerformanceMetrics;
 - [ ] DatasetVersion;
@@ -697,18 +700,18 @@ Implement explicit, strongly validated models for:
 
 Use:
 
-- [ ] `Decimal` for money;
-- [ ] `Decimal` for prices;
-- [ ] `Decimal` for quantities;
-- [ ] `Decimal` for commissions;
-- [ ] `Decimal` for balances;
-- [ ] normalized timestamps;
-- [ ] UTC internally;
+- [x] `Decimal` for money;
+- [x] `Decimal` for prices;
+- [x] `Decimal` for quantities;
+- [x] `Decimal` for commissions;
+- [x] `Decimal` for balances;
+- [x] normalized timestamps;
+- [x] UTC internally;
 - [ ] the local timezone only for presentation;
-- [ ] dataclasses or Pydantic models where appropriate.
+- [x] dataclasses or Pydantic models where appropriate.
 
-- [ ] Do not use `float` for critical monetary calculations.
-- [ ] Every exchange adapter must normalize exchange-specific data into common domain models.
+- [x] Do not use `float` for critical monetary calculations.
+- [x] Every exchange adapter must normalize exchange-specific data into common domain models.
 
 ---
 
@@ -1816,42 +1819,42 @@ Create an `ExchangeAdapter` interface or equivalent.
 
 It must define separate operations for:
 
-- [ ] retrieving markets;
-- [ ] retrieving tickers;
-- [ ] retrieving historical candles;
-- [ ] subscribing to tickers;
-- [ ] subscribing to candles;
-- [ ] subscribing to trades;
-- [ ] subscribing to the order book;
-- [ ] retrieving balances;
-- [ ] retrieving orders;
-- [ ] creating an order;
-- [ ] cancelling an order;
-- [ ] receiving order updates;
-- [ ] checking API permissions.
+- [x] retrieving markets;
+- [x] retrieving tickers;
+- [x] retrieving historical candles;
+- [x] subscribing to tickers;
+- [x] subscribing to candles;
+- [x] subscribing to trades;
+- [x] subscribing to the order book;
+- [x] retrieving balances;
+- [x] retrieving orders;
+- [x] creating an order;
+- [x] cancelling an order;
+- [x] receiving order updates;
+- [x] checking API permissions.
 
 ### 26.1 MockExchange
 
 Implement a fully local provider for:
 
-- [ ] automated tests;
+- [x] automated tests;
 - [ ] demonstrations;
 - [ ] paper trading;
-- [ ] historical replay;
-- [ ] simulated failures;
-- [ ] simulated disconnections;
-- [ ] simulated latency;
-- [ ] simulated slippage;
-- [ ] partially filled orders;
-- [ ] rejected orders;
-- [ ] rate-limit simulations.
+- [x] historical replay;
+- [x] simulated failures;
+- [x] simulated disconnections;
+- [x] simulated latency;
+- [x] simulated slippage;
+- [x] partially filled orders;
+- [x] rejected orders;
+- [x] rate-limit simulations.
 
 ### 26.2 Binance Spot Testnet
 
 Add initial support for Binance Spot Testnet using current official documentation.
 
-- [ ] Endpoints must be configurable.
-- [ ] Do not scatter endpoint strings throughout the codebase.
+- [x] Endpoints must be configurable.
+- [x] Do not scatter endpoint strings throughout the codebase.
 
 Include:
 
@@ -1866,7 +1869,7 @@ Include:
 - [ ] duplicate message tolerance;
 - [ ] secure logging.
 
-- [ ] Do not implement Binance Futures.
+- [x] Do not implement Binance Futures.
 
 ### 26.3 Coinbase
 
@@ -1885,16 +1888,16 @@ Initially add:
 
 Create a connection state machine with:
 
-- [ ] DISCONNECTED
-- [ ] CONNECTING
-- [ ] AUTHENTICATING
-- [ ] SUBSCRIBING
-- [ ] CONNECTED
-- [ ] DEGRADED
-- [ ] RECONNECTING
-- [ ] RATE_LIMITED
-- [ ] ERROR
-- [ ] STOPPED
+- [x] DISCONNECTED
+- [x] CONNECTING
+- [x] AUTHENTICATING
+- [x] SUBSCRIBING
+- [x] CONNECTED
+- [x] DEGRADED
+- [x] RECONNECTING
+- [x] RATE_LIMITED
+- [x] ERROR
+- [x] STOPPED
 
 Implement:
 
@@ -1911,7 +1914,7 @@ Implement:
 Every connection state must have:
 
 - [ ] a technical description;
-- [ ] a beginner-friendly explanation;
+- [x] a beginner-friendly explanation;
 - [ ] a visible status label;
 - [ ] a troubleshooting link.
 
@@ -1996,31 +1999,31 @@ Beyond time-based candles, the system may support event-based bars for research 
 
 Every exchange adapter must retrieve and respect:
 
-- [ ] minimum quantity;
-- [ ] minimum order value/notional;
+- [x] minimum quantity;
+- [x] minimum order value/notional;
 - [ ] tick size;
 - [ ] step size;
-- [ ] price precision;
-- [ ] quantity precision;
-- [ ] supported order states;
-- [ ] supported order types;
-- [ ] known fees;
+- [x] price precision;
+- [x] quantity precision;
+- [x] supported order states;
+- [x] supported order types;
+- [x] known fees;
 - [ ] rate limits;
-- [ ] timestamp formats;
+- [x] timestamp formats;
 - [ ] time synchronization requirements.
 
 Before creating an order:
 
-- [ ] 1. normalize the price;
-- [ ] 2. normalize the quantity;
+- [x] 1. normalize the price;
+- [x] 2. normalize the quantity;
 - [ ] 3. apply tick-size rules;
 - [ ] 4. apply step-size rules;
-- [ ] 5. verify minimum notional value;
-- [ ] 6. estimate fees;
-- [ ] 7. verify available balance;
+- [x] 5. verify minimum notional value;
+- [x] 6. estimate fees;
+- [x] 7. verify available balance;
 - [ ] 8. verify risk limits;
 - [ ] 9. verify market-data freshness;
-- [ ] 10. verify connection state;
+- [x] 10. verify connection state;
 - [ ] 11. prevent duplicate orders;
 - [ ] 12. create an idempotency identifier;
 - [ ] 13. produce a beginner-readable explanation of any rejection.

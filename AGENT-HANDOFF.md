@@ -22,8 +22,9 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Documentation:** `docs/en/beginners/` (3 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`)
-- **Specification:** `ROADMAP.md` — 72 chapters; 241 requirements marked
-  `[x]` after the 2026-09-13 reconciliation
+- **Specification:** `ROADMAP.md` — 72 chapters; 310 requirements marked
+  `[x]` (reconciled item by item on 2026-09-13, including chapters 7, 26, 27
+  and 30)
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
 - **Current phase:** Phase 3 (backtesting) in progress. The engine and the
@@ -65,6 +66,30 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Indicators (SMA/EMA/RSI/BB/ATR/ROC) | `src/crypto_trading_lab/indicators/library.py` | 31 |
 | Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
+
+### Domain-model naming and the chapter 7/26/30 reconciliation
+
+- `Symbol` is the validated trading-pair type (`BASE/QUOTE`): where chapter 7
+  lists "TradingPair", the implementation is `Symbol`.
+- Domain models implemented: `Market`, `Ticker`, `Candle`, `Balance`,
+  `OrderRequest`, `Fill`, `OrderResult` (`domain/models.py`), plus
+  `BacktestConfig`, `CostModel`, `TradeRecord`, `BacktestResult`
+  (`backtesting/engine.py`). All money, price, quantity, fee and balance
+  fields are `Decimal`; timestamps are UTC and naive ones are rejected.
+- Domain models still to add (chapter 7): Exchange, Asset, Trade, OrderBook,
+  OrderBookLevel, Position, Portfolio, Order, Fee, StrategySignal,
+  RiskDecision, Backtest, PaperAccount, PerformanceMetrics, DatasetVersion,
+  Experiment, StrategyVersion, QualificationReport.
+- Chapter 30 is only partly done: `Market` carries `min_quantity`,
+  `min_notional`, `price_precision`, `quantity_precision` and maker/taker fees,
+  and `ExchangeAdapter.validate_order_request` performs the shared pre-flight
+  checks. Still pending: true tick-size/step-size rules, rate limits, time
+  synchronisation, and the remaining pre-trade steps (risk limits, data
+  freshness, duplicate prevention, idempotency identifiers, beginner-readable
+  rejections).
+- Chapters 26.2 and 26.3 are partial: only the Binance endpoint configuration
+  exists (centralised, spot-only, tested). There is no WebSocket layer, no
+  reconnection logic and no Coinbase support.
 
 ### Development environment
 
