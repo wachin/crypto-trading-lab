@@ -107,6 +107,26 @@ Rules:
 - Research, execution, and risk are separate responsibilities. Never mix them (see Chapter 6.1).
 - When a chapter references another, the referenced chapter owns the canonical requirements.
 
+## Where development stands (resume here)
+
+This roadmap is the **specification**, not the status log. The living statement
+of what is implemented and what comes next is `AGENT-HANDOFF.md`, which is the
+first file any new agent must read:
+
+1. `AGENT-HANDOFF.md` §1 — what exists today (modules, tests, baseline).
+2. `AGENT-HANDOFF.md` §5 — the exact continuation point.
+3. This file — the requirements of the chapter currently being implemented.
+4. `AGENTS.md` — the non-negotiable ground rules.
+
+How to read the checkboxes:
+
+- `- [x]` marks a requirement that is implemented **and tested**.
+- Chapter headers use the `[ ]` template; progress is tracked in the sub-items.
+- Some partially implemented chapters (**7, 26, 27, 30**) have not yet been
+  reconciled item by item, so their sub-items understate what already exists;
+  for those, `AGENT-HANDOFF.md` §1 is authoritative.
+- Phase roll-up lives in Chapter 69; the working method is Chapter 70.
+
 ---
 
 # PART I — FOUNDATION
@@ -4593,15 +4613,15 @@ Before programming:
 
 Create:
 
-- [ ] `pyproject.toml`;
-- [ ] project structure;
+- [x] `pyproject.toml`;
+- [x] project structure;
 - [x] minimal PyQt6 application;
 - [x] logging;
-- [ ] configuration;
+- [x] configuration;
 - [x] English default language;
 - [x] Spanish translation framework;
 - [x] tests;
-- [ ] SQLite;
+- [x] SQLite;
 - [ ] initial Debian package;
 - [x] initial English beginner documentation;
 - [x] initial Learning Center shell.
@@ -4612,7 +4632,7 @@ Implement:
 
 - [x] MockExchange;
 - [x] CSV import;
-- [ ] candles;
+- [x] candles;
 - [x] storage;
 - [x] charts;
 - [x] basic indicators;
@@ -4624,8 +4644,8 @@ Implement:
 
 - [x] deterministic engine;
 - [x] initial strategies;
-- [ ] commissions;
-- [ ] slippage;
+- [x] commissions;
+- [x] slippage;
 - [ ] metrics;
 - [ ] reports;
 - [ ] beginner backtesting guide.
@@ -4763,21 +4783,21 @@ Perform these tasks:
 - [ ] 10. create ADR-0005 for the packaging backend;
 - [ ] 11. create ADR-0006 for internationalization;
 - [ ] 12. create ADR-0007 for beginner documentation;
-- [ ] 13. create the initial project structure;
+- [x] 13. create the initial project structure;
 - [x] 14. create a minimal PyQt6 window;
 - [x] 15. make English the default language;
 - [x] 16. create the Spanish translation infrastructure;
 - [x] 17. configure Qt Linguist files;
 - [x] 18. create XDG configuration handling;
-- [ ] 19. create logging with secret redaction;
-- [ ] 20. create a minimal SQLite database;
-- [ ] 21. create initial unit tests;
-- [ ] 22. create `pyproject.toml`;
+- [x] 19. create logging with secret redaction;
+- [x] 20. create a minimal SQLite database;
+- [x] 21. create initial unit tests;
+- [x] 22. create `pyproject.toml`;
 - [ ] 23. create an initial Debian package;
 - [x] 24. create the first English beginner guide;
 - [x] 25. create the initial glossary;
 - [x] 26. create the Learning Center placeholder;
-- [ ] 27. execute available tests.
+- [x] 27. execute available tests.
 
 The initial application must open a window containing:
 

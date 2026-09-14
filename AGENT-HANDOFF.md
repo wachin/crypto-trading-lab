@@ -1,30 +1,59 @@
-# AGENT-HANDOFF.md — Repository Migration & Continuation Guide
+# AGENT-HANDOFF.md — Continuation Guide
 
-**Purpose:** complete, self-contained instructions for moving this
-project to a fresh repository and continuing development 
+**Purpose:** everything a new AI Agent needs to continue this project from
+its current state. The migration notes that follow (§3–§6) are preserved
+for a fresh start.
 
-A new AI Agent should read this file **before** doing anything else.
+A new AI Agent must read this file **before** doing anything else, then
+`AGENTS.md`, then `ROADMAP.md`.
 
 ---
 
-## 1. Project state at handoff (2026-09-13)
+## 1. Project state (last updated 2026-09-13)
 
-- **Tests:** 229 passed, 2 skipped (`python3 -m pytest tests/ -q`,
-  run with `QT_QPA_PLATFORM=offscreen` on headless machines)
+- **Repository:** `https://github.com/wachin/crypto-trading-lab`
+  (branch `main`, pushed and in sync)
+- **State verified at commit:** `1906732 docs: specify the AFML research-tier
+  techniques` (an ancestor of the commit that carries this file)
+- **Tests:** 229 passed, 2 skipped —
+  `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
 - **Source:** 39 Python files under `src/crypto_trading_lab/`
 - **Tests:** 37 Python files under `tests/`
-- **Specification:** `ROADMAP.md` — 72 chapters in checklist format,
-  228 items marked `[x]`
-- **Phases completed:** Phase 0 (research), Phase 1 (foundation),
-  Phase 2 (data & charts), Phase 3 in progress (backtesting engine done)
-- **Last commit:** `3fbc029 Implementado — Motor de backtesting (cap. 37)`
+- **Documentation:** `docs/en/beginners/` (3 files) and
+  `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
+  `adr/0001-exchange-adapter-spike.md`)
+- **Specification:** `ROADMAP.md` — 72 chapters; 241 requirements marked
+  `[x]` after the 2026-09-13 reconciliation
+- **Git submodules:** 8 reference projects under `external/`; a fresh clone
+  needs `git submodule update --init --recursive`
+- **Current phase:** Phase 3 (backtesting) in progress. The engine and the
+  initial strategies are done; the next task is **Chapter 40 (performance
+  metrics)**, followed by the Backtesting Lab UI (§37.9). See §5.
+
+### Honest status of the earlier phases
+
+Phase 0 (research) and Phase 2 (data & charts) are functionally done. Phase 1
+(foundation) is done except for the items below — do not repeat "all phases
+completed"; Chapter 69 and Chapter 71 track the real state.
+
+Still missing from the foundation (required by Chapter 19.1 / Chapter 71 and
+not yet written):
+
+- `docs/en/developers/debian-dependencies.md`
+- `docs/en/developers/architecture-proposal.md`
+- `docs/en/developers/threat-model.md`
+- the ADR set `ADR-0001`–`ADR-0007` (only an exchange-adapter spike ADR
+  exists today, `docs/en/developers/adr/0001-exchange-adapter-spike.md`)
+- the initial Debian package (Chapter 16)
+
+These are ordinary pending work items, not blockers for Chapter 40.
 
 ### Implemented modules (all with passing tests)
 
 | Module | Path | Roadmap chapter |
 |---|---|---|
 | Domain models (Decimal, UTC) | `src/crypto_trading_lab/domain/models.py` | 7 |
-| Exchange adapters + Mock + CCXT | `src/crypto_trading_lab/exchanges/` | 26-27, 30 |
+| Exchange adapters + Mock + CCXT | `src/crypto_trading_lab/exchanges/` | 26-27, 30 (partial) |
 | Credential store (keyring/memory) | `src/crypto_trading_lab/security/credentials.py` | 9 |
 | Logging + redaction + audit | `src/crypto_trading_lab/infrastructure/logging_setup.py` | 10 |
 | SQLite persistence + candle repo | `src/crypto_trading_lab/persistence/` | 8 |
@@ -34,7 +63,8 @@ A new AI Agent should read this file **before** doing anything else.
 | Charts (PyQtGraph backend) | `src/crypto_trading_lab/ui/charts/` | 32, 4.2 |
 | CSV import + validation | `src/crypto_trading_lab/market_data/importer.py` | 28 |
 | Indicators (SMA/EMA/RSI/BB/ATR/ROC) | `src/crypto_trading_lab/indicators/library.py` | 31 |
-| Backtesting engine | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
+| Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
+| AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
 
 ### Development environment
 
@@ -43,14 +73,16 @@ A new AI Agent should read this file **before** doing anything else.
   platformdirs 4.3.7, pytest 8.3.5, Qt tools `pylupdate6`/`lrelease`/
   `linguist` — **all from Debian packages, no venv needed**
 
+### One reference you will not have
 
+The previous developer held the book's *exhibit compilation* as a local PDF.
+It is git-ignored, was deliberately deleted and is **not part of the
+repository**. This is not a blocker: every technique that depended on it is
+already specified in `docs/en/developers/afml-techniques.md`, with the
+exhibit numbers, the equations and the primary-paper citations in its §5.
+Work from that specification; do not try to obtain the PDF.
 
-**Expected result:** 229 passed, 2 skipped. If anything else fails,
-the migration lost a file — compare against this old repository.
-
-
-## About Book Marcos López de Prado, *Advances in Financial Machine Learning*,
- Wiley, 2018.
+## About the book — Marcos López de Prado, *Advances in Financial Machine Learning* (Wiley, 2018)
 
 Credit appears (and must be preserved) in:
 
@@ -82,10 +114,12 @@ repository's Agent must:
 2. Use `docs/en/developers/reference-projects.md` — Part A maps every
    relevant technique to roadmap sections with adoption guidance; A.9
    inventories the book's exhibit compilation (a local reference copy).
-3. Use the MIT-licensed exercises submodule for reference code, and the
-   exhibit compilation for the snippets and equations the
-   submodule lacks (sample weights, fractional differentiation, bet
-   sizing, structural breaks, entropy, the PSR/DSR formulas, CPCV).
+3. Use the MIT-licensed exercises submodule for reference code. For the
+   snippets and equations the submodule lacks (sample weights, fractional
+   differentiation, bet sizing, structural breaks, entropy, the PSR/DSR
+   formulas, CPCV), use the specification in `afml-techniques.md` — it
+   carries the exhibit numbers and equations, and the compilation itself
+   is not available to you (see §1).
 4. Implement from the recorded definitions, cite the book in
    docstrings/docs: *"Technique from López de Prado (2018),
    Advances in Financial Machine Learning, ch. N"*
@@ -98,7 +132,6 @@ repository's Agent must:
    guess.
 6. Never copy book text or code into the repository and never commit the
    book (printed text or exhibit compilation).
-   
 
 ## 3. AGENTS.md in the new repo
 
@@ -129,7 +162,7 @@ These rules are canonical. The new Agent inherits them verbatim:
 5. **Working method** (chapter 70): small changes, tests always run,
    results shown honestly, documentation evolves with code, English
    first (Spanish via Qt Linguist).
-6. **Book rule** (§3-§4 of this file): cite López de Prado by
+6. **Book rule** (§1 and §2 of this file): cite López de Prado by
    reference; never redistribute his text.
 7. **Windows/portability**: code is Qt/stdlib/Debian-packages pure —
    keep it platform-neutral by construction, but Debian is the only
@@ -139,30 +172,44 @@ These rules are canonical. The new Agent inherits them verbatim:
 
 Per `ROADMAP.md` and the last iteration report:
 
-1. **Performance metrics** (chapter 40): win rate, profit factor,
-   expectancy, max drawdown, volatility, Sharpe/Sortino — computed
-   from `BacktestResult`, each with beginner documentation.
-2. **Enable the Backtesting Lab button** in the main window (it is
-   currently disabled by design), running backtests over imported
-   candles, showing results with the mandatory beginner-oriented
-   explanation (chapter 37.9).
-3. Then: reports (41), paper trading (57), risk manager (58).
+1. **Performance metrics (Chapter 40)** — the canonical next task. Chapter 40
+   owns the metric catalogue: return and profit metrics (40.1), trade
+   statistics (40.2), risk metrics (40.3), trading activity (40.4), benchmark
+   comparison (40.5), statistical validity (40.6), configuration (40.7) and
+   documentation (40.8). Compute them from `BacktestResult`
+   (`src/crypto_trading_lab/backtesting/engine.py`), each with its own tests
+   (Chapter 14) and a beginner explanation (40.7 and Chapter 19.2).
+2. **Backtesting Lab UI** — enable the Backtesting Lab button in the main
+   window (it is currently disabled by design), run backtests over imported
+   candles, and show the results with the mandatory beginner-oriented
+   explanation (Chapter 37.9).
+3. Then: reports (41), benchmarking (42), robustness (43-46), paper trading
+   (57), risk manager (58).
+
+Do not start a task before reading the chapter that owns it, and do not tick
+a requirement until it is implemented **and tested**.
 
 ## 6. Quick-start for the new Agent
 
 ```bash
-# Verify environment:
+# 1. Clone with the reference submodules (or, if already cloned):
+git submodule update --init --recursive
+
+# 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 229 passed expected
 
-# Read in this order:
-# 1. AGENT-HANDOFF.md (this file)
-# 2. GENESIS.md
-# 3. ROADMAP.md (chapters 70, 71, then the next chapter to implement)
-# 4. docs/en/developers/reference-projects.md (when AFML is needed)
+# 3. Read in this order:
+#    1. AGENT-HANDOFF.md (this file) — state and next steps
+#    2. AGENTS.md — the non-negotiable rules
+#    3. ROADMAP.md — the specification (start with Chapter 40, the next task)
+#    4. docs/en/developers/afml-techniques.md (when AFML is needed)
+#    5. docs/en/developers/reference-projects.md (reference-project studies)
 ```
+
+If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff prepared 2026-09-13. All 229 tests passing at time of writing.*
+*Handoff updated 2026-09-13. All 229 tests passing at time of writing.*

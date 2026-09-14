@@ -20,9 +20,10 @@ Priority order, non-negotiable:
 
 The method follows the discipline of *Advances in Financial Machine
 Learning* (Marcos López de Prado, Wiley, 2018) — cited here by
-bibliographic reference only. Its techniques are implemented from the study notes
-in `docs/en/developers/reference-projects.md` and the MIT-licensed
-exercise repository under `external/`, with attribution.
+bibliographic reference only. Its techniques are implemented from the
+specification in `docs/en/developers/afml-techniques.md`, the study notes in
+`docs/en/developers/reference-projects.md`, and the MIT-licensed exercise
+repository under `external/`, with attribution.
 
 ## What the finished program will be used for
 
@@ -61,8 +62,9 @@ Implemented so far (each with passing tests):
 This repository is ready for an AI Agent to initiate or continue the creation of the program. No programming knowledge is required.
 
 1. Open an AI Agent (such as opencode) inside this repository.
-2. Tell it to read `AGENT-HANDOFF.md` (it explains where development
-   stands and what comes next). For a brand-new start, use `GENESIS.md`.
+2. Tell it to read `AGENT-HANDOFF.md` — §1 states what exists today and
+   §5 gives the exact continuation point. For a brand-new start, use
+   `GENESIS.md`.
 3. The Agent will continue building step by step, following the
    specification in `ROADMAP.md`.
 
@@ -94,7 +96,7 @@ off.
 | `AGENTS.md` | Ground rules every AI Agent must follow in this repository |
 | `GENESIS.md` | The original first-session instruction (kept for fresh starts) |
 | `ROADMAP.md` | The complete project specification (72 chapters in checklist format, for tracking progress) |
-| `docs/` | Developer documentation: ADRs, reference-project studies, beginner guides |
+| `docs/` | Developer documentation (ADRs, reference-project studies, AFML technique specifications) and beginner guides |
 | `src/` | Application source code (domain, adapters, security, logging, persistence, indicators, backtesting, UI) |
 | `tests/` | Automated tests (unit, GUI, persistence, backtesting) |
 | `external/` | Git submodules with reference projects studied during development (all open source) |
