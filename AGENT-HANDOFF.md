@@ -63,29 +63,50 @@ Credit appears (and must be preserved) in:
 **Rule for the new repository:** the book is cited by bibliographic
 reference only. Techniques from the book are implemented from the public
 MIT-licensed exercise repository (`external/adv-financial-ml-marcos-
-exercises`, already a submodule) and from the mathematical
-definitions recorded in `reference-projects.md`, always with
-attribution.
+exercises`, already a submodule), from the book's own exhibit
+compilation (a local reference copy, inventoried in
+`reference-projects.md` A.9), and from the mathematical definitions
+recorded in `docs/en/developers/afml-techniques.md`, always with
+attribution. Never copy book text or code, and never commit the book —
+printed text or exhibit compilation.
 
 ## 2. What to do if the Agent needs AFML material later
 
 Part VIII of the ROADMAP (chapters 47-50) draws on the book. The new
 repository's Agent must:
 
-1. Use `docs/en/developers/reference-projects.md` — Part A maps every
-   relevant technique to roadmap sections with adoption guidance
-2. Use the MIT-licensed exercises submodule for reference code
-3. Implement from the mathematical definitions, cite the book in
+1. Read `docs/en/developers/afml-techniques.md` first — it holds the
+   project's own specification of every AFML technique: purpose,
+   mandatory parameters, algorithm outline, required tests, exhibit
+   pointers and open questions.
+2. Use `docs/en/developers/reference-projects.md` — Part A maps every
+   relevant technique to roadmap sections with adoption guidance; A.9
+   inventories the book's exhibit compilation (a local reference copy).
+3. Use the MIT-licensed exercises submodule for reference code, and the
+   exhibit compilation for the snippets and equations the
+   submodule lacks (sample weights, fractional differentiation, bet
+   sizing, structural breaks, entropy, the PSR/DSR formulas, CPCV).
+4. Implement from the recorded definitions, cite the book in
    docstrings/docs: *"Technique from López de Prado (2018),
    Advances in Financial Machine Learning, ch. N"*
+5. Resolve every *open question* in `afml-techniques.md` before coding
+   the affected technique. The two that were open (PBO/CSCV, ch. 49.6;
+   the Deflated Sharpe Ratio, ch. 49.5) are now specified from their
+   public primary papers, as the roadmap allows ("additional research",
+   Ch. 49); only the DSR paper's Appendix 3 (effective number of
+   independent trials) remains, with a conservative fallback. Never
+   guess.
+6. Never copy book text or code into the repository and never commit the
+   book (printed text or exhibit compilation).
    
 
-## 3. Recommended: create AGENTS.md in the new repo
+## 3. AGENTS.md in the new repo
 
-The new repository should carry an `AGENTS.md` at its root so any
+The new repository carries an `AGENTS.md` at its root so any
 AI Agent (opencode, Codex, etc.) automatically loads the ground
-rules. Suggested content is provided in §7. Do this in the FIRST
-commit of the new repository.
+rules. It was created in the first commit of this repository; keep it
+in sync with §4 of this file (the working rules) and with the AFML book
+rule (§1).
 
 ## 4. Working rules that must survive the migration
 

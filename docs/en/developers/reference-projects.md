@@ -16,6 +16,7 @@ Status legend: **done** (study concluded, conclusions below) · **pending** (stu
 | Jesse | `external/jesse` | Ch. 43–50 | pending |
 | TA-Lib | `external/ta-lib` | Ch. 31 | pending |
 | VectorBT | `external/vectorbt` | Ch. 37, 45 | **done** (Part C) |
+| AFML book exhibit compilation | local reference copy (not in this repository) | Ch. 43–50, 47.4 | **inventoried** (A.9) |
 
 ---
 
@@ -32,6 +33,8 @@ Status legend: **done** (study concluded, conclusions below) · **pending** (stu
 | Tests / type hints | none — research-notebook quality throughout |
 
 **Key structural fact:** the *snippet files* cover considerably more of the book than the *notebooks* do. Several techniques (notably purged cross-validation and the whole labeling suite) have complete, verbatim book code in `src/snippets/` while their exercise notebooks are empty stubs. Conversely, some roadmap-relevant techniques are absent from the repository entirely (fractional differentiation, PBO, DSR/PSR, CPCV) and must be implemented from the book.
+
+**Second reference — the book's own exhibits.** The developer also holds the book's exhibit compilation as a local reference copy, outside this repository (see A.9). It contains **all 97 book snippets** — including the ones this repository lacks — plus the book's equations, figures and tables, though it is *not* the full book text. A.9 inventories it; the per-technique specifications that turn its exhibits into implementable requirements live in `docs/en/developers/afml-techniques.md`.
 
 ## A.2 Coverage status by book chapter
 
@@ -52,9 +55,11 @@ Status legend: **done** (study concluded, conclusions below) · **pending** (stu
 | 20. Multiprocessing | — | `src/snippets/ch20.py` — complete suite (20.5–20.10) | **strong** |
 | Data preparation (Kibot tick data, MAD outliers) | `data_load_and_clean.ipynb` (18 cells) | `data/clean_data.py` | **didactic** |
 
+> This table covers the *exercise repository only*. Rows marked **absent** are absent from that repository — not from the project. For each of them the book's own exhibit compilation supplies the snippet or equation (see A.9), and `afml-techniques.md` records the resulting specification.
+
 ## A.3 Technique-to-exercise mapping (roadmap → reference)
 
-This is the operative table for implementers. "Adoption" follows the roadmap rule that adapted code must be reviewed against the book's definitions and tested before merging (Ch. 49.9).
+This is the operative table for implementers. "Adoption" follows the roadmap rule that adapted code must be reviewed against the book's definitions and tested before merging (Ch. 49.9). Status values: **usable reference** = code exists in the exercise repository; **absent in repo, exhibits available** = the book's snippet or equation is available in the local exhibit compilation (A.9) and the technique is specified in `afml-techniques.md`; **absent** = neither code nor formula is available locally.
 
 | Roadmap section | Technique | Where in the reference | Status | Adoption guidance |
 |---|---|---|---|---|
@@ -62,22 +67,25 @@ This is the operative table for implementers. "Adoption" follows the roadmap rul
 | 29.1, 49.1 | Dollar *imbalance* bars | `ch2.ipynb` cell "implement dollar imbalance bars" (exercise 2.2) | attempt only, incomplete | Implement from the book's chapter 2; do not treat the notebook cell as a correct reference |
 | 49.2 | Triple-barrier labeling | `src/snippets/ch3.py`: `applyPtSlOnT1` (Sn. 3.2), `addVerticalBarrier` (Sn. 3.4), `getEvents` (Sn. 3.3); `ch3.ipynb` 3.1 | usable reference | Verify intrabar-ambiguity handling against Ch. 37.5 (the book's snippet evaluates barrier touches on the close path; document that choice explicitly) |
 | 49.2 | Dropping rare labels | `src/snippets/ch3.py`: `dropLabels` (Sn. 3.8) | usable reference | Wire into the labeling pipeline as an explicit, recorded step |
-| 49.3 | Sample weights by uniqueness | book chapter 4 | **absent** | Implement from the book (Snippets 4.1–4.2); no reference code exists in the repo |
+| 49.3 | Sample weights by uniqueness | no repo code; book ch. 4 exhibits: Sn. 4.1–4.11 (the compilation, pp. 35–44), Eq. 32 | **absent in repo**, exhibits available | Specified in `afml-techniques.md` §3.1; port with vectorized interval counting |
 | 49.4 | Purging of overlapping training observations | `src/snippets/ch7.py`: `getTrainTimes` (Sn. 7.1) | usable reference | Port with unit tests on interval-overlap edge cases |
 | 49.4 | Embargo | `src/snippets/ch7.py`: `getEmbargoTimes` (Sn. 7.2) | usable reference | Same; embargo length must become an explicit parameter (Ch. 49.4) |
 | 49.4 | Purged K-Fold CV class | `src/snippets/ch7.py`: `PurgedKFold` (Sn. 7.3), `cvScore` (Sn. 7.4) | usable reference | The central CV component for Ch. 49.4/38.8; verify against the book's definition before merging |
-| 45.3 | Combinatorial purged CV (CPCV) | book chapter 12 | **absent** | Build on `PurgedKFold` after implementing; count paths and disclose data re-use (Ch. 45.3) |
-| 49.5 | Probabilistic Sharpe ratio (PSR) | book chapter 14 | **absent** | Implement from the book; requires recorded skewness/kurtosis/sample length |
-| 49.5 | Deflated Sharpe ratio (DSR) | book chapter 14 | **absent** | Implement from the book; requires the trial count (Ch. 49.5: no trial count → no deflated estimate) |
-| 49.6 | PBO via CSCV | book chapters 11–12 | **absent** | Implement from the book; combine with the optimization trial records of Ch. 39 |
+| 45.3 | Combinatorial purged CV (CPCV) | no repo code; book ch. 12 exhibits: Eq. 39–44 (the compilation, pp. 96–99), Figs. 12.1–12.2 | **absent in repo**, equations available | Specified in `afml-techniques.md` §3.4; build on `PurgedKFold`; count paths and disclose data re-use (Ch. 45.3) |
+| 49.5 | Probabilistic Sharpe ratio (PSR) | no repo code; book ch. 14 exhibit: Eq. 52 (the compilation, p. 126) | **absent in repo**, formula available | Specified in `afml-techniques.md` §3.5; requires recorded skewness/kurtosis/sample length |
+| 49.5 | Deflated Sharpe ratio (DSR) | no repo code; compilation Eq. 53 (p. 127) + primary paper Eqs. 1–2 | **absent in repo**, specified | Specified in `afml-techniques.md` §3.6 from Bailey & López de Prado (2014); requires the trial count (Ch. 49.5: no trial count → no deflated estimate) |
+| 49.6 | PBO via CSCV | no repo code; compilation Figs. 11.1–11.2 (p. 94) + primary paper Algorithm 2.3 | **absent in repo**, specified | Specified in `afml-techniques.md` §3.7 from Bailey, Borwein, López de Prado & Zhu (Algorithm 2.3); combine with the optimization trial records of Ch. 39 |
+| 48.1, 48.3 | Hyper-parameter tuning with purged CV | no repo code; book ch. 9 exhibits: Sn. 9.1–9.4 (the compilation, pp. 79–82) | **absent in repo**, exhibits available | Specified in `afml-techniques.md` §3.8; requires scikit-learn (Ch. 4.0 STOP procedure) |
+| 49.8, 58 | Bet sizing from probabilities (+ limit price) | no repo code; book ch. 10 exhibits: Sn. 10.1–10.4 (the compilation, pp. 87–91) | **absent in repo**, exhibits available | Specified in `afml-techniques.md` §3.9; research-tier only, must pass the risk manager (Ch. 58) |
 | 49.7 | MDI feature importance | `src/snippets/ch8.py`: `featImpMDI` (Sn. 8.2); `ch8.ipynb` | usable reference | Tree-ensemble only; run within purged CV, never plain K-Fold |
 | 49.7 | MDA feature importance | `src/snippets/ch8.py`: `featImpMDA` (Sn. 8.3); `ch8.ipynb` | usable reference | Score on purged/embargoed splits; report uncertainty |
 | 49.7 | Single-feature importance (SFI) | `src/snippets/ch8.py`: `auxFeatImpSFI` (Sn. 8.4); `ch8.ipynb` | usable reference | — |
 | 49.7 | Clustered / orthogonalized importance | `src/snippets/ch8.py`: `get_eVec` + `orthoFeats` (Sn. 8.5), `kendal_weighted` (Sn. 8.6) | usable reference | Supports the roadmap rule that correlated feature clusters distort single-feature importance (Ch. 49.7) |
 | 49.8 | Meta-labeling events/bins | `src/snippets/ch3.py`: `getEvents` (Sn. 3.6), `getBins` (Sn. 3.7) | usable reference | Meta-label output remains a research signal candidate; never bypasses 33.6 |
 | 47.4 | Symmetric CUSUM filter (structural breaks/events) | `src/snippets/ch2.py`: `getTEvents` (Sn. 2.4) | usable reference | Threshold `h` must be a recorded parameter |
-| 47.4 | Fractional differentiation | book chapter 5 | **absent** | Implement from the book; differentiation order `d` must be recorded (Ch. 47.4) |
-| 47.4 | Entropy features | book chapter 18 | **absent** | Implement from the book; document the quantization scheme |
+| 47.4 | Structural-break tests (SADF/GSADF, CUSUM on residuals) | no repo code; book ch. 17 exhibits: Sn. 17.1–17.4 (the compilation, pp. 164–165), §17.3 (p. 156) | **absent in repo**, exhibits available | Specified in `afml-techniques.md` §3.10; minimum sample length, deterministic terms and lag order are recorded parameters |
+| 47.4 | Fractional differentiation | no repo code; book ch. 5 exhibits: Sn. 5.1–5.4 (the compilation, pp. 48–53), Table 5.1 | **absent in repo**, exhibits available | Specified in `afml-techniques.md` §3.2; differentiation order `d` must be recorded (Ch. 47.4) |
+| 47.4 | Entropy features | no repo code; book ch. 18 exhibits: Sn. 18.1–18.4 (the compilation, pp. 168–172) | **absent in repo**, exhibits available | Specified in `afml-techniques.md` §3.11; document the quantization scheme |
 | 50 | Ensembles (bagging theory) | `ch6.ipynb` (Snippet 6.1 bagging accuracy, exercise 6.1 discussion) | weak reference | Ensemble design follows Ch. 50; this reference only illustrates bagging variance reduction |
 | 10 | Multiprocessing framework | `src/snippets/ch20.py`: `mpPandasObj` (Sn. 20.7) and helpers (20.5–20.10) | usable reference | Concept/design reference for parallel research jobs; the app's own background processing follows Ch. 12 |
 | 29 | Data cleaning (MAD outliers, tick-data preparation) | `data_load_and_clean.ipynb`, `data/clean_data.py`: `mad_outlier` | didactic reference | Informs Ch. 29 policies; the notebook works on Kibot E-mini/IVE and WDC tick files, not crypto data |
@@ -115,7 +123,11 @@ This is the operative table for implementers. "Adoption" follows the roadmap rul
 
 ## A.7 Gaps that require original implementation
 
-The repository does **not** cover: sample weights by uniqueness (book ch. 4), fractional differentiation (ch. 5), bet sizing (ch. 10), PBO/CSCV (ch. 11–12), CPCV (ch. 12), PSR/DSR (ch. 14), and entropy features (ch. 18). Each of these is mapped to a roadmap section in A.3 with status **absent**; their implementations must be written from the book and reviewed against it (Ch. 49.9), with the printed book cited as authority.
+The exercise repository does **not** cover: sample weights by uniqueness (book ch. 4), fractional differentiation (ch. 5), hyper-parameter tuning with purged CV (ch. 9), bet sizing (ch. 10), PBO/CSCV (ch. 11–12), CPCV (ch. 12), PSR/DSR (ch. 14), structural-break tests (ch. 17), and entropy features (ch. 18). Each is mapped to a roadmap section in A.3.
+
+The book's own exhibit compilation (A.9) narrows the gap: it supplies the code snippets for chs. 4, 5, 9, 10, 17 and 18, and the equations for chs. 12 and 14. It does **not** supply the book's prose definitions; where those were missing, the technique was specified from its **primary paper** instead — DSR and PBO/CSCV are now unblocked this way (see `afml-techniques.md` §3.6–§3.7 and its §5 references list); PBO/CSCV in particular is built on the published CSCV algorithm rather than on the book's chapter, whose prose is not in the compilation.
+
+For every technique in this list the implementation must be written from the specification in `docs/en/developers/afml-techniques.md` (our own definitions, exhibit pointers, mandatory parameters and open questions) and reviewed against the printed book (Ch. 49.9), which is cited as authority and never redistributed.
 
 ## A.8 Verification checklist before adopting any code from this repository
 
@@ -125,6 +137,47 @@ The repository does **not** cover: sample weights by uniqueness (book ch. 4), fr
 - [ ] Provenance is recorded: source file and snippet number in the docstring, and the technique-to-reference mapping in A.3 updated if needed.
 - [ ] MIT license attribution is preserved where code, not just ideas, is taken.
 - [ ] The roadmap checklist item that required the study (Ch. 25) is checked for this repository.
+
+## A.9 The book's exhibit compilation (local reference)
+
+One-off inventory taken 2026-09-13; the method and the per-technique
+consequences are recorded in `afml-techniques.md` §1.
+
+The compilation is a local reference copy held by the developer, **outside this
+repository**; it is not tracked and never will be. Only its structure is
+recorded here, not the file itself.
+
+| Property | Value |
+|---|---|
+| Source | the book's exhibit compilation (local reference copy, not in this repository) |
+| Pages | 218 |
+| Structure | pp. 1–10 = *List of Exhibits* (tables, figures, equations, snippets + page); pp. 11–218 = the exhibits grouped by chapter (`c01`–`c22`) |
+| Content | **all 97 book snippets**, plus the book's equations, figures and tables |
+| Narrative | fragments only (≈20,600 words in the body, median 69 words/page, 75 of 209 body pages under 50 words) — **this is not the full book** |
+
+Page pointers for the roadmap-relevant chapters:
+
+| PDF chapter | Topic | Key exhibits |
+|---|---|---|
+| c02 | Financial data structures, CUSUM filter | Table 2.1; Figs. 2.1–2.3; Sn. 2.1–2.4 (pp. 21–23) |
+| c03 | Labeling, meta-labeling | Sn. 3.1–3.8 (pp. 26–34); Figs. 3.1–3.2 |
+| c04 | Sample weights / uniqueness | Sn. 4.1–4.11 (pp. 35–44); Eq. 32; Figs. 4.1–4.3 |
+| c05 | Fractional differentiation | Sn. 5.1–5.4 (pp. 48–53); Table 5.1; Figs. 5.1–5.5 |
+| c07 | Cross-validation in finance | Sn. 7.1–7.4 (pp. 63–67); Figs. 7.1–7.3 |
+| c08 | Feature importance | Sn. 8.2–8.10 (pp. 68–76); Figs. 8.1–8.4 |
+| c09 | Hyper-parameter tuning | Sn. 9.1–9.4 (pp. 79–82) |
+| c10 | Bet sizing | Sn. 10.1–10.4 (pp. 87–91); Figs. 10.1–10.3 |
+| c11 | Dangers of backtesting (PBO) | Figs. 11.1–11.2 only (p. 94) — **no formula, no code** |
+| c12 | Backtesting through CV (CSCV/CPCV) | Eq. 39–44 (pp. 96–99); Figs. 12.1–12.2 |
+| c13–c14 | Backtest statistics | Sn. 13.1–13.2 (p. 103); Sn. 14.1–14.4 (pp. 120–124); Eq. 45–53; Table 14.1 |
+| c17 | Structural breaks | Sn. 17.1–17.4 (pp. 164–165); §17.3 (p. 156); Eq. 59–66 |
+| c18 | Entropy features | Sn. 18.1–18.4 (pp. 168–172); Eq. 67–89 |
+| c20 | Multiprocessing and vectorization | Sn. 20.1–20.14 (pp. 187–199) |
+
+Rules: the compilation is a local reference only — **never commit or
+redistribute it**; page pointers refer to that copy and to the book's own
+exhibit numbering; the per-technique requirements derived from these exhibits
+live in `afml-techniques.md`.
 
 ---
 
@@ -304,6 +357,9 @@ These sections will be filled as each study concludes, per Chapter 25. Until the
 
 ## Maintenance rules for this document
 
-- [ ] Update A.3 whenever an implementation of a technique lands, noting the project module that fulfills it.
+- [ ] Update A.3 whenever an implementation of a technique lands, noting the project module that fulfills it, and mirror the status change in `afml-techniques.md`.
 - [ ] Keep the coverage table (A.2) in sync with the submodule commit recorded in the repository; re-verify on submodule updates.
+- [ ] Keep A.9 in sync with `afml-techniques.md`; if the local compilation is replaced, re-verify the page pointers.
+- [ ] Resolve the open questions recorded in `afml-techniques.md` before implementing the affected technique (Ch. 49.9).
+- [ ] Never commit or redistribute the book — printed text or exhibit compilation (book rule: cite by bibliographic reference only).
 - [ ] Every conclusion must be backed by the referenced files, not by the book's table of contents.

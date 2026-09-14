@@ -9,3 +9,9 @@ __pycache__/
 build/
 dist/
 .coverage
+
+# Local reference material — kept out of version control
+Book/
+
+# Local scratch space for analysis (extractions, rendered pages)
+.scratch/

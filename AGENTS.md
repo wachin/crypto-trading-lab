@@ -31,7 +31,13 @@ freshly migrated copy, then `GENESIS.md`, then `ROADMAP.md`.
    the command; never pretend success.
 6. **The AFML book rule.** *Advances in Financial Machine Learning*
    (Marcos López de Prado, Wiley 2018) is cited by bibliographic
-   reference only:
+   reference only. Record every technique mapping and definition in
+   `docs/en/developers/reference-projects.md` and
+   `docs/en/developers/afml-techniques.md`; cite the book as
+   "López de Prado (2018), Advances in Financial Machine Learning,
+   ch. N"; never copy book text, code, figures, or tables into the
+   repository; never commit or redistribute the book itself — printed
+   text or local exhibit compilation — which stays a local reference.
 7. **Language.** English is the source language for code, docs, and
    UI strings; Spanish via Qt Linguist (`pylupdate6` → `.ts` →
    `lrelease` → `.qm`). Never hard-code visible strings outside
@@ -52,4 +58,4 @@ freshly migrated copy, then `GENESIS.md`, then `ROADMAP.md`.
 
 Phase 3 (backtesting). Engine and strategies are done; next is
 chapter 40 (performance metrics) then the Backtesting Lab UI. See
-`AGENT-HANDOFF.md` §8 for the exact continuation point.
+`AGENT-HANDOFF.md` §5 for the exact continuation point.
