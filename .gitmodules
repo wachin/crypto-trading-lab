@@ -1,0 +1,24 @@
+[submodule "external/freqtrade"]
+	path = external/freqtrade
+	url = https://github.com/freqtrade/freqtrade.git
+[submodule "external/hummingbot"]
+	path = external/hummingbot
+	url = https://github.com/hummingbot/hummingbot.git
+[submodule "external/jesse"]
+	path = external/jesse
+	url = https://github.com/jesse-ai/jesse.git
+[submodule "external/ccxt"]
+	path = external/ccxt
+	url = https://github.com/ccxt/ccxt.git
+[submodule "external/vectorbt"]
+	path = external/vectorbt
+	url = https://github.com/polakowo/vectorbt.git
+[submodule "external/backtrader"]
+	path = external/backtrader
+	url = https://github.com/mementum/backtrader.git
+[submodule "external/ta-lib"]
+	path = external/ta-lib
+	url = https://github.com/TA-Lib/ta-lib.git
+[submodule "external/adv-financial-ml-marcos-exercises"]
+	path = external/adv-financial-ml-marcos-exercises
+	url = https://github.com/fernandodelacalle/adv-financial-ml-marcos-exercises

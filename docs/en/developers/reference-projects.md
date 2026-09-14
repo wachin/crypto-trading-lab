@@ -2,13 +2,7 @@
 
 This document records the conclusions of studying the repositories under `external/`, as required by `ROADMAP.md` Chapter 25 (Reference projects) and Chapter 49.9 (Research code references).
 
-Notation: `Ch. N` refers to a roadmap chapter, `N.x` to a roadmap section. "Book" refers to *Advances in Financial Machine Learning* (Marcos López de Prado, Wiley, 2018). The book is the conceptual authority in any dispute between implementations; it must be cited in documentation but never redistributed.
-
-**Note on the book (2026-09-13):** the PDF copy that once lived in `Books/` was removed from this repository and will not be carried into future copies — redistributing a commercial work was not authorized. The book's techniques are implemented from the mathematical definitions recorded in this document and from the MIT-licensed exercise submodule below, always with attribution:
-
-> Marcos López de Prado, *Advances in Financial Machine Learning*, Wiley, 2018.
-
-Anyone needing the book should purchase it from the publisher.
+Notation: `Ch. N` refers to a roadmap chapter, `N.x` to a roadmap section. "Book" refers to *Advances in Financial Machine Learning* (Marcos López de Prado, Wiley, 2018). The book is the conceptual authority in any dispute between implementations; it must be cited in documentation.
 
 Status legend: **done** (study concluded, conclusions below) · **pending** (study not yet concluded).
 
@@ -25,7 +19,7 @@ Status legend: **done** (study concluded, conclusions below) · **pending** (stu
 
 ---
 
-# Part A — AFML exercise repository (`external/adv-financial-ml-marcos-exercises`)
+# Part A — AFML(Advances in Financial Machine Learning) exercise repository (`external/adv-financial-ml-marcos-exercises`)
 
 ## A.1 The reference at a glance
 
