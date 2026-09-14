@@ -16,10 +16,10 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 240 passed, 2 skipped —
+- **Tests:** 248 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 40 Python files under `src/crypto_trading_lab/`
-- **Tests:** 38 Python files under `tests/`
+- **Source:** 42 Python files under `src/crypto_trading_lab/`
+- **Tests:** 39 Python files under `tests/`
 - **Documentation:** `docs/en/beginners/` (4 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`)
@@ -29,8 +29,9 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
 - **Current phase:** Phase 3 (backtesting) in progress. The engine, the
-  initial strategies and the performance metrics (chapter 40) are done; the
-  next task is the **Backtesting Lab UI (§37.9)**. See §5.
+  initial strategies, the performance metrics (chapter 40) and the
+  Backtesting Lab UI (§37.9–37.10) are done; the next task per the roadmap
+  order is **reports (chapter 41)**. See §5.
 
 ### Honest status of the earlier phases
 
@@ -67,6 +68,7 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Indicators (SMA/EMA/RSI/BB/ATR/ROC) | `src/crypto_trading_lab/indicators/library.py` | 31 |
 | Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
 | Performance metrics (returns, trades, risk, activity, benchmark, validity) | `src/crypto_trading_lab/backtesting/metrics.py` | 40 |
+| Backtesting Lab UI (results + beginner explanation) | `src/crypto_trading_lab/ui/backtesting/lab.py` | 37.9, 37.10 |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
 
 ### Domain-model naming and the chapter 7/26/30 reconciliation
@@ -201,17 +203,18 @@ Per `ROADMAP.md` and the last iteration report:
 
 1. ~~Performance metrics (Chapter 40)~~ — done on 2026-09-14
    (`backtesting/metrics.py` + `tests/backtesting/test_metrics.py` +
-   `docs/en/beginners/performance-metrics.md`; 240 tests passing). Still open
+   `docs/en/beginners/performance-metrics.md`). Still open
    in chapter 40, by design and with notes in ROADMAP: short exposure,
    rejected/partial orders and funding costs — all require engine/paper-
    trading capabilities that do not exist yet.
-2. **Backtesting Lab UI** — the canonical next task: enable the Backtesting
-   Lab button in the main window (it is currently disabled by design), run
-   backtests over imported candles, and show the results **including the
-   chapter 40 metrics** with the mandatory beginner-oriented explanation
-   (Chapter 37.9).
+2. ~~Backtesting Lab UI~~ — done on 2026-09-14 (§37.9–37.10;
+   `ui/backtesting/lab.py`, main-window button enabled, strategy/dataset
+   reproducibility records added to the engine, Spanish translations
+   compiled; 248 tests passing).
 3. Then: reports (41), benchmarking (42), robustness (43-46), paper trading
-   (57), risk manager (58).
+   (57), risk manager (58). Note: §37.8 determinism checkboxes are still
+   open; much of it is already engine-tested, reconciling them is a cheap
+   documentation task.
 
 Do not start a task before reading the chapter that owns it, and do not tick
 a requirement until it is implemented **and tested**.
@@ -239,4 +242,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 240 tests passing at time of writing.*
+*Handoff updated 2026-09-14. All 248 tests passing at time of writing.*

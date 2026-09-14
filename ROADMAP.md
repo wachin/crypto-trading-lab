@@ -2553,49 +2553,49 @@ Every backtest must record enough metadata to reproduce the experiment (see Chap
 
 Every backtest must record:
 
-* [ ] Initial capital.
-* [ ] Final equity.
-* [ ] Net profit/loss.
-* [ ] Total return.
-* [ ] Number of trades.
-* [ ] Win rate.
-* [ ] Average winning trade.
-* [ ] Average losing trade.
-* [ ] Profit factor.
-* [ ] Maximum drawdown.
-* [ ] Maximum drawdown duration.
-* [ ] Sharpe ratio where statistically appropriate.
-* [ ] Sortino ratio where statistically appropriate.
-* [ ] Buy-and-hold performance (see Chapter 42).
-* [ ] Total commissions/fees.
-* [ ] Estimated slippage.
-* [ ] Execution model.
-* [ ] Dataset period.
-* [ ] Dataset version.
-* [ ] Strategy version.
-* [ ] Strategy parameters.
+* [x] Initial capital.
+* [x] Final equity.
+* [x] Net profit/loss.
+* [x] Total return.
+* [x] Number of trades.
+* [x] Win rate.
+* [x] Average winning trade.
+* [x] Average losing trade.
+* [x] Profit factor.
+* [x] Maximum drawdown.
+* [x] Maximum drawdown duration.
+* [x] Sharpe ratio where statistically appropriate.
+* [x] Sortino ratio where statistically appropriate.
+* [x] Buy-and-hold performance (see Chapter 42).
+* [x] Total commissions/fees.
+* [x] Estimated slippage.
+* [x] Execution model.
+* [x] Dataset period.
+* [x] Dataset version.
+* [x] Strategy version.
+* [x] Strategy parameters.
 
-- [ ] Metric definitions and statistical validity rules are specified in Chapter 40.
+- [x] Metric definitions and statistical validity rules are specified in Chapter 40.
 
 ### 37.10 Beginner-oriented explanation
 
 Every backtest result must explain:
 
-* [ ] What was tested.
-* [ ] Which asset and timeframe were tested.
-* [ ] Which strategy and parameters were used.
-* [ ] Which historical period was used.
-* [ ] What assumptions were made.
-* [ ] Which execution model was used.
-* [ ] What commissions and fees mean.
-* [ ] What spread and slippage mean.
-* [ ] Why liquidity affects execution.
-* [ ] Why historical results can be misleading.
-* [ ] Why backtesting cannot guarantee future profitability.
-* [ ] Why real trading results may differ.
-* [ ] Whether the result is in-sample, validation, or out-of-sample.
+* [x] What was tested.
+* [x] Which asset and timeframe were tested.
+* [x] Which strategy and parameters were used.
+* [x] Which historical period was used.
+* [x] What assumptions were made.
+* [x] Which execution model was used.
+* [x] What commissions and fees mean.
+* [x] What spread and slippage mean.
+* [x] Why liquidity affects execution.
+* [x] Why historical results can be misleading.
+* [x] Why backtesting cannot guarantee future profitability.
+* [x] Why real trading results may differ.
+* [x] Whether the result is in-sample, validation, or out-of-sample.
 
-- [ ] A profitable backtest must never be presented as proof that a strategy will be profitable in the future.
+- [x] A profitable backtest must never be presented as proof that a strategy will be profitable in the future.
 
 ---
 

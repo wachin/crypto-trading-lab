@@ -54,7 +54,8 @@ class MainWindow(QMainWindow):
 
         tools_menu = self.menuBar().addMenu(self.tr("&Tools"))
         self.action_backtesting = QAction(self.tr("Open Backtesting Lab"), self)
-        self.action_backtesting.setEnabled(False)  # initially disabled
+        self.action_backtesting.setEnabled(True)  # chapter 37.9
+        self.action_backtesting.triggered.connect(self._open_backtesting)
         tools_menu.addAction(self.action_backtesting)
 
         help_menu = self.menuBar().addMenu(self.tr("&Help"))
@@ -127,7 +128,8 @@ class MainWindow(QMainWindow):
         )
         self.learning_center_button.clicked.connect(self._open_learning_center)
         self.backtesting_button = QPushButton(self.tr("Open Backtesting Lab"))
-        self.backtesting_button.setEnabled(False)  # initially disabled
+        self.backtesting_button.setEnabled(True)  # chapter 37.9
+        self.backtesting_button.clicked.connect(self._open_backtesting)
         layout.addWidget(self.csv_button)
         layout.addWidget(self.chart_button)
         layout.addWidget(self.learning_center_button)
@@ -265,6 +267,65 @@ class MainWindow(QMainWindow):
         chart.show()
         self._chart_window = chart  # keep a reference alive
         return chart
+
+    def open_backtesting(
+        self, paths: "AppPaths | None" = None, notify: bool = True
+    ) -> "BacktestingLabWidget | None":
+        """Open the Backtesting Lab over the imported candles (37.9).
+
+        The lab always shows chapter 40 metrics, statistical-validity
+        warnings and the beginner explanation (37.10): a profitable
+        backtest is never presented as proof of future profit.
+        ``notify=False`` skips the message box (tests).
+        """
+        from crypto_trading_lab.configuration.xdg import AppPaths
+        from crypto_trading_lab.domain.models import Symbol
+        from crypto_trading_lab.persistence.database import (
+            create_database,
+            database_engine,
+            make_session_factory,
+        )
+        from crypto_trading_lab.persistence.candles import CandleRepository
+        from crypto_trading_lab.ui.backtesting.lab import (
+            BacktestingLabWidget,
+        )
+
+        paths = paths or AppPaths()
+        candles = []
+        if paths.database_file.exists():
+            engine = database_engine(paths.database_file)
+            create_database(engine)
+            session = make_session_factory(engine)()
+            try:
+                repo = CandleRepository(session)
+                candles = repo.load_candles(Symbol("BTC/USDT"), "1m")
+            finally:
+                session.close()
+                engine.dispose()
+
+        if not candles:
+            if notify:
+                from PyQt6.QtWidgets import QMessageBox
+
+                QMessageBox.information(
+                    self,
+                    self.tr("Backtesting Lab"),
+                    self.tr(
+                        "No candles stored yet. Load a CSV file first "
+                        "(File → Load CSV file)."
+                    ),
+                )
+            return None
+
+        lab = BacktestingLabWidget(candles, "BTC/USDT", "1m")
+        lab.setWindowTitle(self.tr("Crypto Trading Lab — Backtesting Lab"))
+        lab.resize(720, 640)
+        lab.show()
+        self._backtesting_window = lab  # keep a reference alive
+        return lab
+
+    def _open_backtesting(self) -> None:
+        self.open_backtesting()
 
     def _open_chart(self) -> None:
         self.open_chart()

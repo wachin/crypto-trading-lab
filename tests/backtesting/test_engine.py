@@ -50,6 +50,14 @@ def _flat_costs():
     )
 
 
+def test_result_records_version_and_dataset_period():
+    """Every backtest records its reproducibility metadata (37.9)."""
+    result = run_backtest(_candles([100, 101, 102]), BuyAndHoldStrategy())
+    assert result.strategy_version == "1.0.0"
+    assert result.dataset_version.startswith("unversioned")
+    assert result.dataset_period.startswith("2024-01-01")
+
+
 def test_null_strategy_preserves_capital_minus_nothing():
     result = run_backtest(_candles([100, 101, 102]), NullStrategy())
     assert result.trades == []

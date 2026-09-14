@@ -47,9 +47,10 @@ def test_safety_indicators_visible(window):
     assert window.status_label.text() == "Disconnected"
 
 
-def test_backtesting_button_disabled(window):
-    assert window.backtesting_button.isEnabled() is False
-    assert window.action_backtesting.isEnabled() is False
+def test_backtesting_button_enabled(window):
+    # Chapter 37.9 is implemented: the lab is now reachable.
+    assert window.backtesting_button.isEnabled() is True
+    assert window.action_backtesting.isEnabled() is True
 
 
 def test_csv_and_learning_center_buttons_enabled(window):

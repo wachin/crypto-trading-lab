@@ -140,6 +140,7 @@ class MACrossoverStrategy:
 
     fast: int = 10
     slow: int = 30
+    version: str = "1.0.0"  # strategy version (ROADMAP 37.9)
 
     def __post_init__(self) -> None:
         if self.fast >= self.slow:
@@ -182,6 +183,8 @@ class MACrossoverStrategy:
 class BuyAndHoldStrategy:
     """Buy on the first fillable candle and hold (benchmark, ch. 33.5)."""
 
+    version: str = "1.0.0"  # strategy version (ROADMAP 37.9)
+
     @property
     def name(self) -> str:
         return "Buy and hold"
@@ -193,6 +196,8 @@ class BuyAndHoldStrategy:
 @dataclass
 class NullStrategy:
     """Never trades (chapter 33, strategy 6 — the honest baseline)."""
+
+    version: str = "1.0.0"  # strategy version (ROADMAP 37.9)
 
     @property
     def name(self) -> str:
@@ -218,6 +223,10 @@ class BacktestResult:
     candle_count: int
     order_count: int = 0
     exposure_curve: tuple[bool, ...] = ()  # True when in the market that candle
+    # Reproducibility records (ROADMAP 37.9).
+    strategy_version: str = "unknown"
+    dataset_version: str = "unknown"
+    dataset_period: str = ""
 
     @property
     def net_profit(self) -> Decimal:
@@ -353,4 +362,12 @@ def run_backtest(
         candle_count=len(candles),
         order_count=order_count,
         exposure_curve=tuple(exposure_curve),
+        strategy_version=str(getattr(strategy, "version", "unknown")),
+        # Chapter 53 (experiment tracking) does not exist yet, so
+        # datasets are honestly recorded as unversioned.
+        dataset_version="unversioned (experiment tracking pending, ch. 53)",
+        dataset_period=(
+            f"{candles[0].open_time.isoformat()} to "
+            f"{candles[-1].close_time.isoformat()}"
+        ),
     )

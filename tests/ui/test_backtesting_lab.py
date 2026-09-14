@@ -1,0 +1,155 @@
+"""GUI tests for the Backtesting Lab (ROADMAP.md 37.9, 37.10, 40)."""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
+
+import pytest
+
+pytest.importorskip("PyQt6")
+
+from crypto_trading_lab.configuration.xdg import AppPaths  # noqa: E402
+from crypto_trading_lab.domain.models import Candle, Symbol  # noqa: E402
+from crypto_trading_lab.ui.backtesting.lab import (  # noqa: E402
+    BacktestingLabWidget,
+)
+
+BASE = datetime(2024, 1, 1, tzinfo=timezone.utc)
+
+HEADER = "timestamp,open,high,low,close,volume\n"
+ROWS = "".join(
+    f"2024-01-01T00:{m:02d}:00+00:00,100,110,90,105,10\n"
+    for m in range(50)
+)
+
+
+def _candles(closes):
+    return [
+        Candle(
+            Symbol("BTC/USDT"),
+            "1m",
+            BASE + timedelta(minutes=i),
+            BASE + timedelta(minutes=i + 1),
+            open=Decimal(str(c)),
+            high=Decimal(str(c + 1)),
+            low=Decimal(str(c - 1)),
+            close=Decimal(str(c)),
+            volume=Decimal("10"),
+        )
+        for i, c in enumerate(closes)
+    ]
+
+
+def _trending(n=80):
+    """An up-then-down series so the SMA crossover actually trades."""
+    return [100 + i for i in range(n // 2)] + [
+        100 + n // 2 - i for i in range(n // 2)
+    ]
+
+
+
+
+@pytest.fixture()
+def lab(qapp):
+    widget = BacktestingLabWidget(_candles(_trending()))
+    yield widget
+    widget.close()
+
+
+def test_results_show_all_mandatory_fields(lab):
+    text = lab.run_and_display()
+    # 37.9 catalogue
+    for needle in (
+        "Initial capital:",
+        "Final equity:",
+        "Net profit/loss:",
+        "Total return:",
+        "Number of trades:",
+        "Win rate:",
+        "Average winning trade:",
+        "Average losing trade:",
+        "Profit factor:",
+        "Maximum drawdown:",
+        "Maximum drawdown duration:",
+        "Sharpe ratio:",
+        "Sortino ratio:",
+        "Commissions and fees:",
+        "Estimated slippage:",
+        "Execution model:",
+        "Assumptions: long-only spot;",
+        "Historical period:",
+        "Dataset version:",
+        "version 1.0.0",
+        "Benchmark (buy and hold) return:",
+        "Excess return vs benchmark:",
+    ):
+        assert needle in text, needle
+
+
+def test_beginner_explanation_and_honesty(lab):
+    text = lab.run_and_display()
+    # 37.10 + 40.8 mandatory explanations and disclaimers.
+    assert "BTC/USDT" in text
+    assert "IN-SAMPLE" in text
+    assert "NOT proof of future profitability" in text
+    assert "No single metric proves that a strategy is good" in text
+    assert "Commissions and fees are what exchanges charge" in text
+    assert "Liquidity matters" in text
+
+
+def test_null_strategy_shows_small_sample_warnings(qapp):
+    widget = BacktestingLabWidget(_candles([100, 101, 102]))
+    widget.strategy_combo.setCurrentIndex(2)  # Null
+    text = widget.run_and_display()
+    assert "no trades" in text
+    assert "n/a (insufficient data)" in text
+    widget.close()
+
+
+def test_invalid_parameters_are_explained(qapp):
+    widget = BacktestingLabWidget(_candles(_trending()))
+    widget.fast_spin.setValue(50)
+    widget.slow_spin.setValue(10)
+    text = widget.run_and_display()
+    assert "must be smaller" in text
+    widget.capital_edit.setText("abc")
+    text = widget.run_and_display()
+    assert "positive number" in text
+    widget.close()
+
+
+def test_buy_and_hold_matches_itself_as_benchmark(qapp):
+    widget = BacktestingLabWidget(_candles(_trending()))
+    widget.strategy_combo.setCurrentIndex(1)  # Buy and hold
+    text = widget.run_and_display()
+    assert "Excess return vs benchmark: 0" in text
+    widget.close()
+
+
+# -- flow through the main window (mirrors test_chart_flow) -------------
+
+
+@pytest.fixture()
+def isolated_xdg(tmp_path):
+    return AppPaths(
+        config_dir=tmp_path / "config",
+        data_dir=tmp_path / "data",
+        cache_dir=tmp_path / "cache",
+        log_dir=tmp_path / "logs",
+    )
+
+
+def test_open_lab_without_data_returns_none(window, isolated_xdg):
+    assert window.open_backtesting(paths=isolated_xdg, notify=False) is None
+
+
+def test_import_then_open_lab(window, isolated_xdg, tmp_path):
+    csv_path = tmp_path / "candles.csv"
+    csv_path.write_text(HEADER + ROWS, encoding="utf-8")
+    window.load_csv_file(str(csv_path), paths=isolated_xdg)
+    lab = window.open_backtesting(paths=isolated_xdg, notify=False)
+    assert lab is not None
+    text = lab.run_and_display()
+    assert "Number of trades:" in text
+    lab.close()
