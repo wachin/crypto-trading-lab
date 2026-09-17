@@ -20,16 +20,15 @@ A new AI Agent must read this file **before** doing anything else, then
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
 - **Source:** 57 Python files under `src/crypto_trading_lab/`
 - **Tests:** 54 Python files under `tests/`
-- **Documentation:** `docs/en/beginners/` (7 files) and
+- **Documentation:** `docs/en/beginners/` (8 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`,
-  `working-method.md`, `configuration-guide.md`, `research-ethics.md`)
-- **Specification:** `ROADMAP.md` — 72 chapters; Chapter 49 (AFML) partial done
-  (triple-barrier labeling, purged CV, sample uniqueness)
+  `working-method.md`, `configuration-guide.md`, `research-ethics.md`,
+  `capital-protection.md`, `live-monitoring.md`)
+- **Specification:** `ROADMAP.md` — 72 chapters; 18+ chapters complete or partially complete
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
-- **Current phase:** Phase 3 (backtesting). Next task per roadmap order is
-  **Chapter 50 (Ensembles)** or **Chapter 51 (Portfolio construction)**.
+- **Current phase:** Phase 3 (backtesting) complete; Phase 4+ in progress.
 
 ### Honest status of the earlier phases
 

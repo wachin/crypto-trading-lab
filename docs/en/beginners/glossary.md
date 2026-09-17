@@ -174,3 +174,68 @@ otherwise sound strategies. Look at them before you look at profits.
   examples, quizzes, and links to the relevant screens.
 - Spanish translation of this glossary will live at
   `docs/es/beginners/glosario.md` once the English version is stable.
+
+### volatility
+
+**Definition:** How much prices move up and down over a period of time.
+
+**In simple words:** High volatility = big price swings. Low volatility = prices stay relatively flat. High volatility means both bigger potential gains and bigger potential losses.
+
+**Warning:** High volatility strategies can lose more than expected.
+
+### strategy
+
+**Definition:** A set of rules that tells you when to buy and when to sell.
+
+**In simple words:** A strategy removes emotion from trading. Example: "Buy when the 5-period moving average crosses above the 20-period moving average; sell when it crosses below."
+
+**Warning:** No strategy works in all market conditions.
+
+### backtesting
+
+**Definition:** Running a strategy against historical data to see how it would have performed.
+
+**In simple words:** Like a flight simulator for trading. You test your strategy without risking real money. But remember: past performance doesn't guarantee future results.
+
+**Warning:** Backtests can be misleading if they ignore fees, slippage, or look-ahead bias.
+
+### paper trading
+
+**Definition:** Trading with simulated money using real market data.
+
+**In simple words:** Real trading without real risk. It's a step between backtesting and real trading. The application is set up this way by default.
+
+**Warning:** Paper trading doesn't capture every real-world condition like slippage or liquidity.
+
+### drawdown
+
+**Definition:** The fall of your account value from its highest point to a following low, usually shown as a percentage.
+
+**In simple words:** Imagine a graph of your money. A drawdown is the ugliest valley after any peak: "from my best moment, I was down X%." A strategy can make money overall and still have terrifying valleys.
+
+**Warning:** Deep drawdowns are what make real traders abandon otherwise sound strategies. Look at them before you look at profits.
+
+### position sizing
+
+**Definition:** How much of your capital to risk on each trade.
+
+**In simple words:** If you have $10,000 and use 1% position sizing, you risk $100 per trade. Proper sizing helps you survive a series of losses without blowing up your account.
+
+**Warning:** Oversizing (risking too much per trade) is the fastest way to lose money.
+
+### out-of-sample
+
+**Definition:** Data that was NOT used to build or tune your strategy.
+
+**In simple words:** You train your strategy on one set of data, then test it on completely new data. This tells you if it really has edge or just memorized patterns.
+
+**Warning:** A strategy that only works on training data is overfit and will fail in real trading.
+
+### overfit
+
+**Definition:** When a strategy has learned the noise in historical data rather than a real pattern.
+
+**In simple words:** Like a student who memorizes old exam answers instead of learning the material. It will score well on old exams but fail on new ones.
+
+**Warning:** Overfit strategies look great in backtests but fail in real trading.
+

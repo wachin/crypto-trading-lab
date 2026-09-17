@@ -1556,9 +1556,9 @@ Include:
 
 Include:
 
-- [ ] exchange;
+- [x] exchange.
 - [ ] environment;
-- [ ] trading pair;
+- [x] trading pair.
 - [ ] interval;
 - [ ] connection status;
 - [ ] last-data time;
@@ -1736,8 +1736,8 @@ The glossary must include terms such as:
 - [ ] wallet;
 - [ ] private key;
 - [ ] seed phrase;
-- [ ] exchange;
-- [ ] trading pair;
+- [x] exchange.
+- [x] trading pair.
 - [ ] base asset;
 - [ ] quote asset;
 - [ ] bid;
@@ -2078,7 +2078,7 @@ Every indicator must also include beginner documentation:
 Implement charts for:
 
 - [x] OHLC candlesticks;
-- [ ] volume;
+- [x] volume.
 - [ ] price lines;
 - [x] moving averages;
 - [ ] bands;
@@ -3822,11 +3822,11 @@ The purpose is to test the complete trading workflow without risking real capita
 The paper account must model:
 
 - [ ] Initial balance.
-- [ ] Balances by asset.
-- [ ] Positions.
-- [ ] Portfolio value.
-- [ ] Unrealized profit/loss.
-- [ ] Realized profit/loss.
+- [x] Balances by asset.
+- [x] Positions.
+- [x] Portfolio value.
+- [x] Unrealized profit/loss.
+- [x] Realized profit/loss.
 - [ ] Fees.
 - [ ] Slippage.
 - [ ] Spread.
@@ -4783,7 +4783,7 @@ Every completed feature must include:
 
 ### 71.1 First concrete task
 
-- [ ] Begin only with Phase 0 and the minimum foundation of Phase 1.
+- [x] Begin only with Phase 0 and the minimum foundation of Phase 1.
 
 Perform these tasks:
 
@@ -4851,12 +4851,12 @@ It must explain:
 
 It must initially define at least:
 
-- [ ] cryptocurrency;
-- [ ] Bitcoin;
-- [ ] exchange;
-- [ ] trading pair;
-- [ ] candle;
-- [ ] volume;
+- [x] cryptocurrency.
+- [x] Bitcoin.
+- [x] exchange.
+- [x] trading pair.
+- [x] candle.
+- [x] volume.
 - [x] order;
 - [ ] fee;
 - [ ] slippage;
