@@ -46,6 +46,8 @@ __all__ = [
     "DegradationReport",
     "out_of_sample_degradation",
     "DEGRADATION_NOTE",
+    "RobustnessReport",
+    "compute_robustness_report",
 ]
 
 #: Mandatory interpretation line (44.7).
@@ -63,6 +65,14 @@ MONTE_CARLO_WARNINGS = (
     "estimates under the stated assumptions, not predictions.",
     "A Monte Carlo result is never a prediction of future "
     "performance.",
+)
+
+#: Assumption note for consolidated robustness reports (44.9).
+ROBUSTNESS_ASSUMPTIONS = (
+    "Robustness tests evaluate whether results persist under changed "
+    "conditions. They are research capabilities, not predictions. "
+    "Each test carries explicit assumptions, seeds, and scenario counts. "
+    "No single test proves future profitability."
 )
 
 
@@ -369,4 +379,90 @@ def out_of_sample_degradation(
         degradation=degradation,
         collapsed=collapsed,
         boundaries=split.boundaries(),
+    )
+
+
+# --- 44.9 Consolidated robustness report ----------------------------------------
+
+
+@dataclass(frozen=True)
+class RobustnessReport:
+    """Consolidated report summarizing all robustness tests (44.9)."""
+
+    monte_carlo: MonteCarloReport | None
+    perturbation: list[PerturbationResult] | None
+    cost_sweep: list[CostSweepRow] | None
+    degradation: DegradationReport | None
+    assumptions: str
+    metadata: dict[str, str]
+
+    def summary(self) -> str:
+        """Plain-language summary for beginners."""
+        parts = ["Robustness Report Summary"]
+        if self.monte_carlo:
+            mc = self.monte_carlo
+            parts.append(
+                f"Monte Carlo ({mc.scenario_count} scenarios): "
+                f"median profit {mc.profit_p50}, risk of ruin {mc.risk_of_ruin:.1%}"
+            )
+        if self.cost_sweep:
+            sw = self.cost_sweep
+            profit_range = f"{sw[-1].net_profit} to {sw[0].net_profit}"
+            parts.append(f"Cost sweep profit range: {profit_range}")
+        if self.degradation:
+            dg = self.degradation
+            status = "COLLAPSED" if dg.collapsed else "stable"
+            parts.append(
+                f"Out-of-sample: {dg.out_of_sample_return:.1%} ({status}, "
+                f"degradation {dg.degradation:.1% if dg.degradation else 'N/A'})"
+            )
+        if self.perturbation and any(p.collapsed for p in self.perturbation):
+            parts.append("WARNING: Some parameter variations caused collapse.")
+        parts.append(ROBUSTNESS_ASSUMPTIONS)
+        return "\n".join(parts)
+
+
+def compute_robustness_report(
+    result: BacktestResult,
+    candles: Sequence[Candle] | None = None,
+    strategy_factory: Callable[[], "object"] | None = None,
+    monte_carlo_config: MonteCarloConfig | None = None,
+) -> RobustnessReport:
+    """Produce a consolidated robustness report (44.9).
+
+    Combines Monte Carlo, cost sweep, and out-of-sample degradation.
+    If candles + strategy_factory are provided, runs perturbation and cost sweep.
+    """
+    mc = monte_carlo_trades(result, monte_carlo_config) if result.trades else None
+
+    cost_sweep = None
+    perturbation = None
+    degradation = None
+
+    if candles and strategy_factory:
+        cost_sweep = sweep_costs(candles, strategy_factory)
+        perturbation = perturb_sma_crossover(
+            candles,
+            fast=5,
+            slow=20,
+            reference_return=result.return_fraction,
+        )
+        degradation = out_of_sample_degradation(candles, strategy_factory)
+
+    return RobustnessReport(
+        monte_carlo=mc,
+        perturbation=perturbation,
+        cost_sweep=cost_sweep,
+        degradation=degradation,
+        assumptions=ROBUSTNESS_ASSUMPTIONS,
+        metadata={
+            "scenarios": str(mc.scenario_count) if mc else "N/A",
+            "seed": str(mc.seed) if mc else "N/A",
+            "tests_run": str(sum([
+                1 if mc else 0,
+                1 if perturbation else 0,
+                1 if cost_sweep else 0,
+                1 if degradation else 0,
+            ])),
+        },
     )

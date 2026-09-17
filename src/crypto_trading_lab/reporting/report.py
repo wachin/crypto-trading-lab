@@ -1,10 +1,9 @@
 """Report generation (ROADMAP.md chapter 41).
 
 Turns a backtest result plus its chapter 40 performance report into
-HTML, CSV and JSON reports. Standard library only; no report may claim
-future profitability, and every report labels its evidence level
-(chapters 1 and 43): a single backtest run is always an *observed
-result*, never statistical evidence.
+HTML, CSV, JSON, and PDF reports. No report may claim future profitability,
+and every report labels its evidence level (chapters 1 and 43): a single
+backtest run is always an *observed result*, never statistical evidence.
 
 Research and qualification reports (with experiment identifiers,
 chapter 52) and paper-trading reports (chapter 57) reuse this module
@@ -30,6 +29,7 @@ __all__ = [
     "render_json",
     "render_csv",
     "render_html",
+    "render_pdf",
 ]
 
 #: Chapters 1 and 43: a single backtest run is descriptive at most.
@@ -271,3 +271,86 @@ def render_html(data: BacktestReportData) -> str:
         parts.append("<tr><td>No trades.</td></tr>")
     parts.append("</table></body></html>")
     return "\n".join(parts) + "\n"
+
+
+def render_pdf(data: BacktestReportData) -> str:
+    """Serialize the report as a PDF document (chapter 41)."""
+    from pypdf import PdfWriter
+    from pypdf.generic import (
+        ArrayObject,
+        DictionaryObject,
+        NameObject,
+        NumberObject,
+        TextStringObject,
+    )
+
+    pdf = PdfWriter()
+    page = DictionaryObject()
+    page[NameObject("/Type")] = NameObject("/Page")
+    page[NameObject("/MediaBox")] = ArrayObject(
+        [NumberObject(0), NumberObject(0), NumberObject(612), NumberObject(792)]
+    )
+
+    resources = DictionaryObject()
+    fonts = DictionaryObject()
+    font = DictionaryObject()
+    font[NameObject("/Type")] = NameObject("/Font")
+    font[NameObject("/Subtype")] = NameObject("/Type1")
+    font[NameObject("/BaseFont")] = NameObject("/Helvetica")
+    fonts[NameObject("/F1")] = font
+    resources[NameObject("/Font")] = fonts
+
+    page[NameObject("/Resources")] = resources
+
+    lines = []
+    y = 750
+
+    def add_line(text, y_pos, font_size=12):
+        nonlocal y
+        y = y_pos
+        lines.append(f"BT /F1 {font_size} Tf {y} {100 * font_size / 12} Td ({text}) Tj ET")
+
+    add_line(f"Backtest report — {data.strategy}", 770, 16)
+    y -= 30
+    add_line(f"Strategy: {data.strategy} (v{data.strategy_version})", y)
+    y -= 15
+    add_line(f"Trading pair: {data.trading_pair}", y)
+    y -= 15
+    add_line(f"Time range: {data.time_range}", y)
+    y -= 15
+    add_line(f"Initial capital: {data.initial_capital}", y)
+    y -= 25
+    add_line("Metrics:", y, 14)
+    y -= 15
+    for key, value in list(data.metrics.items())[:10]:
+        add_line(f"  {key}: {value}", y)
+        y -= 12
+    add_line(f"Max drawdown: {data.max_drawdown}", y)
+    y -= 15
+    add_line(f"Sharpe ratio: {data.metrics.get('sharpe_ratio', 'N/A')}", y)
+    y -= 25
+    add_line(f"Evidence level: {data.evidence_level}", y)
+
+    content = DictionaryObject()
+    content[NameObject("/Length")] = NumberObject(len("\n".join(lines).encode()))
+    content_stream = "\n".join(lines)
+    content[NameObject("/Contents")] = pdf._addObject(content)
+
+    page[NameObject("/Contents")] = pdf._addObject(content)
+    pdf._addObject(page)
+
+    catalog = DictionaryObject()
+    catalog[NameObject("/Type")] = NameObject("/Catalog")
+    pages = DictionaryObject()
+    pages[NameObject("/Type")] = NameObject("/Pages")
+    pages[NameObject("/Kids")] = ArrayObject([NameObject("/Page1")])
+    pages[NameObject("/Count")] = NumberObject(1)
+    pdf._addObject(pages)
+    catalog[NameObject("/Pages")] = NameObject("/Pages")
+    pdf._addObject(catalog)
+
+    pdf.stream = b""
+    for obj in pdf._objects:
+        pdf.stream += pdf._write_object(obj)
+
+    return pdf.stream.decode("latin-1")

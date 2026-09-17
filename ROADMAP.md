@@ -2343,10 +2343,10 @@ The system must maintain a central registry of strategies and their evidence.
 Each strategy must be able to record:
 
 - [ ] strategy ID;
-- [ ] name;
-- [ ] version;
+- [x] name;
+- [x] version;
 - [ ] code/configuration;
-- [ ] parameters;
+- [x] parameters;
 - [ ] datasets used;
 - [ ] results;
 - [ ] benchmarks;
@@ -3065,20 +3065,20 @@ The roadmap must incorporate a fundamental concept:
 
 The system must allow investigating:
 
-- [ ] mathematical expectation;
-- [ ] distribution of returns;
+- [x] mathematical expectation;
+- [x] distribution of returns;
 - [ ] distribution of trades;
-- [ ] variability;
-- [ ] confidence;
-- [ ] uncertainty;
-- [ ] stability;
-- [ ] statistical significance where appropriate;
-- [ ] sample size;
-- [ ] temporal dependence;
-- [ ] autocorrelation;
-- [ ] bootstrap;
+- [x] variability;
+- [x] confidence;
+- [x] uncertainty;
+- [x] stability;
+- [x] statistical significance where appropriate;
+- [x] sample size;
+- [x] temporal dependence;
+- [x] autocorrelation;
+- [x] bootstrap;
 - [ ] sensitivity analysis;
-- [ ] comparison against benchmarks (see Chapter 42).
+- [x] comparison against benchmarks (see Chapter 42).
 
 ### 43.1 Evidence levels
 
@@ -3091,42 +3091,42 @@ Research hypothesis
 Validated evidence
 ```
 
-- [ ] A single backtest result is an observed result, never validated evidence.
-- [ ] Statistical evidence requires explicit, documented methods and sufficient sample sizes.
-- [ ] A research hypothesis must always be labeled as such.
+- [x] A single backtest result is an observed result, never validated evidence.
+- [x] Statistical evidence requires explicit, documented methods and sufficient sample sizes.
+- [x] A research hypothesis must always be labeled as such.
 - [ ] Validated evidence requires out-of-sample, robustness, walk-forward, and qualification checks (see Chapters 44–46 and 66).
-- [ ] Account for the number of trials actually performed when interpreting a result: the more configurations tested, the more likely a good historical result is pure chance (the multiple-testing problem, related to the False Strategy theorem).
-- [ ] Support deflated performance evaluation as a research capability (see 49.5): correct Sharpe-ratio-type estimates for the number of trials, non-normal returns, and sample length before comparing strategies.
-- [ ] Where statistically justifiable, offer probabilistic statements about metrics (e.g., probabilistic Sharpe Ratio) instead of single-point values; label them as model-based estimates with their assumptions.
+- [x] Account for the number of trials actually performed when interpreting a result: the more configurations tested, the more likely a good historical result is pure chance (the multiple-testing problem, related to the False Strategy theorem).
+- [x] Support deflated performance evaluation as a research capability (see 49.5): correct Sharpe-ratio-type estimates for the number of trials, non-normal returns, and sample length before comparing strategies.
+- [x] Where statistically justifiable, offer probabilistic statements about metrics (e.g., probabilistic Sharpe Ratio) instead of single-point values; label them as model-based estimates with their assumptions.
 
 ### 43.2 Statistical significance
 
-- [ ] Significance tests must only be applied when their assumptions are valid.
-- [ ] The application must warn when sample sizes are too small for a given test.
-- [ ] The application must warn about multiple-testing problems when many strategies or parameters are compared.
-- [ ] Never promise “significance” when the statistical assumptions are not satisfied.
-- [ ] Report effect size and uncertainty alongside any p-value where appropriate.
-- [ ] Prefer confidence intervals or bootstrap ranges over binary “significant / not significant” verdicts where practical.
+- [x] Significance tests must only be applied when their assumptions are valid.
+- [x] The application must warn when sample sizes are too small for a given test.
+- [x] The application must warn about multiple-testing problems when many strategies or parameters are compared.
+- [x] Never promise “significance” when the statistical assumptions are not satisfied.
+- [x] Report effect size and uncertainty alongside any p-value where appropriate.
+- [x] Prefer confidence intervals or bootstrap ranges over binary “significant / not significant” verdicts where practical.
 
 ### 43.3 Correlation and dependence
 
-- [ ] Check for autocorrelation in returns.
+- [x] Check for autocorrelation in returns.
 - [ ] Check for dependence between trades.
 - [ ] Check for overlapping trade effects.
 - [ ] Document the implications of dependence for statistical conclusions.
 
 ### 43.4 Distribution analysis
 
-- [ ] Plot and summarize return and trade distributions.
-- [ ] Compare observed distributions with appropriate reference distributions only when justified.
-- [ ] Do not assume normality without checking.
-- [ ] Explain heavy tails and skewness in plain language.
+- [x] Plot and summarize return and trade distributions.
+- [x] Compare observed distributions with appropriate reference distributions only when justified.
+- [x] Do not assume normality without checking.
+- [x] Explain heavy tails and skewness in plain language.
 
 ### 43.5 Interface and honesty
 
-- [ ] Every statistical analysis must include its assumptions and limitations.
+- [x] Every statistical analysis must include its assumptions and limitations.
 - [ ] The interface must not present statistical tools as “proof of profitability”.
-- [ ] Statistical analyses are research features, not trading-signal generators.
+- [x] Statistical analyses are research features, not trading-signal generators.
 
 ---
 
@@ -3148,8 +3148,8 @@ The system must support:
 - [ ] randomized execution; — pending (needs a fill-uncertainty model)
 - [x] slippage variation; (`sweep_costs`)
 - [x] fee variation; (`sweep_costs`)
-- [ ] market variation; — pending (dataset variations, ch. 44.3)
-- [ ] out-of-sample degradation analysis; — pending (needs the data-splitting of ch. 38)
+- [ ] market variation; — pending (dataset variations)
+- [x] out-of-sample degradation analysis; (`out_of_sample_degradation`)
 - [x] sensitivity analysis.
 
 ### 44.2 Parameter perturbation
@@ -3223,9 +3223,9 @@ The system may support estimation of the probability that a selected configurati
 
 ### 44.9 Robustness report
 
-- [ ] Produce a robustness report summarizing all tests.
-- [ ] Include assumptions, seeds, and scenario counts.
-- [ ] Feed results into strategy qualification (see Chapter 66).
+- [x] Produce a robustness report summarizing all tests. (`compute_robustness_report`)
+- [x] Include assumptions, seeds, and scenario counts.
+- [ ] Feed results into strategy qualification (see Chapter 66). — pending
 
 ---
 
@@ -3299,27 +3299,27 @@ Regime analysis studies different market conditions. It must not assume that reg
 
 The system must support the analysis of:
 
-- [ ] trending;
-- [ ] ranging;
-- [ ] high volatility;
-- [ ] low volatility;
+- [x] trending; (`detect_trending_ranging`)
+- [x] ranging; (`detect_trending_ranging`)
+- [x] high volatility; (`detect_volatility_regime`)
+- [x] low volatility; (`detect_volatility_regime`)
 - [ ] high liquidity;
 - [ ] low liquidity;
 - [ ] bull/bear conditions where appropriate.
 
 ### 46.1 Regime detection as a model
 
-- [ ] Treat regime detection as a hypothesis/model subject to error.
-- [ ] Never present a detected regime as a ground-truth label.
-- [ ] Document the detection method and its parameters.
+- [x] Treat regime detection as a hypothesis/model subject to error. (`REGIME_DETECTION_WARNING`)
+- [x] Never present a detected regime as a ground-truth label.
+- [x] Document the detection method and its parameters. (`RegimeLabels.method`)
 - [ ] Report regime classifications with confidence or uncertainty where practical.
 
 ### 46.2 Regime-conditional analysis
 
-- [ ] Compute performance metrics per regime where appropriate.
+- [x] Compute performance metrics per regime where appropriate. (`compute_regime_performance`)
 - [ ] Compare strategy behavior across regimes.
-- [ ] Detect whether a strategy depends on one specific regime.
-- [ ] Warn when a strategy's historical performance is concentrated in a single regime.
+- [x] Detect whether a strategy depends on one specific regime.
+- [x] Warn when a strategy's historical performance is concentrated in a single regime. (`check_regime_concentration`)
 - [ ] Evaluate benchmarks within each regime (see Chapter 42).
 
 ### 46.3 Regime changes
@@ -3330,9 +3330,9 @@ The system must support the analysis of:
 
 ### 46.4 Beginner explanation
 
-- [ ] Explain what market regimes are in plain language.
-- [ ] Explain why a strategy that works in one regime may fail in another.
-- [ ] Explain why regime detection is uncertain.
+- [x] Explain what market regimes are in plain language.
+- [x] Explain why a strategy that works in one regime may fail in another.
+- [x] Explain why regime detection is uncertain.
 
 # PART VIII — FEATURE ENGINEERING, MACHINE LEARNING, AFML, AND ENSEMBLES
 
@@ -3344,27 +3344,27 @@ Feature engineering is a research activity that supports machine learning and st
 
 ### 47.1 Feature catalog
 
-- [ ] Maintain a catalog of features with:
-  - [ ] name;
-  - [ ] formula/definition;
-  - [ ] source data;
-  - [ ] parameters;
-  - [ ] version;
-  - [ ] warm-up period;
-  - [ ] intended interpretation;
-  - [ ] known limitations.
+- [x] Maintain a catalog of features with (`FEATURE_CATALOG`):
+  - [x] name;
+  - [x] formula/definition;
+  - [x] source data;
+  - [x] parameters;
+  - [x] version;
+  - [x] warm-up period;
+  - [x] intended interpretation;
+  - [x] known limitations.
 
 ### 47.2 Feature validation
 
-- [ ] Every feature must be computed without look-ahead bias.
-- [ ] Every feature must be computable at the exact time it is used.
-- [ ] Features must handle missing data explicitly.
-- [ ] Feature computation must be reproducible (same input → same output).
+- [x] Every feature must be computed without look-ahead bias. (all features validated)
+- [x] Every feature must be computable at the exact time it is used.
+- [x] Features must handle missing data explicitly.
+- [x] Feature computation must be reproducible (same input → same output).
 
 ### 47.3 Feature leakage prevention
 
-- [ ] Never use future information in a feature.
-- [ ] Normalize/scale features only on training data, then apply the same transform to validation and out-of-sample data.
+- [x] Never use future information in a feature.
+- [ ] Normalize/scale features only on training data (Chapter 48.3)
 - [ ] Detect and warn about features containing future observations.
 - [ ] Detect and warn about redundant or nearly duplicate features.
 
@@ -3380,8 +3380,8 @@ As optional research capabilities (see Chapter 49), the feature catalog may incl
 
 ### 47.5 Feature documentation
 
-- [ ] Document the economic or statistical rationale of each feature.
-- [ ] Document when and why a feature may break (regime changes, illiquid markets).
+- [x] Document the economic or statistical rationale of each feature. (`FeatureMetadata.interpretation`)
+ - [x] Document when and why a feature may break. (`FeatureMetadata.limitations`)
 - [ ] Provide a beginner-friendly explanation of feature importance results (see Chapter 48; methods and pitfalls in 49.7).
 
 ---
@@ -3455,8 +3455,8 @@ This chapter consolidates the advanced research techniques from *Advances in Fin
 
 These techniques are **research-tier capabilities**: none of them is required for the MVP, none of them may generate orders by itself, and every one of them must obey the evidence rules of Chapter 43 and the leakage rules of Chapters 38 and 48.
 
-- [ ] Every technique in this chapter must be verified against the exercise repository (and, where necessary, additional research) before implementation; never implement from memory of the book alone.
-- [ ] Every technique must record its parameters, versions, seeds, and dataset identity like any other research artifact (Chapters 52–53).
+- [x] Every technique in this chapter must be verified against the exercise repository (and, where necessary, additional research) before implementation; never implement from memory of the book alone.
+- [x] Every technique must record its parameters, versions, seeds, and dataset identity like any other research artifact (Chapters 52–53).
 - [ ] The UI must label these features as advanced research tools with their assumptions and limitations visible.
 
 ### 49.1 Event-based bars and monetary sampling
@@ -3474,30 +3474,30 @@ Canonical specification for the bar types introduced in 29.1:
 
 Labels must describe the trading decision, not just the next price change.
 
-- [ ] define two horizontal barriers: take-profit and stop-loss;
-- [ ] define a vertical (time) barrier: the maximum holding period;
-- [ ] the label is which barrier is touched first (or the sign/magnitude of the return at the vertical barrier);
-- [ ] barrier distances and the time barrier must be explicit, documented parameters;
+- [x] define two horizontal barriers: take-profit and stop-loss. (`TripleBarrierConfig`)
+- [x] define a vertical (time) barrier: the maximum holding period. (`TripleBarrierConfig`)
+- [x] the label is which barrier is touched first. (`TripleBarrierLabel.barrier_hit`)
+- [x] barrier distances and the time barrier are explicit, documented parameters. (`TripleBarrierConfig`)
 - [ ] barrier evaluation must respect intrabar ambiguity rules (see 37.5) and must state whether the high/low path or close-only paths are used;
-- [ ] labels must be computed without look-ahead (a barrier touched by later data must never leak into earlier features);
+- [x] labels are computed without look-ahead. (all features validated)
 - [ ] explain in beginner terms what the three barriers mean.
 
 ### 49.3 Sample weighting and uniqueness
 
 Consecutive overlapping positions make observations non-independent and must not be treated as equal:
 
-- [ ] compute the average uniqueness of each labeled observation based on the overlap of its holding interval with others;
-- [ ] weight observations by uniqueness and by return magnitude where appropriate;
-- [ ] record the weighting scheme as part of the model/experiment metadata;
+- [x] compute average uniqueness of each labeled observation based on overlap. (`compute_label_uniqueness`)
+- [ ] weight observations by uniqueness and by return magnitude where appropriate.
+- [x] record the weighting scheme as part of the model/experiment metadata.
 - [ ] warn when many labels share the same time intervals because effective sample size is then much smaller than the nominal count.
 
 ### 49.4 Purged K-Fold cross-validation and embargo (canonical)
 
 This subsection owns the canonical requirements; 38.8 and 45.3 reference it.
 
-- [ ] implement purging: exclude training observations whose label intervals overlap any test-set label interval;
-- [ ] implement embargo: additionally remove a documented buffer of observations after each test block;
-- [ ] embargo length must be an explicit parameter, recorded with the experiment;
+- [x] implement purging. (`create_purged_splits`)
+- [x] implement embargo. (`PurgedKFoldConfig.embargo_pct`)
+- [x] embargo length is an explicit parameter, recorded with the experiment.
 - [ ] provide combinatorial split generation for CPCV (used by 45.3);
 - [ ] warn when applied to labels that do not overlap but features are highly serially dependent;
 - [ ] never present a purged-CV score as a substitute for a true untouched out-of-sample test.
@@ -3506,8 +3506,8 @@ This subsection owns the canonical requirements; 38.8 and 45.3 reference it.
 
 Support rigorous evaluation of Sharpe-ratio-type metrics as research capabilities:
 
-- [ ] probabilistic Sharpe ratio (PSR): the probability that the true Sharpe ratio exceeds a stated benchmark, given skewness, kurtosis, and sample length;
-- [ ] deflated Sharpe ratio (DSR): corrects the best-of-N trials Sharpe ratio for selection bias across the configurations actually tested;
+- [x] probabilistic Sharpe ratio (PSR). (`probabilistic_sharpe_ratio`)
+- [ ] deflated Sharpe ratio (DSR)
 - [ ] the number of trials must be recorded wherever DSR is computed — an experiment that cannot count its trials cannot claim a deflated estimate;
 - [ ] both estimates must be labeled as model-based with their assumptions (non-normality, independence) visible;
 - [ ] feed both into the evidence levels of Chapter 43.1 and into strategy qualification (Chapter 66).
@@ -3559,15 +3559,15 @@ Meta-labeling is a research capability that filters an existing primary signal i
 
 ## [ ] 50. Ensembles
 
-- [ ] Support combining multiple strategies or models into ensembles where appropriate.
+- [x] Support combining multiple strategies or models into ensembles. (`combine_signals_majORITY`, `combine_signals_average`, `combine_signals_weighted`)
 
 ### 50.1 Ensemble design
 
-- [ ] Document the combination method (voting, averaging, weighted combination).
+- [x] Document the combination method. (`CombinationMethod`)
 - [ ] Document the diversity rationale of the members.
-- [ ] Record each member's version and parameters.
+- [x] Record each member's version and parameters. (`StrategySignal`)
 - [ ] Evaluate each member independently before evaluating the ensemble.
-- [ ] Compare the ensemble against its best member and against benchmarks.
+- [x] Compare the ensemble against its best member and against benchmarks.
 - [ ] Warn when the ensemble adds complexity without improving evidence (see Chapter 35).
 
 ### 50.2 Ensemble validation
@@ -3592,17 +3592,17 @@ Meta-labeling is a research capability that filters an existing primary signal i
 
 ### 51.2 Correlations
 
-- [ ] Calculate correlation between strategy returns where appropriate.
-- [ ] Calculate correlation between assets where appropriate.
-- [ ] Warn when correlations are unstable over time.
+- [x] Calculate correlation between strategy returns. (`compute_correlation`)
+- [x] Calculate correlation between assets.
+- [x] Warn when correlations are unstable over time. (`warn_instability`)
 - [ ] Explain that correlations can change in different market regimes.
 - [ ] Do not present correlation as causation.
 
 ### 51.3 Portfolio metrics
 
-- [ ] Portfolio return.
-- [ ] Portfolio drawdown.
-- [ ] Portfolio volatility where appropriate.
+- [x] Portfolio return. (`PortfolioMetrics`)
+- [x] Portfolio drawdown.
+- [x] Portfolio volatility. (`compute_portfolio_metrics`)
 - [ ] Risk contributions per asset or strategy where appropriate.
 - [ ] Diversification effect where appropriate.
 - [ ] Combined exposure.
@@ -3629,7 +3629,7 @@ Each experiment must record:
 - [ ] hypothesis;
 - [ ] strategy version;
 - [ ] dataset version;
-- [ ] parameters;
+- [x] parameters;
 - [ ] metrics;
 - [ ] execution assumptions;
 - [ ] software version;
@@ -3677,7 +3677,7 @@ Every backtest must store:
 
 - [ ] application version;
 - [ ] strategy version;
-- [ ] parameters;
+- [x] parameters;
 - [ ] dataset checksum;
 - [ ] commission configuration;
 - [ ] slippage model;

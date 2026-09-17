@@ -9,29 +9,26 @@ A new AI Agent must read this file **before** doing anything else, then
 
 ---
 
-## 1. Project state (last updated 2026-09-14)
+## 1. Project state (last updated 2026-09-17)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`, pushed and in sync)
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 276 passed, 2 skipped —
+- **Tests:** 368 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 44 Python files under `src/crypto_trading_lab/`
-- **Tests:** 41 Python files under `tests/`
-- **Documentation:** `docs/en/beginners/` (4 files) and
+- **Source:** 52 Python files under `src/crypto_trading_lab/`
+- **Tests:** 49 Python files under `tests/`
+- **Documentation:** `docs/en/beginners/` (7 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
-  `adr/0001-exchange-adapter-spike.md`)
-- **Specification:** `ROADMAP.md` — 72 chapters; 381 requirements marked
-  `[x]` (reconciled item by item on 2026-09-13, including chapters 7, 26, 27
-  and 30; chapter 40 added on 2026-09-14)
+  `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`)
+- **Specification:** `ROADMAP.md` — 72 chapters; Chapter 49 (AFML) partial done
+  (triple-barrier labeling, purged CV, sample uniqueness)
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
-- **Current phase:** Phase 3 (backtesting) in progress. The engine, the
-  initial strategies, the performance metrics (chapter 40) and the
-  Backtesting Lab UI (§37.9–37.10) are done; the next task per the roadmap
-  order is **reports (chapter 41)**. See §5.
+- **Current phase:** Phase 3 (backtesting). Next task per roadmap order is
+  **Chapter 50 (Ensembles)** or **Chapter 51 (Portfolio construction)**.
 
 ### Honest status of the earlier phases
 
@@ -68,8 +65,14 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Indicators (SMA/EMA/RSI/BB/ATR/ROC) | `src/crypto_trading_lab/indicators/library.py` | 31 |
 | Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
 | Performance metrics (returns, trades, risk, activity, benchmark, validity) | `src/crypto_trading_lab/backtesting/metrics.py` | 40 |
-| Backtesting Lab UI (results + beginner explanation) | `src/crypto_trading_lab/ui/backtesting/lab.py` | 37.9, 37.10 |
-| Report generation (HTML/CSV/JSON, evidence levels) | `src/crypto_trading_lab/reporting/report.py` | 41 (partial) |
+| Risk manager (position limits, loss limits, operational limits) | `src/crypto_trading_lab/risk_manager.py` | 58 |
+| Robustness report (Monte Carlo, perturbation, cost sweep, OOS degradation) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 |
+| Statistical edge analysis (distributions, autocorrelation, bootstrap, PSR) | `src/crypto_trading_lab/backtesting/statistical_analysis.py` | 43 |
+| Ensemble methods (voting, averaging, weighted combination) | `src/crypto_trading_lab/ensembles.py` | 50 |
+| Portfolio construction (correlation, portfolio returns, portfolio metrics) | `src/crypto_trading_lab/portfolio.py` | 51 |
+| AFML techniques (triple-barrier labeling, purged CV, sample uniqueness) | `src/crypto_trading_lab/machine_learning/` | 49 |
+| Regime analysis (trending/ranging, volatility, concentration warning) | `src/crypto_trading_lab/market_data/regimes.py` | 46 |
+| Feature engineering (returns, volatility, momentum, RSI, EMA, z-score) | `src/crypto_trading_lab/market_data/features.py` | 47 |
 | Robustness (seeded Monte Carlo, perturbation, cost sweeps) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 (partial) |
 | Chronological data splitting (train/validation/test) | `src/crypto_trading_lab/market_data/splitting.py` | 38 |
 | Walk-forward analysis (rolling windows, per-window selection) | `src/crypto_trading_lab/backtesting/walk_forward.py` | 45 |
@@ -216,10 +219,9 @@ Per `ROADMAP.md` and the last iteration report:
    reproducibility records added to the engine, Spanish translations
    compiled; 248 tests passing).
 3. ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-14
-   (`reporting/report.py`, HTML/CSV/JSON export from the Backtesting Lab,
+   (`reporting/report.py`, HTML/CSV/JSON/PDF export from the Backtesting Lab,
    evidence-level labels and disclaimers). Still open by
-   design: optional PDF (new dependency) and research/qualification
-   reports (need the chapter 52 experiment manager).
+   design: research/qualification reports (need the chapter 52 experiment manager).
 4. ~~Benchmarking (chapter 42)~~ — core done on 2026-09-14:
    `compare_reports()` (relative return/volatility/drawdown/Sharpe/
    Sortino differences, gross vs net excess, cost drag), benchmark
@@ -255,10 +257,13 @@ Per `ROADMAP.md` and the last iteration report:
    `out_of_sample_degradation()` in `robustness.py` compares the same
    strategy across the chapter-38 split, quantifies degradation and
    flags collapse; 276 tests passing.
-9. Next: paper trading (57), risk manager (58), or remaining research
-   tier (43 evidence/statistics, 46 regimes, 49 AFML). Note: §37.8
-   determinism checkboxes are still open; much of it is already
-   engine-tested, reconciling them is a cheap documentation task.
+9. ~~Statistical edge (Chapter 43)~~ — done on 2026-09-17:
+   `backtesting/statistical_analysis.py` with distribution statistics,
+   autocorrelation checks, bootstrap confidence intervals, and
+   Deflated Sharpe Ratio (PSR); 14 tests passing + beginner doc.
+14. Next: Chapter 53 (Reproducibility) or Chapter 57 (Paper trading).
+    Note: §37.8 determinism checkboxes are still open; much of it is already
+    engine-tested, reconciling them is a cheap documentation task.
 
 Do not start a task before reading the chapter that owns it, and do not tick
 a requirement until it is implemented **and tested**.
