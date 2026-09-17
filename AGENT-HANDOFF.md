@@ -16,13 +16,14 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 368 passed, 2 skipped —
+- **Tests:** 415 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 52 Python files under `src/crypto_trading_lab/`
-- **Tests:** 49 Python files under `tests/`
+- **Source:** 57 Python files under `src/crypto_trading_lab/`
+- **Tests:** 54 Python files under `tests/`
 - **Documentation:** `docs/en/beginners/` (7 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
-  `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`)
+  `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`,
+  `working-method.md`, `configuration-guide.md`, `research-ethics.md`)
 - **Specification:** `ROADMAP.md` — 72 chapters; Chapter 49 (AFML) partial done
   (triple-barrier labeling, purged CV, sample uniqueness)
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
@@ -66,9 +67,14 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Backtesting engine (fees, slippage, spread, next-open) | `src/crypto_trading_lab/backtesting/engine.py` | 37, 33 |
 | Performance metrics (returns, trades, risk, activity, benchmark, validity) | `src/crypto_trading_lab/backtesting/metrics.py` | 40 |
 | Risk manager (position limits, loss limits, operational limits) | `src/crypto_trading_lab/risk_manager.py` | 58 |
+| Emergency kill switch | `src/crypto_trading_lab/kill_switch.py` | 59 |
+| Safety gates (pre-trade protection layer) | `src/crypto_trading_lab/safety_gates.py` | 67 |
+| Risk of ruin and position sizing | `src/crypto_trading_lab/backtesting/robustness.py` | 60 |
+| Strategy qualification (multi-criterion evaluation) | `src/crypto_trading_lab/qualification.py` | 66 |
 | Robustness report (Monte Carlo, perturbation, cost sweep, OOS degradation) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 |
 | Statistical edge analysis (distributions, autocorrelation, bootstrap, PSR) | `src/crypto_trading_lab/backtesting/statistical_analysis.py` | 43 |
 | Ensemble methods (voting, averaging, weighted combination) | `src/crypto_trading_lab/ensembles.py` | 50 |
+| Paper trading (account, order simulation) | `src/crypto_trading_lab/paper_trading.py` | 57 |
 | Portfolio construction (correlation, portfolio returns, portfolio metrics) | `src/crypto_trading_lab/portfolio.py` | 51 |
 | AFML techniques (triple-barrier labeling, purged CV, sample uniqueness) | `src/crypto_trading_lab/machine_learning/` | 49 |
 | Regime analysis (trending/ranging, volatility, concentration warning) | `src/crypto_trading_lab/market_data/regimes.py` | 46 |
@@ -257,13 +263,25 @@ Per `ROADMAP.md` and the last iteration report:
    `out_of_sample_degradation()` in `robustness.py` compares the same
    strategy across the chapter-38 split, quantifies degradation and
    flags collapse; 276 tests passing.
-9. ~~Statistical edge (Chapter 43)~~ — done on 2026-09-17:
-   `backtesting/statistical_analysis.py` with distribution statistics,
-   autocorrelation checks, bootstrap confidence intervals, and
-   Deflated Sharpe Ratio (PSR); 14 tests passing + beginner doc.
-14. Next: Chapter 53 (Reproducibility) or Chapter 57 (Paper trading).
-    Note: §37.8 determinism checkboxes are still open; much of it is already
-    engine-tested, reconciling them is a cheap documentation task.
+9. ~~Statistical edge (Chapter 43)~~ — complete
+10. ~~Robustness consolidated report (Chapter 44)~~ — complete
+11. ~~Regime analysis (Chapter 46)~~ — complete
+12. ~~Feature engineering (Chapter 47)~~ — complete
+13. ~~AFML techniques (Chapter 49)~~ — partial (triple-barrier, purged CV)
+14. ~~Ensemble methods (Chapter 50)~~ — complete
+15. ~~Portfolio construction (Chapter 51)~~ — partial
+16. ~~Paper trading (Chapter 57)~~ — partial
+17. ~~Risk manager (Chapter 58)~~ — complete
+18. ~~Kill switch (Chapter 59)~~ — complete
+19. ~~Risk of ruin (Chapter 60)~~ — complete
+20. ~~Strategy qualification (Chapter 66)~~ — complete
+21. ~~Safety gates (Chapter 67)~~ — complete
+22. ~~Working method (Chapter 70)~~ — documented
+23. ~~Configuration (Chapter 71)~~ — documented
+
+Next: Finalize remaining glossary terms or research chapters (62-65).
+Note: §37.8 determinism checkboxes are still open; much of it is already
+engine-tested, reconciling them is a cheap documentation task.
 
 Do not start a task before reading the chapter that owns it, and do not tick
 a requirement until it is implemented **and tested**.
@@ -276,8 +294,8 @@ git submodule update --init --recursive
 
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
-python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 229 passed expected
+python3 -c "import pyqtgraph, sqlalchemy, platformdirs, pypdf; print('deps OK')"
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 415 passed expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps

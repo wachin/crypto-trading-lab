@@ -48,6 +48,9 @@ __all__ = [
     "DEGRADATION_NOTE",
     "RobustnessReport",
     "compute_robustness_report",
+    "RiskOfRuinReport",
+    "compute_risk_of_ruin",
+    "PositionSizingConfig",
 ]
 
 #: Mandatory interpretation line (44.7).
@@ -466,3 +469,101 @@ def compute_robustness_report(
             ])),
         },
     )
+
+
+# --- 60. Risk of ruin and capital depletion ----------------------------------------
+
+
+@dataclass(frozen=True)
+class PositionSizingConfig:
+    """Configuration for position sizing (60.1)."""
+    max_risk_per_trade: Decimal = Decimal("0.02")  # 2% of capital
+    max_total_exposure: Decimal = Decimal("0.50")  # 50% of capital
+    ruin_threshold_fraction: Decimal = Decimal("0.10")  # 10% of initial capital
+
+
+@dataclass(frozen=True)
+class RiskOfRuinReport:
+    """Risk of ruin analysis (Chapter 60)."""
+    probability_of_ruin: Decimal
+    expected_max_drawdown: Decimal
+    historical_max_drawdown: Decimal
+    ruin_threshold: Decimal
+    scenarios: int
+    assumptions: str
+    warnings: tuple[str, ...]
+
+
+def compute_risk_of_ruin(
+    result: BacktestResult,
+    config: PositionSizingConfig | None = None,
+) -> RiskOfRuinReport:
+    """
+    Compute risk of ruin and capital depletion analysis (Chapter 60).
+    
+    Uses Monte Carlo simulation to estimate the probability that capital
+    falls below a defined threshold.
+    """
+    config = config or PositionSizingConfig()
+    
+    if not result.trades:
+        return RiskOfRuinReport(
+            probability_of_ruin=Decimal(0),
+            expected_max_drawdown=Decimal(0),
+            historical_max_drawdown=Decimal(0),
+            ruin_threshold=Decimal(0),
+            scenarios=0,
+            assumptions="No trades to analyze.",
+            warnings=("No trade data available for risk analysis.",),
+        )
+    
+    # Compute historical max drawdown
+    peak = result.initial_capital
+    max_dd = Decimal(0)
+    equity = result.initial_capital
+    for value in result.equity_curve:
+        if value > peak:
+            peak = value
+        if peak > 0:
+            dd = (peak - value) / peak
+            if dd > max_dd:
+                max_dd = dd
+    
+    # Run Monte Carlo to estimate probability of ruin
+    mc_config = MonteCarloConfig(
+        scenarios=500,
+        seed=42,
+        ruin_threshold_fraction=config.ruin_threshold_fraction,
+    )
+    mc_report = monte_carlo_trades(result, mc_config)
+    
+    # Assumptions
+    assumptions = (
+        f"Risk of ruin estimated from {mc_report.scenario_count} scenarios. "
+        f"Ruin threshold: {config.ruin_threshold_fraction:.0%} of initial capital. "
+        f"Returns resampled with replacement (bootstrapping). "
+        f"Does not account for regime changes or structural breaks."
+    )
+    
+    warnings = list(mc_report.warnings)
+    if max_dd > Decimal("0.20"):
+        warnings.append(
+            "Historical drawdown exceeds 20%. Consider reducing position sizes."
+        )
+    
+    return RiskOfRuinReport(
+        probability_of_ruin=mc_report.risk_of_ruin,
+        expected_max_drawdown=mc_report.max_drawdown_p95,
+        historical_max_drawdown=max_dd,
+        ruin_threshold=config.ruin_threshold_fraction,
+        scenarios=mc_report.scenario_count,
+        assumptions=assumptions,
+        warnings=tuple(warnings),
+    )
+
+
+RISK_OF_RUIN_WARNING = (
+    "Risk of ruin is an estimate based on historical data and stated assumptions. "
+    "It is NOT a guarantee that you will or will not lose your capital. "
+    "Never risk money needed for essential expenses."
+)

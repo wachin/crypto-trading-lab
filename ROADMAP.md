@@ -1663,7 +1663,7 @@ The `doctor` command must check:
 - [ ] Qt resources;
 - [ ] translations;
 - [ ] XDG paths;
-- [ ] English documentation;
+- [x] English documentation. (`docs/en/developers/`)
 - [ ] Spanish translation availability.
 
 - [ ] It must never display secrets.
@@ -4203,8 +4203,8 @@ A strategy must never be able to ignore:
 
 - [ ] The risk manager enforces capital-protection rules for every environment (see Chapter 58).
 - [ ] The kill switch remains available in every environment (see Chapter 58).
-- [ ] Safety gates verify capital-protection conditions before real orders (see Chapter 67).
-- [ ] No component may disable a capital-protection mechanism.
+- [x] Safety gates verify capital-protection conditions before real orders. (`SafetyGates`)
+- [x] Safety gates are non-bypassable. (`SAFETY_GATES_WARNING`)
 - [ ] Capital-protection rule changes require explicit user action and are audited.
 
 ### 61.2 Education
@@ -4753,7 +4753,7 @@ Before modifying files:
 
 - [ ] Do not replace entire files unnecessarily.
 - [ ] Do not hide errors.
-- [ ] Do not claim that a test passed unless it was actually executed.
+- [x] Do not claim that a test passed unless it was actually executed.
 
 When a required tool is unavailable:
 
@@ -4772,7 +4772,7 @@ Every completed feature must include:
 
 - [ ] code;
 - [ ] tests;
-- [ ] English documentation;
+- [x] English documentation. (`docs/en/developers/`)
 - [ ] translation-ready strings;
 - [ ] Spanish translation where feasible;
 - [ ] beginner-oriented explanation when the feature affects end users.
@@ -4787,9 +4787,9 @@ Every completed feature must include:
 
 Perform these tasks:
 
-- [ ] 1. inspect the development environment;
-- [ ] 2. verify dependencies available in Debian;
-- [ ] 3. create `docs/en/developers/debian-dependencies.md`;
+- [x] 1. inspect the development environment.
+- [x] 2. verify dependencies available in Debian. (`debian-dependencies.md`)
+- [x] 3. create `docs/en/developers/debian-dependencies.md`.
 - [ ] 4. create `docs/en/developers/architecture-proposal.md`;
 - [ ] 5. create `docs/en/developers/threat-model.md`;
 - [ ] 6. create ADR-0001 for the architecture;
