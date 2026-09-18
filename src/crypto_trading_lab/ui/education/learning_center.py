@@ -118,7 +118,13 @@ class LearningCenterWidget(QWidget):
             self.lesson_list.addItem(item)
         layout.addWidget(self.lesson_list)
 
-        self.status_label = QLabel(self.tr("0 of 20 lessons completed"))
+        self.status_label = QLabel(
+            self.tr("0 of 20 lessons completed - 0 quizzes taken")
+        )
+        self.status_label.setText(
+            self.tr("0 of 20 lessons completed")
+        )  # will be updated later
+        layout.addWidget(self.status_label)
         layout.addWidget(self.status_label)
 
         self.start_button = QPushButton(self.tr("Start Here: Cryptocurrency for Complete Beginners."))
