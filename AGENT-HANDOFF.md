@@ -16,10 +16,10 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 430 passed, 2 skipped —
+- **Tests:** 442 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 61 Python files under `src/crypto_trading_lab/`
-- **Tests:** 59 Python files under `tests/`
+- **Source:** 62 Python files under `src/crypto_trading_lab/`
+- **Tests:** 60 Python files under `tests/`
 - **Documentation:** `docs/en/beginners/` (8 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`,
@@ -77,6 +77,7 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Feature engineering (returns, volatility, momentum, RSI, EMA, z-score) | `src/crypto_trading_lab/market_data/features.py` | 47 |
 | Experiment manager (research tracking, reproducibility) | `src/crypto_trading_lab/machine_learning/experiment_manager.py` | 52 |
 | Live vs backtest drift analysis | `src/crypto_trading_lab/monitoring/` | 63 |
+| Real trading support (activation flow, safety protections) | `src/crypto_trading_lab/trading.py` | 68 |
 | Robustness (seeded Monte Carlo, perturbation, cost sweeps) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 (partial) |
 | Chronological data splitting (train/validation/test) | `src/crypto_trading_lab/market_data/splitting.py` | 38 |
 | Walk-forward analysis (rolling windows, per-window selection) | `src/crypto_trading_lab/backtesting/walk_forward.py` | 45 |
