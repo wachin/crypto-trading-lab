@@ -3,74 +3,40 @@
 Provides caching decorators, batch processing for indicators, and memory
 optimization for large candle datasets.
 """
-
 from __future__ import annotations
 
-import functools
 import time
-from typing import Any, Callable, TypeVar
+import functools
+from typing import Any, Callable, TypeVar, Optional
 
 F = TypeVar("F", bound=Callable[..., Any])
 
-
-def memoize_candles(func: F) -> F:
-    """
-    Memoization decorator optimized for candle datasets.
-    
-    Caches function results based on dataset length and start/end timestamps
-    to avoid recomputing indicators on unchanged data.
-    """
-    cache = {}
-
-    @functools.wraps(func)
-    def wrapper(candles: list, *args: Any, **kwargs: Any) -> Any:
-        if not candles:
-            return func(candles, *args, **kwargs)
+def memoize_candles(ttl_seconds: int = 300) -> Callable:
+    """Memoization decorator for candle data processing."""
+    def decorator(func: F) -> F:
+        cache = {}
+        access_times = {}
         
-        # Create a lightweight cache key from dataset identity
-        key = (
-            len(candles),
-            candles[0].timestamp if hasattr(candles[0], "timestamp") else 0,
-            candles[-1].timestamp if hasattr(candles[-1], "timestamp") else 0,
-            args,
-            frozenset(kwargs.items()),
-        )
-        
-        if key in cache:
-            return cache[key]
-        
-        result = func(candles, *args, **kwargs)
-        cache[key] = result
-        return result
-
-    return wrapper  # type: ignore
-
-
-def benchmark_execution(func: Callable[..., Any]) -> Callable[..., Any]:
-    """Benchmark execution time for performance tuning."""
-    @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        duration = (end_time - start_time) * 1000
-        # Log or track duration if needed
-        return result
-    return wrapper
-
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            key = str(args) + str(kwargs)
+            now = time.monotonic()
+            
+            if key in cache and (now - access_times.get(key, 0) < ttl_seconds):
+                return cache[key]
+            
+            result = func(*args, **kwargs)
+            cache[key] = result
+            access_times[key] = now
+            return result
+        return wrapper # type: ignore
+    return decorator
 
 class DataBatcher:
-    """Batch processor for large candle datasets to prevent UI blocking."""
-    
+    """Batch processor for large candle datasets."""
     @staticmethod
-    def process_in_batches(
-        data: list[Any],
-        processor: Callable[[list[Any]], Any],
-        batch_size: int = 1000,
-    ) -> list[Any]:
-        """Process large data in chunks to maintain responsiveness."""
+    def process_in_batches(data: list, processor: Callable[[list], Any], batch_size: int = 100) -> list:
         results = []
         for i in range(0, len(data), batch_size):
-            batch = data[i:i + batch_size]
-            results.extend(processor(batch))
+            results.extend(processor(data[i:i + batch_size]))
         return results
