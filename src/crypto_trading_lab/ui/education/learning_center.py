@@ -58,6 +58,30 @@ LESSONS: tuple[Lesson, ...] = (
     Lesson(20, "Protecting the money you need for living."),
 )
 
+#: Quiz questions for each lesson (chapter 73).
+QUIZ_QUESTIONS: dict[int, dict] = {
+    1: {"question": "What is cryptocurrency?", "options": ["Digital money secured by cryptography", "A type of stock", "A physical coin"], "answer": 0},
+    2: {"question": "What is a market?", "options": ["A place to buy and sell", "A type of bank", "A crypto wallet"], "answer": 0},
+    3: {"question": "What is a trading pair?", "options": ["Two currencies traded against each other", "A pair of dice", "A trading strategy"], "answer": 0},
+    4: {"question": "What is a candlestick?", "options": ["A price chart showing open, high, low, close", "A type of candle", "A trading signal"], "answer": 0},
+    5: {"question": "What is volume?", "options": ["The number of shares/contracts traded", "The price change", "The market cap"], "answer": 0},
+    6: {"question": "What is a market order?", "options": ["Buys/sells at current price", "Sets a price target", "Waits for a specific time"], "answer": 0},
+    7: {"question": "What is a limit order?", "options": ["Buys/sells at a specific price or better", "Sets a time limit", "Uses market price"], "answer": 0},
+    8: {"question": "What are fees?", "options": ["Costs for trading", "Taxes on profits", "Broker commissions"], "answer": 0},
+    9: {"question": "What is risk?", "options": ["The chance of losing money", "The chance of making profit", "The market volatility"], "answer": 0},
+    10: {"question": "What is paper trading?", "options": ["Trading with virtual money", "Trading on paper", "Trading without fees"], "answer": 0},
+    11: {"question": "What is backtesting?", "options": ["Testing a strategy on historical data", "Backing up trades", "Testing internet connection"], "answer": 0},
+    12: {"question": "Build your first simple strategy?", "options": ["Moving average crossover", "Buy and hold", "Day trading"], "answer": 0},
+    13: {"question": "Run your first backtest?", "options": ["Using the Backtesting Lab", "Manual calculation", "Guessing prices"], "answer": 0},
+    14: {"question": "Understand a loss?", "options": ["Losing money is bad", "Losses are part of trading", "Avoid trading entirely"], "answer": 1},
+    15: {"question": "Understand drawdown?", "options": ["Peak-to-trough decline", "A type of profit", "A trading strategy"], "answer": 0},
+    16: {"question": "Learn why profits are never guaranteed?", "options": ["Trading involves risk", "Always win", "Market is predictable"], "answer": 0},
+    17: {"question": "Why most traders lose money?", "options": ["Lack of education", "Bad luck", "Market manipulation"], "answer": 0},
+    18: {"question": "Trading is not a reliable income?", "options": ["True - high risk", "False - easy money", "Depends on capital"], "answer": 0},
+    19: {"question": "When not to trade?", "options": ["When unsure", "When winning", "Never"], "answer": 0},
+    20: {"question": "Protecting the money you need for living?", "options": ["Never borrow to trade", "Always borrow", "Only trade profits"], "answer": 0},
+}
+
 
 class LearningCenterWidget(QWidget):
     """Placeholder Learning Center: lesson list + completed tracking."""
