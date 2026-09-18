@@ -36,6 +36,14 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(self.tr("Crypto Trading Lab"))
         self.resize(900, 600)
 
+        # Lazy-loaded components (loaded on demand)
+        self._learning_center = None
+        self._chart_window = None
+        self._backtesting_window = None
+        self._chart_loaded = False
+        self._backtesting_loaded = False
+        self._learning_center_loaded = False
+
         self._build_menus()
         self._build_central()
 
@@ -143,15 +151,19 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(self.tr("Disconnected"))
 
     def _open_learning_center(self) -> None:
-        """Open the Learning Center as a top-level window (chapter 23)."""
-        from crypto_trading_lab.ui.education.learning_center import (
-            LearningCenterWidget,
-        )
-
-        self._learning_center = LearningCenterWidget()
-        self._learning_center.setWindowTitle(self.tr("Learning Center"))
-        self._learning_center.resize(480, 560)
-        self._learning_center.show()
+        """Open the Learning Center as a top-level window (chapter 23).
+        
+        Uses lazy loading - the Learning Center widget is only created
+        when first requested.
+        """
+        if self._learning_center is None:
+            from crypto_trading_lab.ui.education.learning_center import (
+                LearningCenterWidget,
+            )
+            self._learning_center = LearningCenterWidget()
+            self._learning_center.setWindowTitle(self.tr("Learning Center"))
+            self._learning_center.resize(480, 560)
+            self._learning_center.show()
 
     def load_csv_file(
         self, path: str, paths: "AppPaths | None" = None
