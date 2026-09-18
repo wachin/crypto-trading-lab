@@ -44,6 +44,14 @@ class MainWindow(QMainWindow):
         self._backtesting_loaded = False
         self._learning_center_loaded = False
 
+        # Lazy-loaded components (loaded on demand)
+        self._learning_center = None
+        self._chart_window = None
+        self._backtesting_window = None
+        self._chart_loaded = False
+        self._backtesting_loaded = False
+        self._learning_center_loaded = False
+
         self._build_menus()
         self._build_central()
 
