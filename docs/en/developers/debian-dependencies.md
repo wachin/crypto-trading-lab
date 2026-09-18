@@ -24,3 +24,31 @@ python3 -c "import pyqtgraph, sqlalchemy, platformdirs, pypdf; print('deps OK')"
 ```bash
 sudo apt install python3-pytest python3-pytest-qt python3-hypothesis python3-typeguard
 ```
+
+# Debian Package Installation
+
+This application is available as a Debian package on Debian 13 (trixie).
+
+## Installation
+
+```bash
+sudo apt update
+sudo apt install crypto-trading-lab
+```
+
+## Verification
+
+```bash
+crypto-trading-lab --version
+```
+
+## Development
+
+For development purposes, you can install from source:
+
+```bash
+sudo apt install python3 python3-pip python3-dev python3-virtualenv
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```

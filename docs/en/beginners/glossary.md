@@ -271,3 +271,69 @@ otherwise sound strategies. Look at them before you look at profits.
 **In simple words:** If your backtest uses future data to make decisions (look-ahead bias), it shows profits that would never be real.
 
 **Warning:** Always check that your strategy logic only uses data available *at the time* of the signal.
+
+### latency
+
+**Definition:** The delay between sending an order and the exchange receiving it.
+
+**In simple words:** Time it takes for your signal to travel across the internet to the exchange. In high-frequency environments, milliseconds matter.
+
+**Warning:** In a fast-moving market, latency can mean you buy or sell after the price has already moved.
+
+### fill
+
+**Definition:** The actual execution of a trade.
+
+**In simple words:** You sent an order; the exchange said "okay" and swapped your money for the asset. That swap is the fill.
+
+**Warning:** In a live market, orders sometimes don't fill because the price moves away before you reach it.
+
+### backtesting bias
+
+**Definition:** Errors in backtest results caused by incorrect assumptions.
+
+**In simple words:** If your backtest uses future data to make decisions (look-ahead bias), it shows profits that would never be real.
+
+**Warning:** Always check that your strategy logic only uses data available *at the time* of the signal.
+
+
+### order size
+
+**Definition:** The quantity of units to trade in a single transaction.
+
+**In simple words:** If you have $1,000 and want to risk 1% per trade, and the stock price is $100, your order size would be 10 shares. Proper order size ensures that a single trade doesn't overly impact your portfolio.
+
+**Warning:** Overly large order sizes can lead to significant losses if the trade moves against you, and can also cause slippage issues in illiquid markets.
+
+### pi
+
+**Definition:** A mathematical constant approximately equal to 3.14159, representing the ratio of a circle's circumference to its diameter.
+
+**In simple words:** Pi is just a number that shows up in all sorts of unexpected places in mathematics and physics, including in formulas for the period of a pendulum, the probability of certain random events, and in the calculation of circle areas.
+
+**Warning:** Don't confuse this with "pie," the delicious dessert.
+
+### circuit breaker
+
+**Definition:** A mechanism that automatically halts trading when certain adverse conditions are met.
+
+**In simple words:** Like a household electrical circuit breaker, if the system detects extreme market conditions or strategy losses, it automatically stops trading to prevent further losses.
+
+**Warning:** Circuit breakers can sometimes halt trading during momentary glitches, so it's important to understand the specific conditions that trigger them.
+
+### market order
+
+**Definition:** An order to buy or sell immediately at the best available current price.
+
+**In simple words:** A market order says "I want to buy/sell right now, no matter what the price is." It's the fastest way to get in or out of a position, but you might not get the exact price you saw a moment ago.
+
+**Warning:** Market orders in illiquid markets can result in very poor fill prices due to slippage.
+
+### limit order
+
+**Definition:** An order to buy at or below a specific price, or to sell at or above a specific price.
+
+**In simple words:** A limit order says "I want to buy, but only if the price is $X or lower." It gives you price control, but the order might not execute if the price never reaches your limit.
+
+**Warning:** Limit orders can leave you unfilled, meaning you don't enter or exit the position, which can be frustrating if you're trying to capitalize on a fast-moving move.
+
