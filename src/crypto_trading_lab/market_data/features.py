@@ -274,3 +274,133 @@ FEATURE_LEAKAGE_WARNING = (
     "However, when using features for machine learning, ensure proper "
     "time-series validation (Chapter 48.3) to avoid data leakage."
 )
+#: Portfolio-level backtesting (Chapter 51.1).
+def portfolio_backtest(strategies, candles, initial_capital=Decimal("1000"), backtest_config=None):
+    """Run backtest on a portfolio of strategies.
+    Returns portfolio-level metrics and individual strategy results.
+    """
+    from crypto_trading_lab.backtesting.engine import run_backtest
+    from crypto_trading_lab.backtesting.metrics import compute_performance
+    
+    results = []
+    portfolio_metrics = {"total_return": Decimal(0), "trades": 0}
+    
+    for strategy in strategies:
+        result = run_backtest(candles, strategy, backtest_config)
+        perf = compute_performance(result)
+        results.append({
+            "strategy_name": strategy.name,
+            "return_fraction": perf.return_fraction,
+            "num_trades": len(result.trades),
+            "sharpe_ratio": float(perf.risk.sharpe_ratio) if perf.risk.sharpe_ratio else None,
+            "max_drawdown": float(perf.risk.max_drawdown),
+        })
+        portfolio_metrics["total_return"] += perf.return_fraction
+        portfolio_metrics["trades"] += len(result.trades)
+    
+    portfolio_metrics["total_return"] /= len(strategies)
+    return results, portfolio_metrics
+
+#: Correlation calculation (Chapter 51.2).
+def compute_asset_correlations(returns_list):
+    """Calculate correlation matrix between multiple strategies/assets.
+    (Chapter 51.2)
+    """
+    import scipy.stats
+    n = len(returns_list)
+    if n < 2:
+        return {}
+    
+    # Convert each series to float for computation
+    float_returns = [[float(r) for r in series] for series in returns_list]
+    matrix = {}
+    
+    for i in range(n):
+        for j in range(i + 1, n):
+            try:
+                r, _ = scipy.stats.pearsonr(float_returns[i], float_returns[j])
+                matrix[(i, j)] = r
+                matrix[(j, i)] = r
+            except:
+                matrix[(i, j)] = Decimal(0)
+                matrix[(j, i)] = Decimal(0)
+    
+    return matrix
+
+#: Portfolio metrics computation (Chapter 51.3).
+def compute_portfolio_metrics(returns, risk_free_rate=Decimal("0")):
+    """Compute portfolio-level metrics (Chapter 51.3).
+    """
+    from decimal import Decimal
+    n = len(returns)
+    if n == 0:
+        return {"total_return": Decimal(0), "volatility": Decimal(0), 
+                "sharpe_ratio": Decimal(0), "sortino_ratio": Decimal(0)}
+    n = len(returns)
+    total_return = sum(returns) / n
+    
+    if len(returns) > 1:
+        mean_ret = sum(returns) / n
+        variance = sum((r - mean_ret) ** 2 for r in returns) / (len(returns) - 1)
+        volatility = Decimal(variance).sqrt()
+    else:
+        volatility = Decimal(0)
+    
+    excess_return = sum(returns) - risk_free_rate * n
+    sharpe_ratio = Decimal(0)
+    if volatility > Decimal(0):
+        sharpe_ratio = excess_return / (volatility * Decimal(252).sqrt() / n)
+    
+    downside_returns = [r for r in returns if r < Decimal(0)]
+    downside_dev = Decimal(0)
+    if downside_returns:
+        dd_sum = sum((r - Decimal(0)) ** 2 for r in downside_returns)
+        downside_dev = (dd_sum / len(downside_returns)).sqrt()
+    sortino_ratio = Decimal(0)
+    if downside_dev > Decimal(0):
+        excess_return = sum(returns) - risk_free_rate * n
+        sortino_ratio = excess_return / downside_dev
+    
+    peak = returns[0]
+    max_drawdown = Decimal(0)
+    for r in returns:
+        if r < peak:
+            max_drawdown = min(max_drawdown, r - peak) if max_drawdown < Decimal(0) else r - peak
+        peak = max(peak, r)
+    
+    corr_mean = Decimal(0)
+    corr_max = Decimal(0)
+    corr_min = Decimal(0)
+    if correlations:
+        corr_mean = sum(correlations) / len(correlations)
+        corr_max = max(correlations)
+        corr_min = min(correlations)
+    
+    return {
+        "total_return": total_return,
+        "volatility": volatility,
+        "sharpe_ratio": sharpe_ratio,
+        "sortino_ratio": sortino_ratio,
+        "max_drawdown": max_drawdown,
+    }
+
+#: Correlation instability warning (Chapter 51.2).
+WARN_CORRELATION_INSTABILITY = (
+    "Correlation values may change over time. Correlations calculated "
+    "on a limited window may not reflect the true long-term relationship. "
+    "Always verify correlations over multiple windows and market regimes."
+)
+
+#: Portfolio concentration warning.
+WARN_CONCENTRATION = (
+    "High correlation between strategies or assets indicates "
+    "concentration risk. A portfolio of correlated strategies/assets "
+    "may suffer significant losses during market stress events."
+)
+
+#: Portfolio position sizing warning.
+WARN_POSITION_SIZING = (
+    "Position sizing must pass through the risk manager (Chapter 58). "
+    "Never bypass risk limits per asset or per strategy."
+)
+
