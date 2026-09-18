@@ -9,6 +9,7 @@ later phases.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -89,6 +90,7 @@ class LearningCenterWidget(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._completed: set[int] = set()
+        self._quiz_scores: dict[int, bool] = {}
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -139,6 +141,7 @@ class LearningCenterWidget(QWidget):
                 len(self._completed), len(LESSONS)
             )
         )
+        self._save_persistence()
 
     def take_quiz(self, lesson_number: int) -> bool:
         """Take a quiz for the specified lesson number.
@@ -238,6 +241,29 @@ class LearningCenterWidget(QWidget):
 
     def completed_lessons(self) -> set[int]:
         return set(self._completed)
+
+    #: Persistence file for quiz and lesson progress (chapter 75)
+    PERSISTENCE_FILE = Path(__file__).resolve().parents[3] / "data" / "learning_center_progress.json"
+
+    def _load_persistence(self) -> None:
+        """Load persisted progress from disk."""
+        if self.PERSISTENCE_FILE.exists():
+            try:
+                with open(self.PERSISTENCE_FILE, 'r', encoding='utf-8') as f:
+                    progress = json.load(f)
+                self._completed.update(progress.get("completed_lessons", []))
+            except (json.JSONDecodeError, KeyError, TypeError):
+                pass
+
+    def _save_persistence(self) -> None:
+        """Save completed lessons and quiz scores to disk."""
+        self.PERSISTENCE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        progress_data = {
+            "completed_lessons": sorted(list(self._completed)),
+            "quiz_scores": self._quiz_scores,
+        }
+        with open(self.PERSISTENCE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(progress_data, f, indent=2)
 
     @staticmethod
     def guide_path() -> Path:
