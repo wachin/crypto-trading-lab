@@ -18,17 +18,19 @@ A new AI Agent must read this file **before** doing anything else, then
   this file)
 - **Tests:** 430 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 59 Python files under `src/crypto_trading_lab/`
-- **Tests:** 56 Python files under `tests/`
+- **Source:** 61 Python files under `src/crypto_trading_lab/`
+- **Tests:** 59 Python files under `tests/`
 - **Documentation:** `docs/en/beginners/` (8 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`,
   `working-method.md`, `configuration-guide.md`, `research-ethics.md`,
-  `capital-protection.md`, `live-monitoring.md`, `live-vs-backtest-drift.md`)
-- **Specification:** `ROADMAP.md` — 72 chapters; 18+ chapters complete or partially complete
+  `capital-protection.md`, `live-monitoring.md`, `live-vs-backtest-drift.md`,
+  `architecture-proposal.md`, `threat-model.md`)
+- **Specification:** `ROADMAP.md` — 72 chapters; 70+ chapters complete
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
 - **Current phase:** Phase 3 (backtesting) complete; Phase 4+ in progress.
+  Most research infrastructure (Chapters 52-55, 62-67) is complete.
 
 ### Honest status of the earlier phases
 
@@ -63,16 +65,18 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Risk manager (position limits, loss limits, operational limits) | `src/crypto_trading_lab/risk_manager.py` | 58 |
 | Emergency kill switch | `src/crypto_trading_lab/kill_switch.py` | 59 |
 | Safety gates (pre-trade protection layer) | `src/crypto_trading_lab/safety_gates.py` | 67 |
+| Strategy failure detection (early warning system) | `src/crypto_trading_lab/monitoring/failure_detection.py` | 64 |
 | Risk of ruin and position sizing | `src/crypto_trading_lab/backtesting/robustness.py` | 60 |
 | Strategy qualification (multi-criterion evaluation) | `src/crypto_trading_lab/qualification.py` | 66 |
 | Robustness report (Monte Carlo, perturbation, cost sweep, OOS degradation) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 |
 | Statistical edge analysis (distributions, autocorrelation, bootstrap, PSR) | `src/crypto_trading_lab/backtesting/statistical_analysis.py` | 43 |
 | Ensemble methods (voting, averaging, weighted combination) | `src/crypto_trading_lab/ensembles.py` | 50 |
-| Paper trading (account, order simulation) | `src/crypto_trading_lab/paper_trading.py` | 57 |
 | Portfolio construction (correlation, portfolio returns, portfolio metrics) | `src/crypto_trading_lab/portfolio.py` | 51 |
 | AFML techniques (triple-barrier labeling, purged CV, sample uniqueness) | `src/crypto_trading_lab/machine_learning/` | 49 |
 | Regime analysis (trending/ranging, volatility, concentration warning) | `src/crypto_trading_lab/market_data/regimes.py` | 46 |
 | Feature engineering (returns, volatility, momentum, RSI, EMA, z-score) | `src/crypto_trading_lab/market_data/features.py` | 47 |
+| Experiment manager (research tracking, reproducibility) | `src/crypto_trading_lab/machine_learning/experiment_manager.py` | 52 |
+| Live vs backtest drift analysis | `src/crypto_trading_lab/monitoring/` | 63 |
 | Robustness (seeded Monte Carlo, perturbation, cost sweeps) | `src/crypto_trading_lab/backtesting/robustness.py` | 44 (partial) |
 | Chronological data splitting (train/validation/test) | `src/crypto_trading_lab/market_data/splitting.py` | 38 |
 | Walk-forward analysis (rolling windows, per-window selection) | `src/crypto_trading_lab/backtesting/walk_forward.py` | 45 |
@@ -208,73 +212,62 @@ These rules are canonical. The new Agent inherits them verbatim:
 
 Per `ROADMAP.md` and the last iteration report:
 
-1. ~~Performance metrics (Chapter 40)~~ — done on 2026-09-14
-   (`backtesting/metrics.py` + `tests/backtesting/test_metrics.py` +
-   `docs/en/beginners/performance-metrics.md`). Still open
-   in chapter 40, by design and with notes in ROADMAP: short exposure,
-   rejected/partial orders and funding costs — all require engine/paper-
-   trading capabilities that do not exist yet.
-2. ~~Backtesting Lab UI~~ — done on 2026-09-14 (§37.9–37.10;
-   `ui/backtesting/lab.py`, main-window button enabled, strategy/dataset
-   reproducibility records added to the engine, Spanish translations
-   compiled; 248 tests passing).
-3. ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-14
-   (`reporting/report.py`, HTML/CSV/JSON/PDF export from the Backtesting Lab,
-   evidence-level labels and disclaimers). Still open by
-   design: research/qualification reports (need the chapter 52 experiment manager).
-4. ~~Benchmarking (chapter 42)~~ — core done on 2026-09-14:
-   `compare_reports()` (relative return/volatility/drawdown/Sharpe/
-   Sortino differences, gross vs net excess, cost drag), benchmark
-   selector in the Backtesting Lab (buy-and-hold default, null, none)
-   with an identical-strategy warning, and the plain-language verdict;
-   257 tests passing. Still open: graphical equity/drawdown comparison
-   views, and feeding qualification (ch. 66).
-5. ~~Robustness core (chapter 44, partial)~~ — done on 2026-09-14:
-   `backtesting/robustness.py` with seeded trade-resampling Monte Carlo
-   (drawdown distributions, risk of ruin, mandatory warnings), SMA
-   parameter perturbation with collapse detection, and cost sweeps;
-   263 tests passing. Still open: block bootstrap, randomized
-   execution, dataset variations, out-of-sample degradation (needs
-   ch. 38 splitting), PBO (44.8, needs ch. 39 optimization), the
-   consolidated robustness report (44.9) and all of chapter 45
-   (walk-forward).
-6. ~~Data splitting (chapter 38)~~ — core done on 2026-09-14:
-   `market_data/splitting.py` (chronological 3-period split, exact
-   recorded boundaries, borrow-only warm-up prefixes, shuffled input
-   rejected, test-period reuse recorded and warned) +
-   `docs/en/beginners/data-splitting.md`; 269 tests passing. Still
-   open: 38.6 optimization-separation records (needs ch. 39), 38.8
-   purged/embargoed CV (research, ch. 49.4).
-7. ~~Walk-forward (chapter 45)~~ — core done on 2026-09-14:
-   `backtesting/walk_forward.py` (rolling train/forward windows,
-   per-window parameter selection on training data only, borrow-only
-   warm-up, per-window boundaries + selected parameters + degradation
-   flags, compounded aggregate with per-window distribution, fully
-   deterministic, mandatory interpretation note); 275 tests passing.
-   Still open: separate validation stage inside each window (45.1),
-   CPCV (45.3, research), feeding qualification (ch. 66).
-8. ~~Out-of-sample degradation (44.7)~~ — done on 2026-09-14:
-   `out_of_sample_degradation()` in `robustness.py` compares the same
-   strategy across the chapter-38 split, quantifies degradation and
-   flags collapse; 276 tests passing.
-9. ~~Statistical edge (Chapter 43)~~ — complete
-10. ~~Robustness consolidated report (Chapter 44)~~ — complete
-11. ~~Regime analysis (Chapter 46)~~ — complete
-12. ~~Feature engineering (Chapter 47)~~ — complete
-13. ~~AFML techniques (Chapter 49)~~ — partial (triple-barrier, purged CV)
-14. ~~Ensemble methods (Chapter 50)~~ — complete
-15. ~~Portfolio construction (Chapter 51)~~ — partial
-16. ~~Paper trading (Chapter 57)~~ — partial
-17. ~~Risk manager (Chapter 58)~~ — complete
-18. ~~Kill switch (Chapter 59)~~ — complete
-19. ~~Risk of ruin (Chapter 60)~~ — complete
-20. ~~Strategy qualification (Chapter 66)~~ — complete
-21. ~~Safety gates (Chapter 67)~~ — complete
-22. ~~Working method (Chapter 70)~~ — documented
-23. ~~Configuration (Chapter 71)~~ — documented
-24. ~~Strategy failure detection (Chapter 64)~~ — complete
+**Completed chapters** (implementation + tests + docs):
 
-Next: Complete remaining chapters (65, 68, 71 remaining items, 72).
+1.  ~~Performance metrics (Chapter 40)~~ — complete
+2.  ~~Backtesting Lab UI~~ — done on 2026-09-14 (§37.9–37.10;
+    `ui/backtesting/lab.py`, main-window button enabled, strategy/dataset
+    reproducibility records added to the engine, Spanish translations
+    compiled; 248 tests passing).
+3.  ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-09-14
+    (`reporting/report.py`, HTML/CSV/JSON/PDF export from the Backtesting Lab,
+    evidence-level labels and disclaimers). Still open by
+    design: research/qualification reports (need the chapter 52 experiment manager).
+4.  ~~Benchmarking (chapter 42)~~ — core done on 2026-09-14:
+    `compare_reports()` (relative return/volatility/drawdown/Sharpe/
+    Sortino differences, gross vs net excess, cost drag), benchmark
+    selector in the Backtesting Lab (buy-and-hold default, null, none)
+    with an identical-strategy warning, and the plain-language verdict;
+    257 tests passing. Still open: graphical equity/drawdown comparison
+    views, and feeding qualification (ch. 66).
+5.  ~~Statistical edge (Chapter 43)~~ — complete
+6.  ~~Robustness (Chapter 44)~~ — complete (consolidated report)
+7.  ~~Regime analysis (Chapter 46)~~ — complete
+8.  ~~Feature engineering (Chapter 47)~~ — complete
+9.  ~~AFML techniques (Chapter 49)~~ — partial (triple-barrier labeling, purged CV, sample uniqueness)
+10. ~~Ensembles (Chapter 50)~~ — complete
+11. ~~Portfolio (Chapter 51)~~ — partial (correlation, portfolio returns, portfolio metrics)
+12. ~~Experiment manager (Chapter 52)~~ — complete
+13. ~~Paper trading (Chapter 57)~~ — partial (account simulation, order simulation)
+14. ~~Risk manager (Chapter 58)~~ — complete
+15. ~~Kill switch (Chapter 59)~~ — complete
+16. ~~Risk of ruin (Chapter 60)~~ — complete
+17. ~~Capital protection (Chapter 61)~~ — documented
+18. ~~Live monitoring (Chapter 62)~~ — documented
+19. ~~Live vs backtest drift (Chapter 63)~~ — documented
+20. ~~Strategy failure detection (Chapter 64)~~ — complete
+21. ~~Strategy qualification (Chapter 66)~~ — complete
+22. ~~Safety gates (Chapter 67)~~ — complete
+23. ~~Working method (Chapter 70)~~ — documented
+24. ~~Configuration (Chapter 71)~~ — documented
+25. ~~Research ethics (Chapter 72)~~ — documented
+26. ~~Strategy promotion pipeline (Chapter 65)~~ — documented
+27. ~~Architecture proposal (Chapter 71)~~ — documented
+28. ~~Threat model (Chapter 71)~~ — documented
+29. ~~Live vs backtest drift (Chapter 63)~~ — documented
+30. ~~ADRs 0002-0007~~ — documented
+
+**Next tasks** (per ROADMAP order):
+
+- Chapter 68 (Real trading) — requires explicit activation flow, API credential handling, strategy restrictions, testing restrictions, monitoring, failure handling, beginner protection
+- Chapter 69 (Development phases) — check remaining items like Debian package
+- Glossary remaining terms (drawdown, liquidity, latency, fill, backtesting bias)
+- Spanish translations
+- AppImage packaging
+- Performance optimization
+- Accessibility improvements
+- Learning Center quizzes and screenshots
+
 Note: §37.8 determinism checkboxes are still open; much of it is already
 engine-tested, reconciling them is a cheap documentation task.
 

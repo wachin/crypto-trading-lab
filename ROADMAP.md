@@ -4603,7 +4603,7 @@ The application must clearly state:
 
 ---
 
-## [ ] 69. Development phases
+## [x] 69. Development phases
 
 - [ ] Do not try to implement the entire application in one change.
 
@@ -4736,7 +4736,7 @@ Implement after the core phases are stable:
 
 ---
 
-## [ ] 70. Working method
+## [x] 70. Working method
 
 Before modifying files:
 
@@ -4779,7 +4779,7 @@ Every completed feature must include:
 
 ---
 
-## [ ] 71. First concrete task and expected result
+## [x] 71. First concrete task and expected result
 
 ### 71.1 First concrete task
 
@@ -4790,15 +4790,15 @@ Perform these tasks:
 - [x] 1. inspect the development environment.
 - [x] 2. verify dependencies available in Debian. (`debian-dependencies.md`)
 - [x] 3. create `docs/en/developers/debian-dependencies.md`.
-- [ ] 4. create `docs/en/developers/architecture-proposal.md`;
-- [ ] 5. create `docs/en/developers/threat-model.md`;
-- [ ] 6. create ADR-0001 for the architecture;
-- [ ] 7. create ADR-0002 for charting;
-- [ ] 8. create ADR-0003 for Qt and asyncio concurrency;
-- [ ] 9. create ADR-0004 for credential storage;
-- [ ] 10. create ADR-0005 for the packaging backend;
-- [ ] 11. create ADR-0006 for internationalization;
-- [ ] 12. create ADR-0007 for beginner documentation;
+- [x] 4. create `docs/en/developers/architecture-proposal.md`;
+- [x] 5. create `docs/en/developers/threat-model.md`;
+- [x] 6. create ADR-0001 for the architecture;
+- [x] 7. create ADR-0002 for charting;
+- [x] 8. create ADR-0003 for Qt and asyncio concurrency;
+- [x] 9. create ADR-0004 for credential storage;
+- [x] 10. create ADR-0005 for the packaging backend;
+- [x] 11. create ADR-0006 for internationalization;
+- [x] 12. create ADR-0007 for beginner documentation;
 - [x] 13. create the initial project structure;
 - [x] 14. create a minimal PyQt6 window;
 - [x] 15. make English the default language;
@@ -4893,7 +4893,7 @@ At the end, provide:
 
 ---
 
-## [ ] 72. Research ethics and honest reporting
+## [x] 72. Research ethics and honest reporting
 
 The project must maintain scientific and professional honesty at every stage.
 
@@ -4936,10 +4936,10 @@ The project must maintain scientific and professional honesty at every stage.
 
 This roadmap is complete when the following architectural checks hold:
 
-- [ ] The conceptual flow `FOUNDATION → DATA → MARKET MODEL → STRATEGIES → SIGNALS → BACKTESTING → DATA SPLITTING → OPTIMIZATION → PERFORMANCE → STATISTICAL RESEARCH → ROBUSTNESS → WALK-FORWARD → REGIME ANALYSIS → FEATURE ENGINEERING → MACHINE LEARNING → ADVANCED FINANCIAL ML → ENSEMBLES → PORTFOLIO → EXECUTION → PAPER TRADING → RISK → MONITORING → STRATEGY QUALIFICATION → SAFETY GATES → REAL TRADING` is respected.
-- [ ] Research, execution, and risk responsibilities are separated (see Chapter 6.1).
-- [ ] No feature appears twice with different owners.
-- [ ] Every cross-reference points to a chapter that exists.
-- [ ] Every chapter answers a concrete question.
-- [ ] Terminology is consistent (see Chapter 2).
-- [ ] A profitable backtest is never presented as evidence of future advantage.
+- [x] The conceptual flow `FOUNDATION → DATA → MARKET MODEL → STRATEGIES → SIGNALS → BACKTESTING → DATA SPLITTING → OPTIMIZATION → PERFORMANCE → STATISTICAL RESEARCH → ROBUSTNESS → WALK-FORWARD → REGIME ANALYSIS → FEATURE ENGINEERING → MACHINE LEARNING → ADVANCED FINANCIAL ML → ENSEMBLES → PORTFOLIO → EXECUTION → PAPER TRADING → RISK → MONITORING → STRATEGY QUALIFICATION → SAFETY GATES → REAL TRADING` is respected.
+- [x] Research, execution, and risk responsibilities are separated (see Chapter 6.1).
+- [x] No feature appears twice with different owners.
+- [x] Every cross-reference points to a chapter that exists.
+- [x] Every chapter answers a concrete question.
+- [x] Terminology is consistent (see Chapter 2).
+- [x] A profitable backtest is never presented as evidence of future advantage.
