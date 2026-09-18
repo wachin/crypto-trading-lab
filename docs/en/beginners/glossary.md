@@ -239,3 +239,35 @@ otherwise sound strategies. Look at them before you look at profits.
 
 **Warning:** Overfit strategies look great in backtests but fail in real trading.
 
+
+### liquidity
+
+**Definition:** How easily you can buy or sell without moving the price much.
+
+**In simple words:** High liquidity means you can trade big size and the price stays the same. Low liquidity means even a small trade moves the price.
+
+**Warning:** In illiquid markets, your market order might execute at a much worse price than you saw.
+
+### latency
+
+**Definition:** The delay between sending an order and the exchange receiving it.
+
+**In simple words:** Time it takes for your signal to travel across the internet to the exchange. In high-frequency environments, milliseconds matter.
+
+**Warning:** In a fast-moving market, latency can mean you buy or sell after the price has already moved.
+
+### fill
+
+**Definition:** The actual execution of a trade.
+
+**In simple words:** You sent an order; the exchange said "okay" and swapped your money for the asset. That swap is the fill.
+
+**Warning:** In a live market, orders sometimes don't fill because the price moves away before you reach it.
+
+### backtesting bias
+
+**Definition:** Errors in backtest results caused by incorrect assumptions.
+
+**In simple words:** If your backtest uses future data to make decisions (look-ahead bias), it shows profits that would never be real.
+
+**Warning:** Always check that your strategy logic only uses data available *at the time* of the signal.

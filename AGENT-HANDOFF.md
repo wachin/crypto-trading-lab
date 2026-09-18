@@ -16,15 +16,15 @@ A new AI Agent must read this file **before** doing anything else, then
 - **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
   26, 27 and 30 against the code` (an ancestor of the commit that carries
   this file)
-- **Tests:** 415 passed, 2 skipped —
+- **Tests:** 430 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 57 Python files under `src/crypto_trading_lab/`
-- **Tests:** 54 Python files under `tests/`
+- **Source:** 59 Python files under `src/crypto_trading_lab/`
+- **Tests:** 56 Python files under `tests/`
 - **Documentation:** `docs/en/beginners/` (8 files) and
   `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
   `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`,
   `working-method.md`, `configuration-guide.md`, `research-ethics.md`,
-  `capital-protection.md`, `live-monitoring.md`)
+  `capital-protection.md`, `live-monitoring.md`, `live-vs-backtest-drift.md`)
 - **Specification:** `ROADMAP.md` — 72 chapters; 18+ chapters complete or partially complete
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
@@ -39,11 +39,6 @@ completed"; Chapter 69 and Chapter 71 track the real state.
 Still missing from the foundation (required by Chapter 19.1 / Chapter 71 and
 not yet written):
 
-- `docs/en/developers/debian-dependencies.md`
-- `docs/en/developers/architecture-proposal.md`
-- `docs/en/developers/threat-model.md`
-- the ADR set `ADR-0001`–`ADR-0007` (only an exchange-adapter spike ADR
-  exists today, `docs/en/developers/adr/0001-exchange-adapter-spike.md`)
 - the initial Debian package (Chapter 16)
 
 These are ordinary pending work items, not blockers for Chapter 40.
@@ -277,8 +272,9 @@ Per `ROADMAP.md` and the last iteration report:
 21. ~~Safety gates (Chapter 67)~~ — complete
 22. ~~Working method (Chapter 70)~~ — documented
 23. ~~Configuration (Chapter 71)~~ — documented
+24. ~~Strategy failure detection (Chapter 64)~~ — complete
 
-Next: Finalize remaining glossary terms or research chapters (62-65).
+Next: Complete remaining chapters (65, 68, 71 remaining items, 72).
 Note: §37.8 determinism checkboxes are still open; much of it is already
 engine-tested, reconciling them is a cheap documentation task.
 

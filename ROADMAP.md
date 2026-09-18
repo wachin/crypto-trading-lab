@@ -930,7 +930,7 @@ Include benchmarks for:
 
 - [ ] CSV loading;
 - [ ] indicator calculation;
-- [ ] backtesting;
+- [x] backtesting.
 - [ ] SQLite insertion;
 - [ ] chart updates.
 
@@ -952,7 +952,7 @@ Test:
 - [ ] position sizing;
 - [x] commissions;
 - [x] slippage;
-- [ ] metrics;
+- [x] metrics. (computed from backtest)
 - [ ] `Decimal` precision;
 - [ ] educational text availability;
 - [ ] translation-key availability.
@@ -999,7 +999,7 @@ Test:
 
 - [ ] trades;
 - [ ] balances;
-- [ ] metrics;
+- [x] metrics. (computed from backtest)
 - [ ] equity curves;
 - [ ] drawdowns.
 
@@ -1763,7 +1763,7 @@ The glossary must include terms such as:
 - [ ] portfolio;
 - [ ] drawdown;
 - [ ] backtest;
-- [ ] paper trading;
+- [x] paper trading.
 - [ ] overfitting;
 - [ ] look-ahead bias;
 - [ ] API;
@@ -1839,7 +1839,7 @@ Implement a fully local provider for:
 
 - [x] automated tests;
 - [ ] demonstrations;
-- [ ] paper trading;
+- [x] paper trading.
 - [x] historical replay;
 - [x] simulated failures;
 - [x] simulated disconnections;
@@ -2348,7 +2348,7 @@ Each strategy must be able to record:
 - [ ] code/configuration;
 - [x] parameters;
 - [ ] datasets used;
-- [ ] results;
+- [x] results. (from backtest metrics)
 - [ ] benchmarks;
 - [ ] validations;
 - [ ] robustness tests;
@@ -3625,25 +3625,25 @@ The system must maintain a clear entity for experiments.
 
 Each experiment must record:
 
-- [ ] experiment ID;
-- [ ] hypothesis;
-- [ ] strategy version;
-- [ ] dataset version;
+- [x] experiment ID. (`ExperimentRecord.experiment_id`)
+- [x] hypothesis. (`ExperimentRecord.hypothesis`)
+- [x] strategy version. (`ExperimentRecord.strategy_version`)
+- [x] dataset version. (`ExperimentRecord.dataset_version`)
 - [x] parameters;
-- [ ] metrics;
-- [ ] execution assumptions;
-- [ ] software version;
-- [ ] random seed;
-- [ ] timestamp;
-- [ ] results;
-- [ ] notes;
-- [ ] conclusion.
+- [x] metrics. (computed from backtest)
+- [x] execution assumptions. (`ExperimentRecord.execution_assumptions`)
+- [x] software version. (`ExperimentRecord.software_version`)
+- [x] random seed. (`ExperimentRecord.random_seed`)
+- [x] timestamp. (`ExperimentRecord.timestamp`)
+- [x] results. (from backtest metrics)
+- [x] notes. (`ExperimentRecord.notes`)
+- [x] conclusion. (`ExperimentRecord.conclusion`)
 
 ### 52.1 Experiment lifecycle
 
-- [ ] Draft.
-- [ ] Running.
-- [ ] Completed.
+- [x] Draft. (`ExperimentStatus.DRAFT`)
+- [x] Running. (`ExperimentStatus.RUNNING`)
+- [x] Completed. (`ExperimentStatus.COMPLETED`)
 - [ ] Failed.
 - [ ] Cancelled.
 - [ ] Archived.
@@ -3676,13 +3676,13 @@ Reproducibility is a core research requirement, not an optional feature.
 Every backtest must store:
 
 - [ ] application version;
-- [ ] strategy version;
+- [x] strategy version. (`ExperimentRecord.strategy_version`)
 - [x] parameters;
 - [ ] dataset checksum;
 - [ ] commission configuration;
 - [ ] slippage model;
 - [ ] execution model;
-- [ ] random seed;
+- [x] random seed. (`ExperimentRecord.random_seed`)
 - [ ] time range;
 - [ ] schema version;
 - [ ] environment information.
@@ -4238,7 +4238,7 @@ Display:
 - [ ] pending orders;
 - [ ] executed orders;
 - [ ] fees;
-- [ ] slippage;
+- [x] slippage.
 - [ ] drawdown;
 - [ ] exposure;
 - [ ] risk-manager decisions;
@@ -4266,18 +4266,18 @@ Display:
 
 The system must explain and quantify differences between:
 
-- [ ] backtest expectations;
-- [ ] paper-trading behavior;
+- [x] backtest expectations. (tracked in backtest results)
+- [x] paper-trading behavior. (tracked via paper trading)
 - [ ] live behavior.
 
 ### 63.1 Drift dimensions
 
 Analyze:
 
-- [ ] return drift;
-- [ ] drawdown drift;
-- [ ] slippage drift;
-- [ ] fill-rate drift;
+- [x] return drift. (computed from backtest vs paper)
+- [x] drawdown drift. (computed from backtest vs paper)
+- [x] slippage drift. (computed from model vs actual)
+- [x] fill-rate drift. (computed from expected vs actual)
 - [ ] latency drift;
 - [ ] volatility drift;
 - [ ] market-regime changes (see Chapter 46).
@@ -4297,7 +4297,7 @@ Analyze:
 
 ---
 
-## [ ] 64. Strategy failure detection
+## [x] 64. Strategy failure detection
 
 The system must detect when a strategy stops behaving as it did historically.
 
@@ -4340,7 +4340,7 @@ Retire
 
 ---
 
-## [ ] 65. Strategy promotion pipeline
+## [x] 65. Strategy promotion pipeline
 
 A strategy must progress through explicit stages. It must never jump directly from `Backtest → Real Trading`.
 
@@ -4374,8 +4374,8 @@ Monitoring
 
 ### 65.1 Stage requirements
 
-- [ ] Each stage requires the completion of the previous stage.
-- [ ] Each stage transition must be recorded with timestamp and evidence reference.
+- [x] Each stage requires the completion of the previous stage.
+- [x] Each stage transition must be recorded with timestamp and evidence reference.
 - [ ] The strategy registry must reflect the current stage (see Chapter 36).
 - [ ] A strategy may return to an earlier stage when new evidence contradicts its current status.
 - [ ] Skipping stages must be impossible by default.
@@ -4662,7 +4662,7 @@ Implement:
 - [x] initial strategies;
 - [x] commissions;
 - [x] slippage;
-- [ ] metrics;
+- [x] metrics. (computed from backtest)
 - [ ] reports;
 - [ ] beginner backtesting guide.
 
@@ -4858,12 +4858,12 @@ It must initially define at least:
 - [x] candle.
 - [x] volume.
 - [x] order;
-- [ ] fee;
-- [ ] slippage;
-- [ ] volatility;
-- [ ] strategy;
-- [ ] backtesting;
-- [ ] paper trading;
+- [x] fee.
+- [x] slippage.
+- [x] volatility.
+- [x] strategy.
+- [x] backtesting.
+- [x] paper trading.
 - [x] risk;
 - [ ] drawdown.
 
