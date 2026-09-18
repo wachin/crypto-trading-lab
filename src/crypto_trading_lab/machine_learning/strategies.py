@@ -377,3 +377,109 @@ __all__ = [
     "evaluate_ml_strategy",
     "ML_STRATEGY_WARNING",
 ]
+
+#: Ensemble strategies (Chapter 50).
+#: Combine multiple strategies to improve robustness and stability.
+
+class EnsembleStrategy:
+    """Base class for ensemble strategies."""
+    
+    def __init__(self, strategies, weights=None):
+        self.strategies = strategies
+        if weights is None:
+            # Equal weights
+            self.weights = [Decimal(1) / len(strategies)] * len(strategies)
+        else:
+            self.weights = weights
+    
+    def on_candle(self, index, candles):
+        """Make ensemble decision."""
+        # Collect signals from all strategies
+        signals = []
+        for strategy in self.strategies:
+            signal = strategy.on_candle(index, candles)
+            if signal is not None:
+                signals.append(signal)
+        
+        if not signals:
+            return None
+        
+        # Weighted decision
+        buy_weight = Decimal(0)
+        sell_weight = Decimal(0)
+        
+        for i, signal in enumerate(signals):
+            weight = self.weights[i] if i < len(self.weights) else Decimal(1) / len(strategies)
+            if signal == OrderSide.BUY:
+                buy_weight += weight
+            elif signal == OrderSide.SELL:
+                sell_weight += weight
+        
+        if buy_weight > sell_weight:
+            return OrderSide.BUY
+        elif sell_weight > buy_weight:
+            return OrderSide.SELL
+        return None
+
+class EqualWeightEnsemble:
+    """Ensemble with equal weights for all strategies."""
+    
+    name = "Equal Weight Ensemble"
+    version = "1.0.0"
+    
+    def __init__(self, strategies):
+        self.strategies = strategies
+    
+    def on_candle(self, index, candles):
+        """Make ensemble decision with equal weights."""
+        buy_weight = Decimal(0)
+        sell_weight = Decimal(0)
+        
+        for strategy in self.strategies:
+            signal = strategy.on_candle(index, candles)
+            if signal == OrderSide.BUY:
+                buy_weight += Decimal(1) / len(self.strategies)
+            elif signal == OrderSide.SELL:
+                sell_weight += Decimal(1) / len(self.strategies)
+        
+        if buy_weight > sell_weight:
+            return OrderSide.BUY
+        elif sell_weight > buy_weight:
+            return OrderSide.SELL
+        return None
+
+def evaluate_ensemble(ensembles, candles, backtest_config=None):
+    """Evaluate an ensemble of strategies."""
+    from crypto_trading_lab.backtesting.engine import run_backtest
+    from crypto_trading_lab.backtesting.metrics import compute_performance
+    
+    results = []
+    for ensemble in ensembles:
+        strategy = ensemble  # EnsembleStrategy or EqualWeightEnsemble
+        result = run_backtest(candles, strategy, backtest_config)
+        performance = compute_performance(result)
+        results.append({
+            "strategy_name": strategy.name,
+            "return_fraction": result.return_fraction,
+            "num_trades": len(result.trades),
+            "sharpe_ratio": report.risk.sharpe_ratio if report.risk.sharpe_ratio else None,
+            "max_drawdown": report.risk.max_drawdown,
+        }
+    )
+    return results
+
+ML_ENSEMBLE_WARNING = """
+ML Ensembles are research tools that combine multiple strategies.
+They must be validated with walk-forward testing (Chapter 45)
+and statistical analysis (Chapter 43) before any real trading decision.
+Ensemble methods diversify risk but do not guarantee future performance.
+"""
+
+__all__ = [
+    "EnsembleStrategy",
+    "EqualWeightEnsemble",
+    "evaluate_ensemble",
+    "ML_STRATEGY_WARNING",
+]
+
+
