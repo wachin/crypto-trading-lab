@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QApplication,
     QLabel,
     QMainWindow,
+    QProgressDialog,
     QPushButton,
     QVBoxLayout,
     QWidget,
@@ -238,6 +239,17 @@ class MainWindow(QMainWindow):
         ``notify=False`` skips the message box (used by tests and
         non-interactive callers)."""
         if self._chart_window is None:
+            # Show progress dialog for first-time loading
+            progress = QProgressDialog(
+                self.tr("Loading chart..."), None, 0, 0, self
+            )
+            progress.setWindowTitle(self.tr("Loading"))
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.setCancelButton(None)
+            progress.setMinimumDuration(500)
+            progress.show()
+            QApplication.processEvents()
+
             from crypto_trading_lab.configuration.xdg import AppPaths
         from crypto_trading_lab.domain.models import Symbol
         from crypto_trading_lab.persistence.database import (
@@ -290,6 +302,7 @@ class MainWindow(QMainWindow):
         )
         chart.show()
         self._chart_window = chart  # keep a reference alive
+        progress.close()
         return chart
 
         # Already loaded, just show it
@@ -311,6 +324,17 @@ class MainWindow(QMainWindow):
         ``notify=False`` skips the message box (tests).
         """
         if self._backtesting_window is None:
+            # Show progress dialog for first-time loading
+            progress = QProgressDialog(
+                self.tr("Loading Backtesting Lab..."), None, 0, 0, self
+            )
+            progress.setWindowTitle(self.tr("Loading"))
+            progress.setWindowModality(Qt.WindowModality.WindowModal)
+            progress.setCancelButton(None)
+            progress.setMinimumDuration(500)
+            progress.show()
+            QApplication.processEvents()
+
             from crypto_trading_lab.configuration.xdg import AppPaths
         from crypto_trading_lab.domain.models import Symbol
         from crypto_trading_lab.persistence.database import (
@@ -355,6 +379,7 @@ class MainWindow(QMainWindow):
         lab.resize(720, 640)
         lab.show()
         self._backtesting_window = lab  # keep a reference alive
+        progress.close()
         return lab
 
         # Already loaded, just show it
