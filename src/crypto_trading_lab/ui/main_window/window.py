@@ -232,9 +232,13 @@ class MainWindow(QMainWindow):
     ) -> "PyQtGraphCandleChart | None":
         """Open the chart window with the most recent imported candles.
 
+        Uses lazy loading - the chart window is created on first access
+        and reused on subsequent calls.
+
         ``notify=False`` skips the message box (used by tests and
         non-interactive callers)."""
-        from crypto_trading_lab.configuration.xdg import AppPaths
+        if self._chart_window is None:
+            from crypto_trading_lab.configuration.xdg import AppPaths
         from crypto_trading_lab.domain.models import Symbol
         from crypto_trading_lab.persistence.database import (
             create_database,
@@ -288,17 +292,26 @@ class MainWindow(QMainWindow):
         self._chart_window = chart  # keep a reference alive
         return chart
 
+        # Already loaded, just show it
+        self._chart_window.show()
+        self._chart_window.raise_()
+        return self._chart_window
+
     def open_backtesting(
         self, paths: "AppPaths | None" = None, notify: bool = True
     ) -> "BacktestingLabWidget | None":
         """Open the Backtesting Lab over the imported candles (37.9).
+
+        Uses lazy loading - the BacktestingLabWidget is only created
+        when first requested.
 
         The lab always shows chapter 40 metrics, statistical-validity
         warnings and the beginner explanation (37.10): a profitable
         backtest is never presented as proof of future profit.
         ``notify=False`` skips the message box (tests).
         """
-        from crypto_trading_lab.configuration.xdg import AppPaths
+        if self._backtesting_window is None:
+            from crypto_trading_lab.configuration.xdg import AppPaths
         from crypto_trading_lab.domain.models import Symbol
         from crypto_trading_lab.persistence.database import (
             create_database,
@@ -343,6 +356,11 @@ class MainWindow(QMainWindow):
         lab.show()
         self._backtesting_window = lab  # keep a reference alive
         return lab
+
+        # Already loaded, just show it
+        self._backtesting_window.show()
+        self._backtesting_window.raise_()
+        return self._backtesting_window
 
     def _open_backtesting(self) -> None:
         self.open_backtesting()
