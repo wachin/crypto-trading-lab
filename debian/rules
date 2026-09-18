@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+override_dh_auto_build:
+override_dh_auto_test:
+	QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	python3 setup.py install --prefix=/usr --root=debian/crypto-trading-lab --no-reload

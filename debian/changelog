@@ -1,0 +1,9 @@
+crypto-trading-lab (0.0.0.spike) unstable; urgency=medium
+
+  * First packaging - lazy loading implementation
+  * Main window lazy loading for Chart, Backtesting Lab, Learning Center
+  * Quiz data and taking functionality for Learning Center
+  * Spanish translations complete
+  * Progress indicators for lazy loading
+
+-- Crypto Trading Lab <support@crypto-trading-lab> Mon, 18 Sep 2026 09:40:00 +0000

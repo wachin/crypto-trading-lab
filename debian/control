@@ -1,0 +1,20 @@
+Source: crypto-trading-lab
+Section: education
+Priority: optional
+Maintainer: Crypto Trading Lab <support@crypto-trading-lab>
+Build-Depends: python3 (>= 3.11), python3-pyqt6, python3-sqlalchemy, python3-hypothesis, python3-setuptools
+Standards-Version: 4.6.0
+
+Package: crypto-trading-lab
+Architecture: all
+Depends: python3 (>= 3.11), ${python3:Depends}, python3-sqlalchemy, python3-pyqt6
+Description: Educational platform for cryptocurrency markets
+ Crypto Trading Lab is an educational, research, and simulation platform
+ for cryptocurrency markets. It implements chapters from Advances in
+ Financial Machine Learning (López de Prado, 2018) and provides
+ paper-trading and real-trading indicators, backtesting lab, learning
+ center, and performance metrics.
+ .
+ This tool is designed for educational purposes and research. It never
+ promises profits and must tell the user the truth when no statistical
+ edge exists. Capital protection outranks profit seeking.

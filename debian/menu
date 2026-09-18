@@ -1,0 +1,2 @@
+?package(crypto-trading-lab):needs="main-menu"
+?menuicon(crypto-trading-lab, /usr/share/pixmaps/crypto-trading-lab.png)

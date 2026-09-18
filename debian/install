@@ -1,0 +1,5 @@
+usr/bin/crypto-trading-lab
+usr/lib/python3/dist-packages/crypto_trading_lab/**/*.py
+usr/lib/python3/dist-packages/crypto_trading_lab/**/*.pyc
+usr/share/crypto-trading-lab/**/*
+usr/share/pixmaps/crypto-trading-lab.png usr/share/applications/crypto-trading-lab.desktop
