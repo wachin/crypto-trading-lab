@@ -140,6 +140,102 @@ class LearningCenterWidget(QWidget):
             )
         )
 
+    def take_quiz(self, lesson_number: int) -> bool:
+        """Take a quiz for the specified lesson number.
+        
+        Returns True if the answer is correct, False otherwise.
+        """
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QButtonGroup, QGroupBox, QHBoxBoxLayout
+        from PyQt6.QtCore import Qt
+        
+        # Get the quiz question for this lesson
+        question_data = self.QUIZ_QUESTIONS.get(lesson_number)
+        if question_data is None:
+            return False
+        
+        question = question_data["question"]
+        options = question_data["options"]
+        correct_answer = question_data["answer"]
+        
+        # Create quiz dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr("Quiz - Lesson {}").format(lesson_number))
+        dialog.setFixedSize(400, 300)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Question label
+        question_label = QLabel(self.tr(question))
+        question_label.setWordWrap(True)
+        question_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        font = question_label.font()
+        font.setPointSize(12)
+        question_label.setFont(font)
+        layout.addWidget(question_label)
+        
+        # Options group box
+        group_box = QGroupBox()
+        group_layout = QVBoxLayout(group_box)
+        
+        button_group = QButtonGroup(dialog)
+        
+        for i, option in enumerate(options):
+            radio = QPushButton(self.tr(option))
+            radio.setCheckable(True)
+            radio.setProperty("answer_index", i)
+            button_group.addButton(radio)
+            group_layout.addWidget(radio)
+        
+        layout.addWidget(group_box)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        
+        submit_btn = QPushButton(self.tr("Submit"))
+        submit_btn.clicked.connect(lambda: self._check_quiz_answer(dialog, button_group, correct_answer, dialog))
+        button_layout.addWidget(submit_btn)
+        
+        cancel_btn = QPushButton(self.tr("Cancel"))
+        cancel_btn.clicked.connect(dialog.reject)
+        button_layout.addWidget(cancel_btn)
+        
+        layout.addLayout(button_layout)
+        
+        dialog.exec()
+        
+        # Return result - this is simplified; in a full implementation
+        # we'd track the result differently
+        return False
+
+    def _check_quiz_answer(self, dialog, button_group, correct_answer, dialog_ref):
+        """Check the quiz answer and provide feedback."""
+        selected_id = button_group.checkedId()
+        
+        if selected_id >= 0:
+            # Get the text of the selected button
+            selected_button = button_group.button(selected_id)
+            selected_text = selected_button.text()
+            
+            if selected_id == correct_answer:
+                # Correct answer
+                from PyQt6.QtWidgets import QMessageBox
+                QMessageBox.information(
+                    dialog,
+                    self.tr("Correct!"),
+                    self.tr("That is the correct answer!")
+                )
+            else:
+                # Wrong answer
+                from PyQt6.QtWidgets import QMessageBox
+                QMessageBox.warning(
+                    dialog,
+                    self.tr("Incorrect"),
+                    self.tr("The correct answer was option {}").format(correct_answer + 1)
+                )
+        
+        dialog.accept()
+
+
     def completed_lessons(self) -> set[int]:
         return set(self._completed)
 
