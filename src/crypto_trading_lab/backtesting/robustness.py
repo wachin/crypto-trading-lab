@@ -562,6 +562,95 @@ def compute_risk_of_ruin(
     )
 
 
+
+#: Chapter 45: Walk-forward analysis.
+#: Repeatedly train on rolling windows and validate on subsequent windows.
+
+
+def walk_forward(
+    candles: Sequence[Candle],
+    strategy_factory: Callable[[], object],
+    backtest_config: BacktestConfig | None = None,
+    train_window: int = 100,
+    test_window: int = 20,
+    step: int = 10,
+    initial_capital: Decimal = Decimal("1000"),
+) -> list[dict[str, Decimal]]:
+    """Perform walk-forward analysis (Chapter 45).
+
+    Repeatedly trains a strategy on a rolling training window and validates
+    it on the subsequent test window, moving forward by ``step`` candles each
+    iteration. Returns a list of results per iteration.
+
+    This is more rigorous than a single out-of-sample test because it
+    evaluates stability across multiple market regimes and train/test splits.
+
+    Returns a list of dicts with keys:
+    - ``train_return``: return from training period
+    - ``test_return``: return from test period
+    - ``degradation``: (train_return - test_return) / train_return
+    - ``train_candles``: number of training candles
+    - ``test_candles``: number of test candles
+    """
+    from decimal import Decimal
+
+    from crypto_trading_lab.backtesting.engine import run_backtest
+    from crypto_trading_lab.backtesting.metrics import compute_performance
+
+    results = []
+    candle_count = len(candles)
+
+    if candle_count < train_window + test_window:
+        return results
+
+    train_end = train_window
+    iteration = 0
+
+    while train_end + test_window <= candle_count:
+        # Training period
+        train_candles = candles[:train_end]
+        train_strategy = strategy_factory()
+        train_result = run_backtest(train_candles, train_strategy, backtest_config)
+        train_perf = compute_performance(train_result)
+
+        # Test period
+        test_start = train_end
+        test_end = test_start + test_window
+        test_candles = candles[test_start:test_end]
+        test_strategy = strategy_factory()  # Fresh strategy instance
+        test_result = run_backtest(test_candles, test_strategy, backtest_config)
+        test_perf = compute_performance(test_result)
+
+        # Compute degradation
+        train_return = train_perf.returns.net_profit
+        test_return = test_perf.returns.net_profit
+        degradation = Decimal(0)
+        if train_return != 0:
+            degradation = (train_return - test_return) / abs(train_return)
+
+        results.append(
+            {
+                "train_return": train_return,
+                "test_return": test_return,
+                "degradation": degradation,
+                "train_candles": train_window,
+                "test_candles": test_window,
+                "iteration": iteration,
+            }
+        )
+
+        # Move window forward by step
+        train_end += step
+        iteration += 1
+
+    return results
+
+
+RISK_OF_RUIN_WARNING = (
+    "Risk of ruin is an estimate based on historical data and stated assumptions. "
+    "It is NOT a guarantee that you will or will not lose your capital. "
+    "Never risk money needed for essential expenses."
+)
 RISK_OF_RUIN_WARNING = (
     "Risk of ruin is an estimate based on historical data and stated assumptions. "
     "It is NOT a guarantee that you will or will not lose your capital. "
