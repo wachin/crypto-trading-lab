@@ -24,7 +24,6 @@ class StrategyMetadata:
     version: str
     author: str
     description: str
-    tags: Set[str]
     created_at: datetime
     updated_at: datetime
     parameters_schema: Dict[str, Dict[str, Any]]
