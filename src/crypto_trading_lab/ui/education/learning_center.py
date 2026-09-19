@@ -131,7 +131,65 @@ class LearningCenterWidget(QWidget):
         layout.addWidget(self.status_label)
 
         self.start_button = QPushButton(self.tr("Start Here: Cryptocurrency for Complete Beginners."))
+        self.start_button.clicked.connect(self._show_first_lesson)
         layout.addWidget(self.start_button)
+
+        self.lesson_list.itemClicked.connect(self._show_lesson_details)
+
+    def _show_lesson_details(self, item):
+        """Show details when a lesson is clicked."""
+        lesson_number = item.data(Qt.ItemDataRole.UserRole)
+        from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLabel, QPushButton, QGroupBox
+        from PyQt6.QtCore import Qt
+        
+        # Get the lesson info
+        lesson = None
+        for l in LESSONS:
+            if l.number == lesson_number:
+                lesson = l
+                break
+        
+        if lesson:
+            dialog = QDialog(self)
+            dialog.setWindowTitle(f"Lesson {lesson.number}: {lesson.title}")
+            dialog.setFixedSize(600, 400)
+            layout = QVBoxLayout(dialog)
+            
+            # Title
+            title = QLabel(f"Lesson {lesson.number}: {lesson.title}")
+            title.setStyleSheet("font-size: 14px; font-weight: bold;")
+            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(title)
+            
+            # Description placeholder
+            desc = QLabel(
+                "Esta lección está en construcción. "
+                "Mira el README para aprender los conceptos: "
+                "https://github.com/wachin/crypto-trading-lab"
+            )
+            desc.setWordWrap(True)
+            desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(desc)
+            
+            # Quiz button
+            quiz_btn = QPushButton("Tomar Quiz")
+            quiz_btn.clicked.connect(lambda: self._take_quiz(lesson_number))
+            layout.addWidget(quiz_btn)
+            
+            # Close button
+            close_btn = QPushButton("Cerrar")
+            close_btn.clicked.connect(dialog.close)
+            layout.addWidget(close_btn)
+            
+            dialog.exec()
+    
+    def _show_first_lesson(self):
+        """Show the first lesson."""
+        for row in range(self.lesson_list.count()):
+            item = self.lesson_list.item(row)
+            self.lesson_list.setCurrentItem(item)
+            self._show_lesson_details(item)
+            break
 
     def mark_completed(self, number: int) -> None:
         """Mark lesson ``number`` as completed and update the list view."""
