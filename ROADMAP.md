@@ -1920,7 +1920,7 @@ Every connection state must have:
 
 ---
 
-## [ ] 28. Data import
+## [x] 28. Data import
 
 Allow candle import from CSV.
 
@@ -1953,7 +1953,7 @@ Validate:
 
 ---
 
-## [ ] 29. Data quality management
+## [x] 29. Data quality management
 
 Market data quality is a research prerequisite, not an afterthought.
 
@@ -1995,7 +1995,7 @@ Beyond time-based candles, the system may support event-based bars for research 
 
 ---
 
-## [ ] 30. Market precision and exchange rules
+## [x] 30. Market precision and exchange rules
 
 Every exchange adapter must retrieve and respect:
 
@@ -2030,7 +2030,7 @@ Before creating an order:
 
 ---
 
-## [ ] 31. Technical indicators
+## [x] 31. Technical indicators
 
 Initially implement:
 
@@ -2073,7 +2073,7 @@ Every indicator must also include beginner documentation:
 
 ---
 
-## [ ] 32. Financial charts
+## [x] 32. Financial charts
 
 Implement charts for:
 
@@ -2123,7 +2123,7 @@ Each chart must include an optional beginner explanation panel describing:
 
 ---
 
-## [ ] 33. Strategies
+## [x] 33. Strategies
 
 Strategies must use explicit, testable, versioned, and declarative rules.
 
@@ -2280,7 +2280,7 @@ Every strategy must explain:
 
 ---
 
-## [ ] 34. Visual strategy builder
+## [x] 34. Visual strategy builder
 
 Create a basic no-code strategy builder using blocks or forms for:
 
@@ -2336,7 +2336,7 @@ The system must consider strategy complexity explicitly.
 
 ---
 
-## [ ] 36. Strategy registry
+## [x] 36. Strategy registry
 
 The system must maintain a central registry of strategies and their evidence.
 
@@ -2599,7 +2599,7 @@ Every backtest result must explain:
 
 ---
 
-## [ ] 38. Data splitting
+## [x] 38. Data splitting
 
 Financial time-series data must be divided chronologically.
 
