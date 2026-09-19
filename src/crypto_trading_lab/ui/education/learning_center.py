@@ -157,7 +157,7 @@ class LearningCenterWidget(QWidget):
             # Title
             title = QLabel(f"Lesson {lesson.number}: {lesson.title}")
             title.setStyleSheet("font-size: 14px; font-weight: bold;")
-            title.setAlignment(Qt.AlignCenter)
+            title.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
             layout.addWidget(title)
             
             # Description placeholder
@@ -167,7 +167,7 @@ class LearningCenterWidget(QWidget):
                 "https://github.com/wachin/crypto-trading-lab"
             )
             desc.setWordWrap(True)
-            desc.setAlignment(Qt.AlignCenter)
+            desc.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
             layout.addWidget(desc)
             
             # Quiz button
