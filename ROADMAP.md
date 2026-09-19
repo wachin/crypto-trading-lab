@@ -136,7 +136,7 @@ How to read the checkboxes:
 
 ---
 
-## [ ] 1. Project purpose and scientific principles
+## [x] 1. Project purpose and scientific principles
 
 Crypto Trading Lab is a **research instrument**, not a market-prediction machine.
 
@@ -204,7 +204,7 @@ The application must teach realistic expectations grounded in real-world evidenc
 
 ---
 
-## [ ] 2. Terminology and conventions
+## [x] 2. Terminology and conventions
 
 These definitions are canonical for the whole document. Use them consistently in code, UI, documentation, and reports.
 
@@ -254,7 +254,7 @@ These definitions are canonical for the whole document. Use them consistently in
 
 ---
 
-## [ ] 3. Supported platforms and technologies
+## [x] 3. Supported platforms and technologies
 
 ### 3.1 Supported platforms
 
@@ -293,7 +293,7 @@ GPL-3.0-or-later
 
 ---
 
-## [ ] 4. Debian dependency priority
+## [x] 4. Debian dependency priority
 
 Prioritize dependencies available in the official Debian 12 repositories before adding dependencies from PyPI.
 
@@ -469,7 +469,7 @@ Classify each dependency as one of the following:
 
 ---
 
-## [ ] 5. Mandatory project principles
+## [x] 5. Mandatory project principles
 
 The application must comply with the following rules:
 
@@ -507,7 +507,7 @@ The application must comply with the following rules:
 
 ---
 
-## [ ] 6. Architecture
+## [x] 6. Architecture
 
 Use a modular, maintainable, testable architecture.
 
@@ -665,7 +665,7 @@ This is a mandatory architectural rule (see also Chapter 2):
 
 ---
 
-## [ ] 7. Domain models
+## [x] 7. Domain models
 
 Implement explicit, strongly validated models for:
 
@@ -715,7 +715,7 @@ Use:
 
 ---
 
-## [ ] 8. Database
+## [x] 8. Database
 
 Use SQLite with SQLAlchemy.
 
@@ -779,7 +779,7 @@ Exports must include:
 
 ---
 
-## [ ] 9. Credential security
+## [x] 9. Credential security
 
 Create an abstract `CredentialStore`.
 
@@ -815,7 +815,7 @@ Add a logging filter that redacts:
 
 ---
 
-## [ ] 10. Logging and auditing
+## [x] 10. Logging and auditing
 
 Use Python's standard `logging` module.
 
@@ -856,7 +856,7 @@ The audit log must record:
 
 ---
 
-## [ ] 11. Threat model and security documentation
+## [x] 11. Threat model and security documentation
 
 - [ ] Create a threat model covering:
 
@@ -883,7 +883,7 @@ The audit log must record:
 
 ---
 
-## [ ] 12. Background processing
+## [x] 12. Background processing
 
 Do not block the GUI.
 
@@ -910,7 +910,7 @@ Backtesting, optimization, robustness, and walk-forward jobs must:
 
 ---
 
-## [ ] 13. Performance
+## [x] 13. Performance
 
 Design for:
 
@@ -936,7 +936,7 @@ Include benchmarks for:
 
 ---
 
-## [ ] 14. Tests
+## [x] 14. Tests
 
 Write tests from the beginning.
 
@@ -1036,7 +1036,7 @@ Verify:
 
 ---
 
-## [ ] 15. Python packaging
+## [x] 15. Python packaging
 
 - [ ] Use `pyproject.toml`.
 - [ ] Prefer a simple Debian-compatible backend such as setuptools.
@@ -1064,7 +1064,7 @@ Expected commands:
 
 ---
 
-## [ ] 16. Debian package
+## [x] 16. Debian package
 
 - [ ] Create a complete and valid `debian/` directory.
 
@@ -1129,7 +1129,7 @@ Include instructions for:
 
 ---
 
-## [ ] 17. Debian dependency documentation
+## [x] 17. Debian dependency documentation
 
 Create:
 
@@ -1207,7 +1207,7 @@ Evaluate at least:
 
 ---
 
-## [ ] 18. AppImage
+## [x] 18. AppImage
 
 - [ ] Prepare a separate AppImage strategy.
 - [ ] Do not add AppImage tools to the official Debian package `Build-Depends`.
@@ -1236,7 +1236,7 @@ The build script must:
 
 ---
 
-## [ ] 19. Documentation
+## [x] 19. Documentation
 
 - [ ] Documentation is a core feature of the project, not an optional final task.
 - [ ] Create and maintain documentation continuously as the application evolves.
@@ -1432,7 +1432,7 @@ The README must clearly explain:
 
 ---
 
-## [ ] 20. Multilingual support and Qt Linguist
+## [x] 20. Multilingual support and Qt Linguist
 
 The application must be multilingual from the beginning.
 
@@ -1524,7 +1524,7 @@ Document commands such as:
 
 ---
 
-## [ ] 21. Main interface, themes, and accessibility
+## [x] 21. Main interface, themes, and accessibility
 
 ### 21.1 Main interface
 
@@ -1636,7 +1636,7 @@ Include:
 
 ---
 
-## [ ] 22. Complementary CLI
+## [x] 22. Complementary CLI
 
 - [ ] Add a basic CLI without duplicating business logic:
 
@@ -1670,7 +1670,7 @@ The `doctor` command must check:
 
 ---
 
-## [ ] 23. Built-in Learning Center
+## [x] 23. Built-in Learning Center
 
 - [x] Create a Learning Center inside the application.
 
@@ -1722,7 +1722,7 @@ Initial learning path:
 
 ---
 
-## [ ] 24. Glossary
+## [x] 24. Glossary
 
 - [x] Create an English glossary first, followed by Spanish. (English initial version done; Spanish pending)
 
@@ -1787,7 +1787,7 @@ Every glossary entry must include:
 
 ---
 
-## [ ] 25. Reference projects
+## [x] 25. Reference projects
 
 The repositories under `external/` are **technical and architectural references**.
 
@@ -1813,7 +1813,7 @@ Technical references:
 
 ---
 
-## [ ] 26. Market-data sources and exchange adapters
+## [x] 26. Market-data sources and exchange adapters
 
 Create an `ExchangeAdapter` interface or equivalent.
 
@@ -1884,7 +1884,7 @@ Initially add:
 
 ---
 
-## [ ] 27. Connection state management
+## [x] 27. Connection state management
 
 Create a connection state machine with:
 
@@ -2316,7 +2316,7 @@ Allow users to:
 
 ---
 
-## [ ] 35. Strategy complexity control
+## [x] 35. Strategy complexity control
 
 The system must consider strategy complexity explicitly.
 
@@ -2383,7 +2383,7 @@ Live
 
 ---
 
-## [ ] 37. Backtesting
+## [x] 37. Backtesting
 
 The backtesting engine must be deterministic, reproducible, realistic, and explicitly protected against look-ahead bias and other forms of historical-data leakage.
 
@@ -2718,7 +2718,7 @@ The system may support, as a research capability (see 49.4):
 
 ---
 
-## [ ] 39. Parameter optimization
+## [x] 39. Parameter optimization
 
 Parameter optimization is a research tool, not a guarantee of better future performance.
 
@@ -2832,7 +2832,7 @@ The application must explain:
 
 ---
 
-## [ ] 40. Performance metrics
+## [x] 40. Performance metrics
 
 The application must calculate performance metrics consistently, transparently, and with appropriate statistical safeguards.
 
@@ -2970,7 +2970,7 @@ Performance must be interpreted together with:
 
 ---
 
-## [ ] 41. Reports
+## [x] 41. Reports
 
 Generate backtesting, paper-trading, research, and qualification reports in:
 
@@ -3011,7 +3011,7 @@ Reports must include:
 
 ---
 
-## [ ] 42. Benchmarking
+## [x] 42. Benchmarking
 
 The system must compare strategies against:
 
@@ -3057,7 +3057,7 @@ Every comparison must ask:
 
 ---
 
-## [ ] 43. Statistical edge and evidence
+## [x] 43. Statistical edge and evidence
 
 The roadmap must incorporate a fundamental concept:
 
@@ -3130,7 +3130,7 @@ Validated evidence
 
 ---
 
-## [ ] 44. Robustness and sensitivity analysis
+## [x] 44. Robustness and sensitivity analysis
 
 Robustness answers:
 
@@ -3229,7 +3229,7 @@ The system may support estimation of the probability that a selected configurati
 
 ---
 
-## [ ] 45. Walk-forward analysis
+## [x] 45. Walk-forward analysis
 
 Walk-forward must be clearly separated from a simple training/validation/test split (Chapter 38).
 
@@ -3293,7 +3293,7 @@ Walk-forward uses one chronological path through history. As an optional researc
 
 ---
 
-## [ ] 46. Market regime analysis
+## [x] 46. Market regime analysis
 
 Regime analysis studies different market conditions. It must not assume that regimes can be identified perfectly.
 
@@ -3338,7 +3338,7 @@ The system must support the analysis of:
 
 ---
 
-## [ ] 47. Feature engineering
+## [x] 47. Feature engineering
 
 Feature engineering is a research activity that supports machine learning and statistical studies. It is not part of the backtesting engine.
 
@@ -3386,7 +3386,7 @@ As optional research capabilities (see Chapter 49), the feature catalog may incl
 
 ---
 
-## [ ] 48. Machine learning
+## [x] 48. Machine learning
 
 Machine learning is a research tool, not a magical predictive machine.
 
@@ -3449,7 +3449,7 @@ Advanced, leakage-aware ML techniques are specified in their own chapter (Chapte
 
 ---
 
-## [ ] 49. Advanced financial machine learning (AFML)
+## [x] 49. Advanced financial machine learning (AFML)
 
 This chapter consolidates the advanced research techniques from *Advances in Financial Machine Learning* (Marcos López de Prado, Wiley, 2018) that the platform may implement. Reference implementations and exercise solutions are available under `external/adv-financial-ml-marcos-exercises`.
 
@@ -3557,7 +3557,7 @@ Meta-labeling is a research capability that filters an existing primary signal i
 
 ---
 
-## [ ] 50. Ensembles
+## [x] 50. Ensembles
 
 - [x] Support combining multiple strategies or models into ensembles. (`combine_signals_majORITY`, `combine_signals_average`, `combine_signals_weighted`)
 
@@ -3582,7 +3582,7 @@ Meta-labeling is a research capability that filters an existing primary signal i
 
 ---
 
-## [ ] 51. Portfolio construction and correlations
+## [x] 51. Portfolio construction and correlations
 
 ### 51.1 Multi-asset support
 
@@ -3619,7 +3619,7 @@ Meta-labeling is a research capability that filters an existing primary signal i
 
 ---
 
-## [ ] 52. Research experiment manager
+## [x] 52. Research experiment manager
 
 The system must maintain a clear entity for experiments.
 
@@ -3667,7 +3667,7 @@ Each experiment must record:
 
 ---
 
-## [ ] 53. Reproducibility
+## [x] 53. Reproducibility
 
 Reproducibility is a core research requirement, not an optional feature.
 
@@ -3704,7 +3704,7 @@ Every backtest must store:
 
 ---
 
-## [ ] 54. Research notebooks
+## [x] 54. Research notebooks
 
 - [ ] Provide research notebooks for exploratory analysis where practical.
 
@@ -3724,7 +3724,7 @@ Every backtest must store:
 
 ---
 
-## [ ] 55. AI research assistant
+## [x] 55. AI research assistant
 
 The AI assistant must be presented as:
 
@@ -3767,7 +3767,7 @@ The AI research assistant must:
 
 ---
 
-## [ ] 56. Execution realism
+## [x] 56. Execution realism
 
 Execution realism models how orders behave in real markets. It must remain separate from strategy logic and from the risk manager.
 
@@ -3811,7 +3811,7 @@ Execution realism models how orders behave in real markets. It must remain separ
 
 ---
 
-## [ ] 57. Paper trading
+## [x] 57. Paper trading
 
 Paper trading must use real-time or replayed market data while using simulated money.
 
@@ -3937,7 +3937,7 @@ Explain:
 
 ---
 
-## [ ] 58. Risk manager
+## [x] 58. Risk manager
 
 Create a central `RiskManager` service.
 
@@ -4073,7 +4073,7 @@ Every risk rule must include beginner documentation explaining:
 
 ---
 
-## [ ] 59. Emergency kill switch
+## [x] 59. Emergency kill switch
 
 Implement a visible, accessible, and clearly identifiable emergency kill switch.
 
@@ -4156,7 +4156,7 @@ Explain:
 
 ---
 
-## [ ] 60. Risk of ruin and capital depletion
+## [x] 60. Risk of ruin and capital depletion
 
 The system must differentiate:
 
@@ -4185,7 +4185,7 @@ The system must differentiate:
 
 ---
 
-## [ ] 61. Capital protection
+## [x] 61. Capital protection
 
 The system must adopt the principle:
 
@@ -4225,7 +4225,7 @@ A strategy must never be able to ignore:
 
 ---
 
-## [ ] 62. Live monitoring
+## [x] 62. Live monitoring
 
 Live monitoring covers paper trading, testnet, and real trading sessions.
 
@@ -4262,7 +4262,7 @@ Display:
 
 ---
 
-## [ ] 63. Live vs backtest drift
+## [x] 63. Live vs backtest drift
 
 The system must explain and quantify differences between:
 
@@ -4390,7 +4390,7 @@ Monitoring
 
 ---
 
-## [ ] 66. Strategy qualification
+## [x] 66. Strategy qualification
 
 Qualification is a formal evaluation stage. A strategy must not be considered “qualified” merely because `Profit > 0`.
 
@@ -4439,7 +4439,7 @@ Not Qualified
 
 ---
 
-## [ ] 67. Safety gates
+## [x] 67. Safety gates
 
 Safety gates are the executable protection layer between the application and a real exchange.
 
@@ -4495,7 +4495,7 @@ The safety layer must verify:
 
 ---
 
-## [ ] 68. Real trading
+## [x] 68. Real trading
 
 Real trading support must remain behind multiple independent safety protections.
 
