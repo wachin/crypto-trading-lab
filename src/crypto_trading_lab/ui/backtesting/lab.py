@@ -13,6 +13,7 @@ from typing import Sequence
 
 from PyQt6.QtWidgets import (
     QComboBox,
+    QLabel,
     QFormLayout,
     QHBoxLayout,
     QLineEdit,
@@ -30,6 +31,12 @@ from crypto_trading_lab.backtesting.engine import (
     NullStrategy,
     run_backtest,
 )
+
+from crypto_trading_lab.complexity_control import (
+    analyze_strategy_complexity,
+    COMPLEXITY_CONTROL_WARNING,
+)
+
 from crypto_trading_lab.backtesting.metrics import (
     DISCLAIMER,
     compare_reports,
