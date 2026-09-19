@@ -17,7 +17,8 @@ cryptocurrency markets, built for learning. Inside it you can:
 - practice with **paper trading** — simulated money, zero risk;
 - measure results honestly, including all the costs and mistakes most
   beginners never notice;
-- learn each concept step by step in the Learning Center.
+- learn each concept step by step in the Learning Center;
+- document your research experiments with Notebook and AI Assistant;
 
 Think of it as a **flight simulator** for trading. A flight simulator
 does not make you a pilot, but it lets you make every beginner mistake
