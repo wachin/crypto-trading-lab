@@ -74,6 +74,15 @@ class MainWindow(QMainWindow):
         self.action_backtesting.setEnabled(True)  # chapter 37.9
         self.action_backtesting.triggered.connect(self._open_backtesting)
         tools_menu.addAction(self.action_backtesting)
+        research_menu = self.menuBar().addMenu(self.tr("&Research"))
+        self.action_notebook = QAction(self.tr("Research Notebook"), self)
+        self.action_notebook.triggered.connect(self._open_notebook)
+        research_menu.addAction(self.action_notebook)
+
+        self.action_assistant = QAction(self.tr("AI Assistant"), self)
+        self.action_assistant.triggered.connect(self._open_assistant)
+        research_menu.addAction(self.action_assistant)
+
 
         help_menu = self.menuBar().addMenu(self.tr("&Help"))
         help_menu.addAction(
@@ -393,6 +402,30 @@ class MainWindow(QMainWindow):
     def _open_chart(self) -> None:
         self.open_chart()
 
+
+
+    def _open_notebook(self) -> None:
+        """Open the research notebook UI."""
+        from crypto_trading_lab.ui.research.notebook import view_notebook
+        from crypto_trading_lab.machine_learning.experiment_manager import ExperimentManager
+        exp_manager = ExperimentManager()
+        entries = exp_manager.list_experiments()
+        if not entries:
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.information(
+                self,
+                self.tr("Research Notebook"),
+                self.tr("No experiments recorded yet.")
+            )
+            return
+        view_notebook(entries)
+
+    def _open_assistant(self) -> None:
+        """Open the AI research assistant UI."""
+        from crypto_trading_lab.ui.research.assistant import research_assistant
+        from crypto_trading_lab.ai_assistant import AIAssistant
+        assistant = AIAssistant()
+        research_assistant(assistant)
 
 def run(argv: list[str] | None = None) -> int:
     """Launch the minimal application (used by tests and __main__)."""
