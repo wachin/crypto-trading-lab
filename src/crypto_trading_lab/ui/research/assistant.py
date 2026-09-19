@@ -119,6 +119,71 @@ def research_assistant(assistant: Any) -> Optional[str]:
     app = QApplication.instance() or QApplication(sys.argv)
     dialog = ResearchAssistantDialog()
     if dialog.exec():
+        question = dialog.question_field.toPlainText().strip()
+        if question:
+            # Provide helpful guidance based on context
+            context = dialog.context_combo.currentText()
+            response = get_guidance(question, context)
+            dialog.response_field.setPlainText(response)
+            return response
+    return None
+
+
+def get_guidance(question: str, context: str) -> str:
+    """Provide guidance based on question and context."""
+    responses = {
+        "Strategy Development": (
+            "To develop a strategy:\n"
+            "1. Define a clear hypothesis\n"
+            "2. Use the Strategy Builder to construct rules\n"
+            "3. Test with backtesting\n"
+            "4. Validate with out-of-sample data\n"
+            "5. Check complexity and overfitting"
+        ),
+        "Data Analysis": (
+            "For data analysis:\n"
+            "1. Import clean CSV data\n"
+            "2. Check data quality\n"
+            "3. Use indicators to extract features\n"
+            "4. Split data properly (train/test)"
+        ),
+        "Performance Evaluation": (
+            "Evaluate performance with:\n"
+            "- Net profit and total return\n"
+            "- Sharpe ratio (risk-adjusted return)\n"
+            "- Maximum drawdown\n"
+            "- Profit factor\n"
+            "Compare against benchmarks"
+        ),
+        "Risk Assessment": (
+            "Assess risk by:\n"
+            "- Checking max drawdown\n"
+            "- Calculating risk of ruin\n"
+            "- Testing under different market conditions\n"
+            "- Ensuring capital protection rules"
+        ),
+        "Portfolio Optimization": (
+            "For portfolio optimization:\n"
+            "- Use correlation analysis\n"
+            "- Apply position sizing\n"
+            "- Consider multiple assets\n"
+            "- Check portfolio metrics"
+        ),
+    }
+    
+    return responses.get(context, 
+        "Use the Learning Center for step-by-step guidance.\n"
+        "Research tools help you:\n"
+        "- Document experiments in the Notebook\n"
+        "- Build strategies visually\n"
+        "- Analyze complexity and benchmarks\n"
+        "- Test with backtesting"
+    )
+    """Launch research assistant and get response."""
+    import sys
+    app = QApplication.instance() or QApplication(sys.argv)
+    dialog = ResearchAssistantDialog()
+    if dialog.exec():
         return dialog.get_response(assistant)
     return None
 

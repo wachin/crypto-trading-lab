@@ -6,6 +6,7 @@ Visual block-based strategy builder.
 from __future__ import annotations
 
 from PyQt6.QtWidgets import (
+    QGroupBox,
     QApplication,
     QDialog,
     QDialogButtonBox,
@@ -126,6 +127,18 @@ class StrategyBuilderDialog(QDialog):
 
 
 def show_strategy_builder() -> None:
+    """Launch the strategy builder."""
+    import sys
+    app = QApplication.instance() or QApplication(sys.argv)
+    try:
+        dialog = StrategyBuilderDialog()
+        dialog.exec()
+    except Exception as e:
+        QMessageBox.critical(
+            None,
+            "Error",
+            f"Failed to open Strategy Builder: {str(e)}"
+        )
     """Launch the strategy builder."""
     import sys
     app = QApplication.instance() or QApplication(sys.argv)

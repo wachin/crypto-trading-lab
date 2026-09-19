@@ -15,6 +15,9 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QGroupBox,
+    QLayout,
+    QRadioButton,
     QLabel,
     QListWidget,
     QListWidgetItem,
@@ -158,7 +161,7 @@ class LearningCenterWidget(QWidget):
         from PyQt6.QtCore import Qt
         
         # Get the quiz question for this lesson
-        question_data = self.QUIZ_QUESTIONS.get(lesson_number)
+        question_data = QUIZ_QUESTIONS.get(lesson_number)
         if question_data is None:
             return False
         
