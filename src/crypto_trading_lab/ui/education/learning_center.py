@@ -140,7 +140,6 @@ class LearningCenterWidget(QWidget):
         """Show details when a lesson is clicked."""
         lesson_number = item.data(Qt.ItemDataRole.UserRole)
         from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLabel, QPushButton, QGroupBox
-        from PyQt6.QtCore import Qt
         
         # Get the lesson info
         lesson = None
@@ -158,7 +157,7 @@ class LearningCenterWidget(QWidget):
             # Title
             title = QLabel(f"Lesson {lesson.number}: {lesson.title}")
             title.setStyleSheet("font-size: 14px; font-weight: bold;")
-            title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            title.setAlignment(Qt.AlignCenter)
             layout.addWidget(title)
             
             # Description placeholder
@@ -168,7 +167,7 @@ class LearningCenterWidget(QWidget):
                 "https://github.com/wachin/crypto-trading-lab"
             )
             desc.setWordWrap(True)
-            desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            desc.setAlignment(Qt.AlignCenter)
             layout.addWidget(desc)
             
             # Quiz button
