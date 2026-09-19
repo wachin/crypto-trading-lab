@@ -428,7 +428,8 @@ class MainWindow(QMainWindow):
         """Open the AI research assistant UI."""
         from crypto_trading_lab.ui.research.assistant import research_assistant
         from crypto_trading_lab.ai_assistant import AIAssistant
-        assistant = AIAssistant()
+        from crypto_trading_lab.configuration.xdg import AppPaths
+        assistant = AIAssistant(AppPaths().data_dir / "ai_assistant")
         research_assistant(assistant)
 
     def _open_strategy_builder(self) -> None:
