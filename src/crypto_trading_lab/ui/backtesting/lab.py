@@ -32,6 +32,13 @@ from crypto_trading_lab.backtesting.engine import (
     run_backtest,
 )
 
+from crypto_trading_lab.optimization import (
+    run_optimization,
+    OBJECTIVE_SHARPE_RATIO,
+    OptimizationConfig,
+    ParameterRange,
+)
+
 from crypto_trading_lab.complexity_control import (
     analyze_strategy_complexity,
     COMPLEXITY_CONTROL_WARNING,
