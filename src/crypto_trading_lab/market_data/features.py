@@ -335,7 +335,8 @@ def compute_portfolio_metrics(returns, risk_free_rate=Decimal("0")):
     n = len(returns)
     if n == 0:
         return {"total_return": Decimal(0), "volatility": Decimal(0), 
-                "sharpe_ratio": Decimal(0), "sortino_ratio": Decimal(0)}
+                "sharpe_ratio": Decimal(0), "sortino_ratio": Decimal(0), 
+                "max_drawdown": Decimal(0)}
     n = len(returns)
     total_return = sum(returns) / n
     
@@ -367,14 +368,6 @@ def compute_portfolio_metrics(returns, risk_free_rate=Decimal("0")):
         if r < peak:
             max_drawdown = min(max_drawdown, r - peak) if max_drawdown < Decimal(0) else r - peak
         peak = max(peak, r)
-    
-    corr_mean = Decimal(0)
-    corr_max = Decimal(0)
-    corr_min = Decimal(0)
-    if correlations:
-        corr_mean = sum(correlations) / len(correlations)
-        corr_max = max(correlations)
-        corr_min = min(correlations)
     
     return {
         "total_return": total_return,
