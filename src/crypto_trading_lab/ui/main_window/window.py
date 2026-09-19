@@ -83,6 +83,10 @@ class MainWindow(QMainWindow):
         self.action_assistant.triggered.connect(self._open_assistant)
         research_menu.addAction(self.action_assistant)
 
+        self.action_strategy_builder = QAction(self.tr("Strategy Builder"), self)
+        self.action_strategy_builder.triggered.connect(self._open_strategy_builder)
+        research_menu.addAction(self.action_strategy_builder)
+
 
         help_menu = self.menuBar().addMenu(self.tr("&Help"))
         help_menu.addAction(
@@ -426,6 +430,11 @@ class MainWindow(QMainWindow):
         from crypto_trading_lab.ai_assistant import AIAssistant
         assistant = AIAssistant()
         research_assistant(assistant)
+
+    def _open_strategy_builder(self) -> None:
+        """Open the visual strategy builder."""
+        from crypto_trading_lab.ui.strategy_builder import show_strategy_builder
+        show_strategy_builder()
 
 def run(argv: list[str] | None = None) -> int:
     """Launch the minimal application (used by tests and __main__)."""
