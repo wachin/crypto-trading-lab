@@ -102,6 +102,16 @@ your emergency savings — and never trade with borrowed money. The
 farmer who mortgages his farm to buy seed survives one drought less
 than the others. If losing it would change your life, it is too much.
 
+
+## Research tools
+
+You can track your experiments with two tools:
+
+- **Research Notebook**: write down your hypotheses and observations
+- **AI Assistant**: get guidance on strategy development and data analysis
+
+These tools help you stay disciplined and learn from each experiment.
+
 ## What to do next
 
 Open the Learning Center and begin lesson 1. That's it. There is
