@@ -62,6 +62,23 @@ tested code:
   with a mandatory risk gate and a trading journal (`paper_session.py`,
   `ui/paper/paper_trading.py`).
 
+### Contributor infrastructure
+
+The repository is now prepared for outside contributors who work with AI
+agents:
+
+- `CONTRIBUTING.md` — setup, workflow, definition of done, the
+  non-negotiable rules, a ready-to-paste agent prompt and a list of good
+  first contributions.
+- `.github/workflows/tests.yml` — runs the offline suite on Debian
+  packages (no pip, no venv) for every push and pull request.
+- `.github/PULL_REQUEST_TEMPLATE.md` and `.github/ISSUE_TEMPLATE/` —
+  they require the real test output and the owning ROADMAP chapter.
+- `Makefile` — `make test`, `make run`, `make banner`, `make translations`.
+- `tools/make_banner_gif.py` — regenerates the README contributor banner
+  (deterministic; needs Pillow/NumPy only to regenerate the asset).
+- `assets/contributing-agents.gif` — the animated banner (76 KB).
+
 ### Implemented modules (all with passing tests)
 
 | Module | Path | Roadmap chapter |

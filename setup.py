@@ -8,7 +8,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="crypto-trading-lab",
-    version="0.0.0.spike",
+    version="0.0.0.dev0",
     author="Crypto Trading Lab",
     author_email="support@crypto-trading-lab",
     description="Educational platform for cryptocurrency markets",
@@ -21,7 +21,7 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Education",
         "Intended Audience :: Financial and Insurance Industry",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.11",
@@ -29,6 +29,15 @@ setup(
         "Programming Language :: Python :: 3.13",
         "Topic :: Education",
         "Topic :: Office/Business :: Financial :: Investment",
+    ],
+    license="GPL-3.0",
+    license_files=("LICENSE",),
+    keywords=[
+        "cryptocurrency",
+        "backtesting",
+        "quantitative-research",
+        "trading",
+        "education",
     ],
     python_requires=">=3.11",
     install_requires=[

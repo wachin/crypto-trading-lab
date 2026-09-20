@@ -1,23 +1,60 @@
-
-
-# Python build/test artifacts
+# ---------------------------------------------------------------------------
+# Python build and test artifacts
+# ---------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
+*$py.class
 .pytest_cache/
-.venv/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
 *.egg-info/
+*.egg
 build/
 dist/
-.coverage
+wheels/
+pip-wheel-metadata/
+cProfile
+pstats
+*.prof
 
+# ---------------------------------------------------------------------------
+# Virtual environments (this project uses Debian packages; kept for safety)
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ---------------------------------------------------------------------------
+# Application runtime data written next to the source tree
+# (normal runs use the XDG data directory; this covers accidental local runs)
+# ---------------------------------------------------------------------------
+/src/data/
+/data/
+*.log
+
+# ---------------------------------------------------------------------------
+# Editors and operating systems
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
 # Local reference material — kept out of version control
+# ---------------------------------------------------------------------------
 Book/
-
-# Local scratch space for analysis (extractions, rendered pages)
 .scratch/
 
-# Profiling output files
-cProfile\npstats
-
-# Personal
+# Personal working documents (private notes, analyses)
 8vo/

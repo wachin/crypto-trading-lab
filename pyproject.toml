@@ -4,19 +4,68 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crypto-trading-lab"
-version = "0.0.0.spike"
+version = "0.0.0.dev0"
 description = "Educational, research, and simulation platform for cryptocurrency markets (see ROADMAP.md)."
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "GPL-3.0" }
+authors = [{ name = "Crypto Trading Lab" }]
+keywords = [
+    "cryptocurrency",
+    "backtesting",
+    "quantitative-research",
+    "trading",
+    "education",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/wachin/crypto-trading-lab"
+Repository = "https://github.com/wachin/crypto-trading-lab"
+Issues = "https://github.com/wachin/crypto-trading-lab/issues"
+Changelog = "https://github.com/wachin/crypto-trading-lab/blob/main/AGENT-HANDOFF.md"
 
 [project.optional-dependencies]
 # CCXT integration is optional until the chapter 4 packaging evaluation
 # concludes (no python3-ccxt Debian package exists; see the CCXT study
 # in docs/en/developers/reference-projects.md).
 ccxt = ["ccxt>=4.0"]
+# Development tooling. In practice these are installed as Debian system
+# packages (python3-pytest, python3-hypothesis, ...); this list exists for
+# contributors who knowingly choose a virtual environment.
+dev = [
+    "pytest>=8.0",
+    "pytest-qt>=4.4",
+    "hypothesis>=6.130",
+    "typeguard>=4.4",
+]
+
+[project.scripts]
+crypto-trading-lab = "crypto_trading_lab.ui.main_window.window:run"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+crypto_trading_lab = [
+    "i18n/translations/*.qm",
+    "i18n/translations/*.ts",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The suite must stay offline: a test that reaches the network is a bug.
+addopts = "-ra"

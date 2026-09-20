@@ -1,0 +1,9 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Contributing guide
+    url: https://github.com/wachin/crypto-trading-lab/blob/main/CONTRIBUTING.md
+    about: How to set up, what the rules are, and good first contributions.
+  - name: Current state and continuation point
+    url: https://github.com/wachin/crypto-trading-lab/blob/main/AGENT-HANDOFF.md
+    about: Read this before starting any task — it says exactly where the project stands.
