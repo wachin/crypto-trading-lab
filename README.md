@@ -18,6 +18,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![Real trading: DISABLED](https://img.shields.io/badge/real%20trading-DISABLED-critical)](#safety-by-construction)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-7dd3fc.svg)](CONTRIBUTING.md)
 [![Built agent-first](https://img.shields.io/badge/built-agent--first-8b5cf6.svg)](CONTRIBUTING.md)
+[![Discussions](https://img.shields.io/badge/Discussions-ask%20%26%20share-6e40c9?logo=github&logoColor=white)](https://github.com/wachin/crypto-trading-lab/discussions)
 
 </div>
 
@@ -40,6 +41,11 @@ than a slogan.
 You bring the agent (or your own two hands). We bring the specification,
 the safety rails and a green test suite that tells you the moment you
 break something.
+
+**Where things go:** a bug with a reproducible command →
+[Issues](https://github.com/wachin/crypto-trading-lab/issues); questions,
+ideas, research results and show-and-tell →
+[Discussions](https://github.com/wachin/crypto-trading-lab/discussions).
 
 ### Start in four commands
 

@@ -1,6 +1,9 @@
 blank_issues_enabled: true
 
 contact_links:
+  - name: Questions, ideas and research (Discussions)
+    url: https://github.com/wachin/crypto-trading-lab/discussions
+    about: Ask how something works, propose an idea, or show an experiment — including failed ones. Bugs with a reproducible command belong in Issues.
   - name: Contributing guide
     url: https://github.com/wachin/crypto-trading-lab/blob/main/CONTRIBUTING.md
     about: How to set up, what the rules are, and good first contributions.

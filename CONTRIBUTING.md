@@ -28,6 +28,12 @@ Read these, in this order, before touching anything:
 requirement is **implemented and tested**, never when it is "mostly
 done".
 
+**Where things go.** [Discussions](https://github.com/wachin/crypto-trading-lab/discussions)
+is for questions ("how do I…"), ideas, research results and show-and-tell.
+[Issues](https://github.com/wachin/crypto-trading-lab/issues) are for
+things that are **broken**, and must include a reproducible command and
+its real output.
+
 ---
 
 ## 2. Set up
