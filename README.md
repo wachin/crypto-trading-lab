@@ -24,11 +24,11 @@ Survive → Validate → Earn. In that order, non-negotiable.
 
 ---
 
-## 🤝 Contributing — bring your AI agent
+## Contributing — bring your AI agent
 
 <img src="assets/contributing-agents.gif" alt="An animated crypto candlestick chart drawing itself next to the words: Crypto Trading Lab — Bring your AI agent." width="100%"/>
 
-**This repository is built agent-first and we want your agent on the team.**
+🤝 **This repository is built agent-first and we want your agent on the team.**
 
 Crypto Trading Lab is not a finished product; it is a *specification with
 a codebase catching up to it*. `ROADMAP.md` holds 80 chapters of
@@ -146,7 +146,7 @@ Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 
 ## Contents
 
-- [Contributing — bring your AI agent](#-contributing--bring-your-ai-agent)
+- [Contributing — bring your AI agent](#contributing--bring-your-ai-agent)
 - [What this is — and what it refuses to be](#what-this-is--and-what-it-refuses-to-be)
 - [Quick start](#quick-start)
 - [System architecture](#system-architecture)
@@ -154,6 +154,7 @@ Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow.
 - [The quantitative core](#the-quantitative-core-implemented-tested)
 - [Safety by construction](#safety-by-construction)
 - [Current state of the build](#current-state-of-the-build)
+- [The journey — from learning to risking money](#the-journey--from-learning-to-risking-money)
 - [Repository map](#repository-map)
 - [Test baseline](#test-baseline)
 - [Dependencies](#dependencies)
@@ -374,11 +375,134 @@ disabled — is written down in
 - Candlestick charts, a **three-level Learning Center** (48 lessons with
   graded quizzes and persisted progress), bilingual UI (EN/ES).
 
-🚧 Ahead: a continuous WebSocket feed and its resilience layer, spot
-testnet, realistic execution (partial fills, market impact), a parameter
-sweep from the builder, Spanish translation of the new strings, and —
-only after all of that — any real-money activation (chapter 68 stays
-disabled).
+🚧 Ahead: everything is listed, with an honest per-item status, in
+[The journey](#the-journey--from-learning-to-risking-money) below.
+
+---
+
+## The journey — from learning to risking money
+
+The laboratory is built around a single path. A beginner starts at the
+top; an idea only reaches the bottom if it survives **every** gate, and
+the bottom is deliberately empty today.
+
+```text
+              CRYPTO TRADING LAB
+
+                    ↓
+              LEARN
+                    ↓
+             CHOOSE MARKET
+                    ↓
+              GET DATA
+                    ↓
+            FORM AN IDEA
+                    ↓
+          WRITE A HYPOTHESIS
+                    ↓
+              BACKTEST
+                    ↓
+              ANALYSE
+                    ↓
+           TRY TO REFUTE IT
+                    ↓
+          OOS / WALK-FORWARD
+                    ↓
+             ROBUSTNESS
+                    ↓
+            PAPER TRADING
+                    ↓
+            QUALIFICATION
+                    ↓
+               TESTNET
+                    ↓
+        ┌──────────────────┐
+        │ Is there evidence │
+        │ of an edge?       │
+        └─────────┬─────────┘
+                  ↓
+            ONLY IF THERE IS
+                  ↓
+        CONSIDER REAL TRADING
+```
+
+**Status legend:** ✅ implemented and tested · 🟡 partial or not yet
+wired · ⬜ not started.
+
+Everything from **Learn** to **Qualification** runs today, with one
+caveat: paper trading replays a downloaded dataset rather than streaming
+live prices. **Testnet** and everything below it are **not built**, on
+purpose — see [`docs/en/developers/live-trading-roadmap.md`](docs/en/developers/live-trading-roadmap.md).
+
+### Phase A — "I want to sit down and learn"
+
+1. ✅ **Finish the Learning Center** — 48 lessons across three levels
+   (from zero → practical trading → quantitative research), graded
+   quizzes, persisted progress, bookmarks and "continue where I left
+   off". *(Remaining: lesson→screen links.)*
+2. 🟡 **Improve charts and market explanation** — the candlestick chart,
+   overlays and the beginner panel exist; regime analysis is implemented
+   in the engine but is not surfaced in the interface.
+3. ✅ **Add direct historical data** — Binance Spot public REST with the
+   standard library, validated and stored as a versioned, checksummed
+   dataset.
+4. ✅ **Market + timeframe + period selector** — the historical-data
+   screen (`BTC/USDT`, `1m`–`1d`, date range).
+
+### Phase B — "I want to research seriously"
+
+5. ✅ **Research Wizard** — hypothesis → costs → backtest → benchmark →
+   out-of-sample → robustness → walk-forward → qualification.
+6. ✅ **Strategy Builder** — block editor with validation, explanation
+   and a versioned JSON rule; rules are **executable in the engine**
+   without `eval`. *(Remaining: a parameter sweep launched from the
+   builder itself.)*
+7. ✅ **Integrated Research Notebook** — entries are full experiment
+   records, not free text.
+8. ✅ **Dataset versioning** — stable identity plus SHA-256 checksum per
+   dataset.
+9. ✅ **Experiment Manager in the GUI** — create, search, tag, annotate.
+10. ✅ **Experiment comparison** — side by side, with a union of metrics.
+11. ✅ **Validity / evidence dashboard** — an explicit checklist, including
+    the checks that *fail*.
+
+### Phase C — "I want to check whether an idea survives"
+
+12. ✅ **Out-of-sample** — chronological split, degradation measured.
+13. ✅ **Walk-forward** — rolling train → forward-test windows.
+14. ✅ **Robustness** — Monte Carlo over trades, cost sweep, parameter
+    perturbation.
+15. ✅ **Multiple-testing awareness** — the number of tested
+    configurations is counted and warned about.
+16. ✅ **Qualification** — multi-criterion verdict, never a single number.
+17. 🟡 **Paper trading with real data** — real downloaded candles are
+    replayed through a mandatory risk gate with a per-trade journal. A
+    **continuous** live feed (chapter 26.2) is not built yet.
+
+### Phase D — "Maybe one day I risk money"
+
+None of this is a promise that the day will come.
+
+18. ⬜ **Binance WebSocket** — reconnection, rate limiting and
+    stale-data detection.
+19. ⬜ **Testnet** — order placement, cancellation, reconciliation.
+20. 🟡 **Realistic execution** — latency, partial fills and market impact
+    are implemented and tested, but **not wired** into the paper or
+    backtest pipeline yet.
+21. ⬜ **Order and balance reconciliation**.
+22. 🟡 **Kill switch** — implemented and unit-tested; never exercised
+    against a live or testnet account.
+23. 🟡 **Complete safety gates** — implemented and tested; the chapter-30
+    pre-trade gaps remain (true tick/step size, rate limits, time
+    synchronisation, idempotency, duplicate-order prevention).
+24. ⬜ **Study real-trading activation** — only after 18–23 are done, and
+    only through the chapter-68 flow. Until then, real trading is
+    disabled by default and the application says so.
+
+This order is the project's safety net, not a backlog. `Survive →
+Validate → Earn`, and nothing skips a step: a strategy cannot jump from
+`Backtested` to `Live`, and no result is presented as proof of future
+profit.
 
 ---
 
