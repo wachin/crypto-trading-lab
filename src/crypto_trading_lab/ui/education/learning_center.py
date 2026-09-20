@@ -1,29 +1,42 @@
-"""Learning Center screen (ROADMAP.md chapter 23, task 26).
+"""Learning Center screen (ROADMAP.md chapters 23 and 80).
 
-A placeholder shell that already satisfies the structural requirements:
-the 20-lesson learning path is listed, content is bundled (offline by
-default), lessons can be marked completed, and the welcome guide is
-reachable. Rich content, quizzes, and progress persistence arrive with
-later phases.
+Three levels of offline lessons with a working quiz, completion
+tracking, bookmarks and "continue where you left off". Content lives in
+:mod:`crypto_trading_lab.education.curriculum`; the interface chrome is
+translated with ``self.tr()`` and progress is stored under the user's
+XDG data directory (injectable for tests).
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
+    QButtonGroup,
+    QComboBox,
     QGroupBox,
-    QLayout,
-    QRadioButton,
+    QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QRadioButton,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
+)
+
+from crypto_trading_lab.configuration.xdg import AppPaths
+from crypto_trading_lab.education.curriculum import (
+    CURRICULUM,
+    LEVEL_NAMES,
+    LEVELS,
+    get_lesson,
+    lessons_for_level,
+    total_lessons,
 )
 
 __all__ = ["LESSONS", "Lesson", "LearningCenterWidget"]
@@ -34,66 +47,34 @@ BEGINNERS_DIR = Path(__file__).resolve().parents[4] / "docs" / "en" / "beginners
 
 @dataclass(frozen=True)
 class Lesson:
+    """Level-1 lesson header kept for the chapter-23 learning path."""
+
     number: int
     title: str
 
 
-#: The chapter 23 learning path.
-LESSONS: tuple[Lesson, ...] = (
-    Lesson(1, "What is cryptocurrency?"),
-    Lesson(2, "What is a market?"),
-    Lesson(3, "What is a trading pair?"),
-    Lesson(4, "What is a candlestick?"),
-    Lesson(5, "What is volume?"),
-    Lesson(6, "What is a market order?"),
-    Lesson(7, "What is a limit order?"),
-    Lesson(8, "What are fees?"),
-    Lesson(9, "What is risk?"),
-    Lesson(10, "What is paper trading?"),
-    Lesson(11, "What is backtesting?"),
-    Lesson(12, "Build your first simple strategy."),
-    Lesson(13, "Run your first backtest."),
-    Lesson(14, "Understand a loss."),
-    Lesson(15, "Understand drawdown."),
-    Lesson(16, "Learn why profits are never guaranteed."),
-    Lesson(17, "Why most traders lose money."),
-    Lesson(18, "Trading is not a reliable income."),
-    Lesson(19, "When not to trade."),
-    Lesson(20, "Protecting the money you need for living."),
+#: The original chapter 23 path (Level 1), 20 lessons.
+LESSONS: tuple[Lesson, ...] = tuple(
+    Lesson(lesson.number, lesson.title) for lesson in lessons_for_level(1)
 )
-
-#: Quiz questions for each lesson (chapter 73).
-QUIZ_QUESTIONS: dict[int, dict] = {
-    1: {"question": "What is cryptocurrency?", "options": ["Digital money secured by cryptography", "A type of stock", "A physical coin"], "answer": 0},
-    2: {"question": "What is a market?", "options": ["A place to buy and sell", "A type of bank", "A crypto wallet"], "answer": 0},
-    3: {"question": "What is a trading pair?", "options": ["Two currencies traded against each other", "A pair of dice", "A trading strategy"], "answer": 0},
-    4: {"question": "What is a candlestick?", "options": ["A price chart showing open, high, low, close", "A type of candle", "A trading signal"], "answer": 0},
-    5: {"question": "What is volume?", "options": ["The number of shares/contracts traded", "The price change", "The market cap"], "answer": 0},
-    6: {"question": "What is a market order?", "options": ["Buys/sells at current price", "Sets a price target", "Waits for a specific time"], "answer": 0},
-    7: {"question": "What is a limit order?", "options": ["Buys/sells at a specific price or better", "Sets a time limit", "Uses market price"], "answer": 0},
-    8: {"question": "What are fees?", "options": ["Costs for trading", "Taxes on profits", "Broker commissions"], "answer": 0},
-    9: {"question": "What is risk?", "options": ["The chance of losing money", "The chance of making profit", "The market volatility"], "answer": 0},
-    10: {"question": "What is paper trading?", "options": ["Trading with virtual money", "Trading on paper", "Trading without fees"], "answer": 0},
-    11: {"question": "What is backtesting?", "options": ["Testing a strategy on historical data", "Backing up trades", "Testing internet connection"], "answer": 0},
-    12: {"question": "Build your first simple strategy?", "options": ["Moving average crossover", "Buy and hold", "Day trading"], "answer": 0},
-    13: {"question": "Run your first backtest?", "options": ["Using the Backtesting Lab", "Manual calculation", "Guessing prices"], "answer": 0},
-    14: {"question": "Understand a loss?", "options": ["Losing money is bad", "Losses are part of trading", "Avoid trading entirely"], "answer": 1},
-    15: {"question": "Understand drawdown?", "options": ["Peak-to-trough decline", "A type of profit", "A trading strategy"], "answer": 0},
-    16: {"question": "Learn why profits are never guaranteed?", "options": ["Trading involves risk", "Always win", "Market is predictable"], "answer": 0},
-    17: {"question": "Why most traders lose money?", "options": ["Lack of education", "Bad luck", "Market manipulation"], "answer": 0},
-    18: {"question": "Trading is not a reliable income?", "options": ["True - high risk", "False - easy money", "Depends on capital"], "answer": 0},
-    19: {"question": "When not to trade?", "options": ["When unsure", "When winning", "Never"], "answer": 0},
-    20: {"question": "Protecting the money you need for living?", "options": ["Never borrow to trade", "Always borrow", "Only trade profits"], "answer": 0},
-}
 
 
 class LearningCenterWidget(QWidget):
-    """Placeholder Learning Center: lesson list + completed tracking."""
+    """Offline, three-level course with quizzes and progress tracking."""
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        paths: AppPaths | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         super().__init__(parent)
+        self._paths = paths or AppPaths()
         self._completed: set[int] = set()
-        self._quiz_scores: dict[int, bool] = {}
+        self._bookmarks: set[int] = set()
+        self._quiz_results: dict[int, bool] = {}
+        self._last_lesson: int | None = None
+        self._current: int | None = None
+        self._load_progress()
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -114,222 +95,347 @@ class LearningCenterWidget(QWidget):
         intro.setWordWrap(True)
         layout.addWidget(intro)
 
+        level_row = QHBoxLayout()
+        level_row.addWidget(QLabel(self.tr("Level:")))
+        self.level_combo = QComboBox()
+        for level in LEVELS:
+            self.level_combo.addItem(self.tr(LEVEL_NAMES[level]), level)
+        self.level_combo.currentIndexChanged.connect(self._on_level_changed)
+        level_row.addWidget(self.level_combo)
+        self.resume_button = QPushButton(self.tr("Continue where I left off"))
+        self.resume_button.clicked.connect(self.resume)
+        level_row.addWidget(self.resume_button)
+        layout.addLayout(level_row)
+
+        body = QHBoxLayout()
         self.lesson_list = QListWidget()
-        for lesson in LESSONS:
-            item = QListWidgetItem(f"{lesson.number}. {lesson.title}")
-            item.setData(Qt.ItemDataRole.UserRole, lesson.number)
-            self.lesson_list.addItem(item)
-        layout.addWidget(self.lesson_list)
+        self.lesson_list.currentItemChanged.connect(self._on_lesson_selected)
+        body.addWidget(self.lesson_list, 2)
 
-        self.status_label = QLabel(
-            self.tr("0 of 20 lessons completed - 0 quizzes taken")
+        detail_column = QVBoxLayout()
+        self.lesson_view = QTextBrowser()
+        self.lesson_view.setOpenExternalLinks(False)
+        detail_column.addWidget(self.lesson_view)
+
+        self.quiz_group_box = QGroupBox(self.tr("Quiz"))
+        quiz_layout = QVBoxLayout(self.quiz_group_box)
+        self.quiz_question = QLabel("")
+        self.quiz_question.setWordWrap(True)
+        quiz_layout.addWidget(self.quiz_question)
+        self.quiz_button_group = QButtonGroup(self)
+        self._quiz_buttons: list[QRadioButton] = []
+        for _ in range(4):
+            button = QRadioButton("")
+            self.quiz_button_group.addButton(button)
+            quiz_layout.addWidget(button)
+            self._quiz_buttons.append(button)
+        self.submit_button = QPushButton(self.tr("Submit answer"))
+        self.submit_button.clicked.connect(self._submit_quiz)
+        quiz_layout.addWidget(self.submit_button)
+        self.quiz_feedback = QLabel("")
+        self.quiz_feedback.setWordWrap(True)
+        quiz_layout.addWidget(self.quiz_feedback)
+        detail_column.addWidget(self.quiz_group_box)
+        body.addLayout(detail_column, 3)
+        layout.addLayout(body)
+
+        actions = QHBoxLayout()
+        self.complete_button = QPushButton(self.tr("Mark lesson as completed"))
+        self.complete_button.clicked.connect(self._complete_current)
+        self.bookmark_button = QPushButton(self.tr("Bookmark this lesson"))
+        self.bookmark_button.clicked.connect(self.toggle_bookmark_current)
+        actions.addWidget(self.complete_button)
+        actions.addWidget(self.bookmark_button)
+        layout.addLayout(actions)
+
+        self.status_label = QLabel("")
+        layout.addWidget(self.status_label)
+
+        self.start_button = QPushButton(
+            self.tr("Start Here: Cryptocurrency for Complete Beginners.")
         )
-        self.status_label.setText(
-            self.tr("0 of 20 lessons completed")
-        )  # will be updated later
-        layout.addWidget(self.status_label)
-        layout.addWidget(self.status_label)
-
-        self.start_button = QPushButton(self.tr("Start Here: Cryptocurrency for Complete Beginners."))
         self.start_button.clicked.connect(self._show_first_lesson)
         layout.addWidget(self.start_button)
 
-        self.lesson_list.itemClicked.connect(self._show_lesson_details)
+        self.set_level(1)
+        self._update_status()
 
-    def _show_lesson_details(self, item):
-        """Show details when a lesson is clicked."""
-        lesson_number = item.data(Qt.ItemDataRole.UserRole)
-        from PyQt6.QtWidgets import QMessageBox, QDialog, QVBoxLayout, QLabel, QPushButton, QGroupBox
-        
-        # Get the lesson info
-        lesson = None
-        for l in LESSONS:
-            if l.number == lesson_number:
-                lesson = l
-                break
-        
-        if lesson:
-            dialog = QDialog(self)
-            dialog.setWindowTitle(f"Lesson {lesson.number}: {lesson.title}")
-            dialog.setFixedSize(600, 400)
-            layout = QVBoxLayout(dialog)
-            
-            # Title
-            title = QLabel(f"Lesson {lesson.number}: {lesson.title}")
-            title.setStyleSheet("font-size: 14px; font-weight: bold;")
-            title.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            layout.addWidget(title)
-            
-            # Description placeholder
-            desc = QLabel(
-                "Esta lección está en construcción. "
-                "Mira el README para aprender los conceptos: "
-                "https://github.com/wachin/crypto-trading-lab"
+    # -- level and list ---------------------------------------------------
+
+    def set_level(self, level: int, *, show_first: bool = True) -> None:
+        """Populate the list with the lessons of ``level``."""
+        self.lesson_list.blockSignals(True)
+        self.lesson_list.clear()
+        for lesson in lessons_for_level(level):
+            item = QListWidgetItem(f"{lesson.number}. {lesson.title}")
+            item.setData(Qt.ItemDataRole.UserRole, lesson.number)
+            self.lesson_list.addItem(item)
+        self.lesson_list.blockSignals(False)
+        if show_first and self.lesson_list.count():
+            self.lesson_list.setCurrentRow(0)
+
+    def _on_level_changed(self) -> None:
+        self.set_level(self.current_level())
+
+    def current_level(self) -> int:
+        return int(self.level_combo.currentData() or 1)
+
+    # -- lesson display ---------------------------------------------------
+
+    def lesson_text(self, number: int) -> str:
+        """Render one lesson for the detail pane."""
+        lesson = get_lesson(number)
+        if lesson is None:
+            return self.tr("Lesson not found.")
+        state = self.tr("completed") if number in self._completed else self.tr(
+            "not completed yet"
+        )
+        body = lesson.body
+        # Keep the transcript readable but preserve intended paragraphs.
+        body = "\n\n".join(part.strip() for part in body.split(". "))
+        return "\n".join(
+            [
+                f"== {self.tr('Lesson')} {lesson.number}: {lesson.title} ==",
+                f"({self.tr('Level')} {lesson.level}, {state})",
+                "",
+                body,
+            ]
+        )
+
+    def show_lesson(self, number: int) -> str:
+        """Show a lesson and load its quiz; returns the rendered text."""
+        lesson = get_lesson(number)
+        if lesson is None:
+            raise ValueError(f"Unknown lesson number: {number}")
+        self._current = number
+        self._last_lesson = number
+        self.lesson_view.setPlainText(self.lesson_text(number))
+        self._load_quiz(lesson)
+        self._save_progress()
+        return self.lesson_view.toPlainText()
+
+    def _load_quiz(self, lesson) -> None:
+        quiz = lesson.quiz
+        self.quiz_question.setText(quiz.question)
+        for index, button in enumerate(self._quiz_buttons):
+            if index < len(quiz.options):
+                button.setText(quiz.options[index])
+                button.setVisible(True)
+                button.setChecked(False)
+            else:
+                button.setVisible(False)
+        self.quiz_group_box.setEnabled(True)
+        previous = self._quiz_results.get(lesson.number)
+        if previous is True:
+            self.quiz_feedback.setText(
+                self.tr("You already answered this quiz correctly.")
             )
-            desc.setWordWrap(True)
-            desc.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-            layout.addWidget(desc)
-            
-            # Quiz button
-            quiz_btn = QPushButton("Tomar Quiz")
-            quiz_btn.clicked.connect(lambda: self._take_quiz(lesson_number))
-            layout.addWidget(quiz_btn)
-            
-            # Close button
-            close_btn = QPushButton("Cerrar")
-            close_btn.clicked.connect(dialog.close)
-            layout.addWidget(close_btn)
-            
-            dialog.exec()
-    
-    def _show_first_lesson(self):
-        """Show the first lesson."""
-        for row in range(self.lesson_list.count()):
-            item = self.lesson_list.item(row)
-            self.lesson_list.setCurrentItem(item)
-            self._show_lesson_details(item)
-            break
+        elif previous is False:
+            self.quiz_feedback.setText(
+                self.tr("Your previous answer was wrong — try again.")
+            )
+        else:
+            self.quiz_feedback.setText("")
+
+    def _on_lesson_selected(self, current: QListWidgetItem | None, _prev) -> None:
+        if current is None:
+            return
+        self.show_lesson(current.data(Qt.ItemDataRole.UserRole))
+
+    def _show_first_lesson(self) -> None:
+        if self.lesson_list.count():
+            self.lesson_list.setCurrentRow(0)
+
+    # -- quiz -------------------------------------------------------------
+
+    def answer_quiz(self, number: int, choice: int) -> bool:
+        """Grade one quiz answer and remember the result.
+
+        This is the testable core; the buttons call it through
+        :meth:`_submit_quiz`.
+        """
+        lesson = get_lesson(number)
+        if lesson is None:
+            raise ValueError(f"Unknown lesson number: {number}")
+        correct = lesson.quiz.is_correct(choice)
+        self._quiz_results[number] = correct
+        self._save_progress()
+        return correct
+
+    def _selected_choice(self) -> int:
+        # ``isVisible()`` is False for every child of a window that has
+        # not been shown (e.g. in headless tests), so rely on the quiz's
+        # own option count instead.
+        if self._current is None:
+            return -1
+        lesson = get_lesson(self._current)
+        if lesson is None:
+            return -1
+        for index in range(len(lesson.quiz.options)):
+            if self._quiz_buttons[index].isChecked():
+                return index
+        return -1
+
+    def _submit_quiz(self) -> None:
+        if self._current is None:
+            return
+        choice = self._selected_choice()
+        lesson = get_lesson(self._current)
+        if lesson is None:
+            return
+        if choice < 0:
+            self.quiz_feedback.setText(
+                self.tr("Choose one answer before submitting.")
+            )
+            return
+        correct = self.answer_quiz(self._current, choice)
+        if correct:
+            self.quiz_feedback.setText(
+                self.tr("Correct. {why}").format(why=lesson.quiz.explanation)
+            )
+            self.mark_completed(self._current)
+        else:
+            self.quiz_feedback.setText(
+                self.tr(
+                    "Not correct. Re-read the lesson and try again. "
+                    "The right answer is worth understanding, not guessing."
+                )
+            )
+
+    # -- progress ---------------------------------------------------------
 
     def mark_completed(self, number: int) -> None:
         """Mark lesson ``number`` as completed and update the list view."""
-        if not any(lesson.number == number for lesson in LESSONS):
+        if get_lesson(number) is None:
             raise ValueError(f"Unknown lesson number: {number}")
         self._completed.add(number)
         for row in range(self.lesson_list.count()):
             item = self.lesson_list.item(row)
-            lesson_number = item.data(Qt.ItemDataRole.UserRole)
-            if lesson_number == number:
+            if item.data(Qt.ItemDataRole.UserRole) == number:
                 text = item.text()
                 if not text.startswith("[x]"):
                     item.setText(f"[x] {text}")
-        self.status_label.setText(
-            self.tr("{} of {} lessons completed").format(
-                len(self._completed), len(LESSONS)
-            )
-        )
-        self._save_persistence()
+        self._update_status()
+        self._save_progress()
 
-    def take_quiz(self, lesson_number: int) -> bool:
-        """Take a quiz for the specified lesson number.
-        
-        Returns True if the answer is correct, False otherwise.
-        """
-        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QButtonGroup, QGroupBox, QHBoxBoxLayout
-        from PyQt6.QtCore import Qt
-        
-        # Get the quiz question for this lesson
-        question_data = QUIZ_QUESTIONS.get(lesson_number)
-        if question_data is None:
-            return False
-        
-        question = question_data["question"]
-        options = question_data["options"]
-        correct_answer = question_data["answer"]
-        
-        # Create quiz dialog
-        dialog = QDialog(self)
-        dialog.setWindowTitle(self.tr("Quiz - Lesson {}").format(lesson_number))
-        dialog.setFixedSize(400, 300)
-        
-        layout = QVBoxLayout(dialog)
-        
-        # Question label
-        question_label = QLabel(self.tr(question))
-        question_label.setWordWrap(True)
-        question_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        font = question_label.font()
-        font.setPointSize(12)
-        question_label.setFont(font)
-        layout.addWidget(question_label)
-        
-        # Options group box
-        group_box = QGroupBox()
-        group_layout = QVBoxLayout(group_box)
-        
-        button_group = QButtonGroup(dialog)
-        
-        for i, option in enumerate(options):
-            radio = QPushButton(self.tr(option))
-            radio.setCheckable(True)
-            radio.setProperty("answer_index", i)
-            button_group.addButton(radio)
-            group_layout.addWidget(radio)
-        
-        layout.addWidget(group_box)
-        
-        # Buttons
-        button_layout = QHBoxLayout()
-        
-        submit_btn = QPushButton(self.tr("Submit"))
-        submit_btn.clicked.connect(lambda: self._check_quiz_answer(dialog, button_group, correct_answer, dialog))
-        button_layout.addWidget(submit_btn)
-        
-        cancel_btn = QPushButton(self.tr("Cancel"))
-        cancel_btn.clicked.connect(dialog.reject)
-        button_layout.addWidget(cancel_btn)
-        
-        layout.addLayout(button_layout)
-        
-        dialog.exec()
-        
-        # Return result - this is simplified; in a full implementation
-        # we'd track the result differently
-        return False
-
-    def _check_quiz_answer(self, dialog, button_group, correct_answer, dialog_ref):
-        """Check the quiz answer and provide feedback."""
-        selected_id = button_group.checkedId()
-        
-        if selected_id >= 0:
-            # Get the text of the selected button
-            selected_button = button_group.button(selected_id)
-            selected_text = selected_button.text()
-            
-            if selected_id == correct_answer:
-                # Correct answer
-                from PyQt6.QtWidgets import QMessageBox
-                QMessageBox.information(
-                    dialog,
-                    self.tr("Correct!"),
-                    self.tr("That is the correct answer!")
-                )
-            else:
-                # Wrong answer
-                from PyQt6.QtWidgets import QMessageBox
-                QMessageBox.warning(
-                    dialog,
-                    self.tr("Incorrect"),
-                    self.tr("The correct answer was option {}").format(correct_answer + 1)
-                )
-        
-        dialog.accept()
-
+    def _complete_current(self) -> None:
+        """Mark the lesson currently open in the detail pane."""
+        if self._current is None:
+            return
+        self.mark_completed(self._current)
+        self.lesson_view.setPlainText(self.lesson_text(self._current))
 
     def completed_lessons(self) -> set[int]:
         return set(self._completed)
 
-    #: Persistence file for quiz and lesson progress (chapter 75)
-    PERSISTENCE_FILE = Path(__file__).resolve().parents[3] / "data" / "learning_center_progress.json"
+    def bookmarked_lessons(self) -> set[int]:
+        return set(self._bookmarks)
 
-    def _load_persistence(self) -> None:
-        """Load persisted progress from disk."""
-        if self.PERSISTENCE_FILE.exists():
-            try:
-                with open(self.PERSISTENCE_FILE, 'r', encoding='utf-8') as f:
-                    progress = json.load(f)
-                self._completed.update(progress.get("completed_lessons", []))
-            except (json.JSONDecodeError, KeyError, TypeError):
-                pass
+    def toggle_bookmark_current(self) -> None:
+        number = self._current
+        if number is None:
+            return
+        if number in self._bookmarks:
+            self._bookmarks.discard(number)
+        else:
+            self._bookmarks.add(number)
+        self._update_status()
+        self._save_progress()
 
-    def _save_persistence(self) -> None:
-        """Save completed lessons and quiz scores to disk."""
-        self.PERSISTENCE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        progress_data = {
-            "completed_lessons": sorted(list(self._completed)),
-            "quiz_scores": self._quiz_scores,
-        }
-        with open(self.PERSISTENCE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(progress_data, f, indent=2)
+    def next_lesson(self) -> int | None:
+        """First lesson not yet completed, in curriculum order."""
+        for lesson in CURRICULUM:
+            if lesson.number not in self._completed:
+                return lesson.number
+        return None
+
+    def resume(self) -> str | None:
+        """Jump to the first uncompleted lesson (chapter 23)."""
+        number = self.next_lesson()
+        if number is None:
+            self.lesson_view.setPlainText(
+                self.tr("Every lesson is completed. Well done.")
+            )
+            return None
+        lesson = get_lesson(number)
+        assert lesson is not None
+        self.level_combo.setCurrentIndex(LEVELS.index(lesson.level))
+        self.select_lesson(number)
+        return self.show_lesson(number)
+
+    def select_lesson(self, number: int) -> None:
+        """Select a lesson in the current list if present."""
+        for row in range(self.lesson_list.count()):
+            item = self.lesson_list.item(row)
+            if item.data(Qt.ItemDataRole.UserRole) == number:
+                self.lesson_list.setCurrentRow(row)
+                return
+
+    def _update_status(self) -> None:
+        self.status_label.setText(
+            self.tr("{done} of {total} lessons completed · {bookmarks} bookmarked").format(
+                done=len(self._completed),
+                total=total_lessons(),
+                bookmarks=len(self._bookmarks),
+            )
+        )
+
+    # -- persistence ------------------------------------------------------
+
+    def progress_path(self) -> Path:
+        return self._paths.data_dir / "learning" / "progress.json"
+
+    def _load_progress(self) -> None:
+        path = self.progress_path()
+        if not path.exists():
+            return
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return
+        self._completed.update(
+            number
+            for number in data.get("completed_lessons", [])
+            if get_lesson(number) is not None
+        )
+        self._bookmarks.update(
+            number
+            for number in data.get("bookmarked_lessons", [])
+            if get_lesson(number) is not None
+        )
+        self._quiz_results.update(
+            {
+                int(number): bool(result)
+                for number, result in data.get("quiz_results", {}).items()
+            }
+        )
+        self._last_lesson = data.get("last_lesson")
+
+    def _save_progress(self) -> None:
+        path = self.progress_path()
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                json.dumps(
+                    {
+                        "completed_lessons": sorted(self._completed),
+                        "bookmarked_lessons": sorted(self._bookmarks),
+                        "quiz_results": {
+                            str(k): v for k, v in self._quiz_results.items()
+                        },
+                        "last_lesson": self._last_lesson,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+        except OSError:
+            # Progress is a convenience, never a reason to crash the UI.
+            return
+
+    @property
+    def last_lesson(self) -> int | None:
+        return self._last_lesson
 
     @staticmethod
     def guide_path() -> Path:

@@ -44,6 +44,7 @@ __all__ = [
     "ExchangeRecord",
     "MarketRecord",
     "CandleRecord",
+    "DatasetRecord",
     "OrderRecord",
     "BalanceRecord",
     "AuditRecord",
@@ -54,7 +55,8 @@ __all__ = [
 
 
 #: Current schema version; migrations must bump this (chapter 8).
-SCHEMA_VERSION = 1
+#: v2 adds the ``datasets`` table (chapters 29 and 53).
+SCHEMA_VERSION = 2
 
 
 class Base(DeclarativeBase):
@@ -133,9 +135,38 @@ class CandleRecord(Base):
     volume: Mapped[float] = mapped_column(Numeric(38, 18))
 
 
+class DatasetRecord(Base):
+    """An identified, checksummed slice of history (chapters 29 and 53).
+
+    A dataset is the unit of reproducibility: every backtest and
+    experiment references a ``dataset_id``, never just "BTC/USDT".
+    """
+
+    __tablename__ = "datasets"
+
+    dataset_id: Mapped[str] = mapped_column(String(120), primary_key=True)
+    exchange: Mapped[str] = mapped_column(String(50), index=True)
+    symbol: Mapped[str] = mapped_column(String(30), index=True)
+    interval: Mapped[str] = mapped_column(String(10), index=True)
+    start: Mapped[str] = mapped_column(String(40))
+    end: Mapped[str] = mapped_column(String(40))
+    candle_count: Mapped[int] = mapped_column(Integer)
+    missing: Mapped[int] = mapped_column(Integer, default=0)
+    duplicates: Mapped[int] = mapped_column(Integer, default=0)
+    invalid: Mapped[int] = mapped_column(Integer, default=0)
+    checksum: Mapped[str] = mapped_column(String(64), index=True)
+    source: Mapped[str] = mapped_column(String(200), default="")
+    timezone_name: Mapped[str] = mapped_column(String(20), default="UTC")
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    ready: Mapped[bool] = mapped_column(Boolean, default=True)
+    downloaded_at: Mapped[str] = mapped_column(String(40))
+    created_at: Mapped[str] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class OrderRecord(Base):
     """A simulated order (chapter 8: "simulated orders")."""
-
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

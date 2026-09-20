@@ -1,9 +1,14 @@
 """Application entry point (ROADMAP.md chapter 71.1).
 
-``python3 -m crypto_trading_lab`` opens the minimal first-iteration
-window: menus, language selector, paper-trading and real-trading
-indicators, connection status, welcome panel, educational warning,
-and the required buttons.
+``python3 -m crypto_trading_lab`` opens the main window: menus,
+language selector, paper-trading and real-trading indicators,
+connection status, welcome panel, educational warning, and the buttons
+that lead into the research workflow (data → research → notebook).
+
+Windows are created lazily and reused, so opening a screen twice does
+not leak a second copy. No screen is a placeholder: every menu entry
+that looks like a feature is backed by the same tested modules the
+tests exercise.
 """
 
 from __future__ import annotations
@@ -22,71 +27,146 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from crypto_trading_lab.configuration.xdg import AppPaths
+from crypto_trading_lab.domain.models import Candle
 from crypto_trading_lab.i18n.translations import (
     DEFAULT_LANGUAGE,
-    SUPPORTED_LANGUAGES,
     apply_language,
 )
+from crypto_trading_lab.machine_learning.experiment_manager import (
+    ExperimentManager,
+)
+from crypto_trading_lab.market_data.historical import DatasetVersion
 
 
 class MainWindow(QMainWindow):
-    """Minimal first-iteration main window (chapter 71.1)."""
+    """Main window: safety indicators plus the research workflow."""
 
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle(self.tr("Crypto Trading Lab"))
-        self.resize(900, 600)
+        self.resize(920, 640)
 
-        # Lazy-loaded components (loaded on demand)
+        # Lazily-created child windows, kept alive by reference.
         self._learning_center = None
         self._chart_window = None
         self._backtesting_window = None
-        self._chart_loaded = False
-        self._backtesting_loaded = False
-        self._learning_center_loaded = False
-
-        # Lazy-loaded components (loaded on demand)
-        self._learning_center = None
-        self._chart_window = None
-        self._backtesting_window = None
-        self._chart_loaded = False
-        self._backtesting_loaded = False
-        self._learning_center_loaded = False
+        self._historical_data_window = None
+        self._wizard_window = None
+        self._notebook_window = None
+        self._assistant_window = None
+        self._strategy_builder_window = None
+        self._paper_window = None
 
         self._build_menus()
         self._build_central()
+
+    # -- helpers ----------------------------------------------------------
+
+    def _paths(self) -> AppPaths:
+        """XDG paths; a single place so tests can override if needed."""
+        return AppPaths()
+
+    def _manager(self) -> ExperimentManager:
+        """Experiment manager persisted under the user's data directory."""
+        manager = ExperimentManager(
+            storage_path=self._paths().data_dir / "research" / "experiments.json"
+        )
+        manager.load()
+        return manager
+
+    def _load_candles_and_dataset(
+        self,
+        symbol: str | None = None,
+        interval: str | None = None,
+        paths: AppPaths | None = None,
+    ) -> tuple[DatasetVersion | None, list[Candle]]:
+        """Most recent versioned dataset plus its candles (or empty)."""
+        from crypto_trading_lab.domain.models import Symbol
+        from crypto_trading_lab.persistence.candles import CandleRepository
+        from crypto_trading_lab.persistence.database import (
+            create_database,
+            database_engine,
+            make_session_factory,
+        )
+        from crypto_trading_lab.persistence.datasets import DatasetRepository
+
+        paths = paths or self._paths()
+        if not paths.database_file.exists():
+            return None, []
+        engine = database_engine(paths.database_file)
+        create_database(engine)
+        session = make_session_factory(engine)()
+        try:
+            datasets = DatasetRepository(session)
+            dataset = (
+                datasets.latest(symbol=symbol, interval=interval)
+                if (symbol or interval)
+                else datasets.latest()
+            )
+            if dataset is None:
+                return None, []
+            candles = CandleRepository(session).load_candles(
+                Symbol(dataset.symbol),
+                dataset.interval,
+                exchange_name=dataset.exchange,
+            )
+            return dataset, candles
+        finally:
+            session.close()
+            engine.dispose()
 
     # -- menus ------------------------------------------------------------
 
     def _build_menus(self) -> None:
         file_menu = self.menuBar().addMenu(self.tr("&File"))
         self.action_load_csv = QAction(self.tr("Load CSV file..."), self)
+        self.action_load_csv.triggered.connect(self._open_csv_dialog)
         file_menu.addAction(self.action_load_csv)
+
+        self.action_historical_data = QAction(
+            self.tr("Get historical data..."), self
+        )
+        self.action_historical_data.triggered.connect(self._open_historical_data)
+        file_menu.addAction(self.action_historical_data)
 
         view_menu = self.menuBar().addMenu(self.tr("&View"))
         self.action_learning_center = QAction(
             self.tr("Open Learning Center"), self
         )
+        self.action_learning_center.triggered.connect(self._open_learning_center)
         view_menu.addAction(self.action_learning_center)
+
+        self.action_chart = QAction(self.tr("Open Chart"), self)
+        self.action_chart.triggered.connect(self._open_chart)
+        view_menu.addAction(self.action_chart)
 
         tools_menu = self.menuBar().addMenu(self.tr("&Tools"))
         self.action_backtesting = QAction(self.tr("Open Backtesting Lab"), self)
         self.action_backtesting.setEnabled(True)  # chapter 37.9
         self.action_backtesting.triggered.connect(self._open_backtesting)
         tools_menu.addAction(self.action_backtesting)
+
+        self.action_wizard = QAction(self.tr("New research..."), self)
+        self.action_wizard.triggered.connect(self._open_research_wizard)
+        tools_menu.addAction(self.action_wizard)
+
+        self.action_paper = QAction(self.tr("Paper Trading"), self)
+        self.action_paper.triggered.connect(self._open_paper)
+        tools_menu.addAction(self.action_paper)
+
         research_menu = self.menuBar().addMenu(self.tr("&Research"))
         self.action_notebook = QAction(self.tr("Research Notebook"), self)
         self.action_notebook.triggered.connect(self._open_notebook)
         research_menu.addAction(self.action_notebook)
 
-        self.action_assistant = QAction(self.tr("AI Assistant"), self)
+        self.action_assistant = QAction(self.tr("Research Assistant"), self)
         self.action_assistant.triggered.connect(self._open_assistant)
         research_menu.addAction(self.action_assistant)
 
         self.action_strategy_builder = QAction(self.tr("Strategy Builder"), self)
         self.action_strategy_builder.triggered.connect(self._open_strategy_builder)
         research_menu.addAction(self.action_strategy_builder)
-
 
         help_menu = self.menuBar().addMenu(self.tr("&Help"))
         help_menu.addAction(
@@ -139,7 +219,6 @@ class MainWindow(QMainWindow):
         message.setWordWrap(True)
         layout.addWidget(message)
 
-        # Welcome panel.
         welcome = QLabel(
             self.tr(
                 "Welcome. Begin with the Learning Center to learn "
@@ -149,6 +228,10 @@ class MainWindow(QMainWindow):
         welcome.setWordWrap(True)
         layout.addWidget(welcome)
 
+        self.historical_data_button = QPushButton(
+            self.tr("Get historical data")
+        )
+        self.historical_data_button.clicked.connect(self._open_historical_data)
         self.csv_button = QPushButton(self.tr("Load CSV file"))
         self.csv_button.clicked.connect(self._open_csv_dialog)
         self.chart_button = QPushButton(self.tr("Open Chart"))
@@ -160,10 +243,20 @@ class MainWindow(QMainWindow):
         self.backtesting_button = QPushButton(self.tr("Open Backtesting Lab"))
         self.backtesting_button.setEnabled(True)  # chapter 37.9
         self.backtesting_button.clicked.connect(self._open_backtesting)
-        layout.addWidget(self.csv_button)
-        layout.addWidget(self.chart_button)
-        layout.addWidget(self.learning_center_button)
-        layout.addWidget(self.backtesting_button)
+        self.wizard_button = QPushButton(self.tr("New research"))
+        self.wizard_button.clicked.connect(self._open_research_wizard)
+        self.paper_button = QPushButton(self.tr("Paper Trading"))
+        self.paper_button.clicked.connect(self._open_paper)
+        for button in (
+            self.historical_data_button,
+            self.csv_button,
+            self.chart_button,
+            self.learning_center_button,
+            self.backtesting_button,
+            self.wizard_button,
+            self.paper_button,
+        ):
+            layout.addWidget(button)
 
         layout.addStretch(1)
 
@@ -172,52 +265,52 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
         self.statusBar().showMessage(self.tr("Disconnected"))
 
+    # -- learning center / charts ----------------------------------------
+
     def _open_learning_center(self) -> None:
-        """Open the Learning Center as a top-level window (chapter 23).
-        
-        Uses lazy loading - the Learning Center widget is only created
-        when first requested.
-        """
+        """Open the Learning Center as a top-level window (chapter 23)."""
         if self._learning_center is None:
             from crypto_trading_lab.ui.education.learning_center import (
                 LearningCenterWidget,
             )
+
             self._learning_center = LearningCenterWidget()
             self._learning_center.setWindowTitle(self.tr("Learning Center"))
-            self._learning_center.resize(480, 560)
-            self._learning_center.show()
+            self._learning_center.resize(520, 620)
+        self._learning_center.show()
+        self._learning_center.raise_()
+
+    # -- CSV import -------------------------------------------------------
 
     def load_csv_file(
         self, path: str, paths: "AppPaths | None" = None
     ) -> str:
         """Parse a CSV, show the pre-import summary, persist on confirm.
 
-        Chapter 28: nothing reaches the database before the user sees
-        a plain-language summary and confirms. Returns a status message
+        Chapter 28: nothing reaches the database before the user sees a
+        plain-language summary and confirms. Returns a status message
         for the UI/tests. ``paths`` is injectable for tests.
         """
         from pathlib import Path
 
         from crypto_trading_lab.market_data.importer import parse_csv
-        from crypto_trading_lab.configuration.xdg import AppPaths
+        from crypto_trading_lab.persistence.candles import CandleRepository
         from crypto_trading_lab.persistence.database import (
             create_database,
             database_engine,
             make_session_factory,
         )
-        from crypto_trading_lab.persistence.candles import CandleRepository
 
         summary = parse_csv(Path(path))
         if not summary.ok:
             return summary.beginner_explanation()
 
-        paths = paths or AppPaths()
+        paths = paths or self._paths()
         engine = database_engine(paths.database_file)
         create_database(engine)
         session = make_session_factory(engine)()
         try:
-            repo = CandleRepository(session)
-            saved = repo.save_candles(summary.candles)
+            saved = CandleRepository(session).save_candles(summary.candles)
         finally:
             session.close()
             engine.dispose()
@@ -234,211 +327,274 @@ class MainWindow(QMainWindow):
             self,
             self.tr("Load CSV file"),
             "",
-            "CSV candles (*.csv);;All files (*)",
+            self.tr("CSV candles (*.csv);;All files (*)"),
         )
         if not path:
             return
         message = self.load_csv_file(path)
         QMessageBox.information(self, self.tr("Import"), message)
 
+    # -- historical data --------------------------------------------------
+
+    def _open_historical_data(self) -> None:
+        """Open the historical-data downloader (chapters 26.2, 28)."""
+        if self._historical_data_window is None:
+            from crypto_trading_lab.ui.data.historical_data import (
+                HistoricalDataWidget,
+            )
+
+            self._historical_data_window = HistoricalDataWidget()
+            self._historical_data_window.setWindowTitle(
+                self.tr("Crypto Trading Lab — Historical data")
+            )
+            self._historical_data_window.resize(760, 680)
+        self._historical_data_window.show()
+        self._historical_data_window.raise_()
+
+    # -- charts -----------------------------------------------------------
+
     def open_chart(
         self, paths: "AppPaths | None" = None, notify: bool = True
     ) -> "PyQtGraphCandleChart | None":
-        """Open the chart window with the most recent imported candles.
+        """Open the chart window with the most recent imported candles."""
+        if self._chart_window is not None:
+            self._chart_window.show()
+            self._chart_window.raise_()
+            return self._chart_window
 
-        Uses lazy loading - the chart window is created on first access
-        and reused on subsequent calls.
+        from PyQt6.QtWidgets import QMessageBox
 
-        ``notify=False`` skips the message box (used by tests and
-        non-interactive callers)."""
-        if self._chart_window is None:
-            # Show progress dialog for first-time loading
-            progress = QProgressDialog(
-                self.tr("Loading chart..."), None, 0, 0, self
-            )
-            progress.setWindowTitle(self.tr("Loading"))
-            progress.setWindowModality(Qt.WindowModality.WindowModal)
-            progress.setCancelButton(None)
-            progress.setMinimumDuration(500)
-            progress.show()
-            QApplication.processEvents()
-
-            from crypto_trading_lab.configuration.xdg import AppPaths
         from crypto_trading_lab.domain.models import Symbol
+        from crypto_trading_lab.persistence.candles import CandleRepository
         from crypto_trading_lab.persistence.database import (
             create_database,
             database_engine,
             make_session_factory,
         )
-        from crypto_trading_lab.persistence.candles import CandleRepository
         from crypto_trading_lab.ui.charts.abstraction import CandleSeries
         from crypto_trading_lab.ui.charts.pyqtgraph_backend import (
             PyQtGraphCandleChart,
         )
 
-        paths = paths or AppPaths()
-        candles = []
-        if paths.database_file.exists():
+        progress = QProgressDialog(
+            self.tr("Loading chart..."), None, 0, 0, self
+        )
+        progress.setWindowTitle(self.tr("Loading"))
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setCancelButton(None)
+        progress.setMinimumDuration(500)
+        progress.show()
+        QApplication.processEvents()
+
+        paths = paths or self._paths()
+        candles: list[Candle] = []
+        dataset, dataset_candles = self._load_candles_and_dataset(
+            paths=paths
+        )
+        if dataset is not None:
+            candles = dataset_candles
+        elif paths.database_file.exists():
             engine = database_engine(paths.database_file)
             create_database(engine)
             session = make_session_factory(engine)()
             try:
-                repo = CandleRepository(session)
-                candles = repo.load_candles(
+                candles = CandleRepository(session).load_candles(
                     Symbol("BTC/USDT"), "1m"
                 )
             finally:
                 session.close()
                 engine.dispose()
+        progress.close()
 
         if not candles:
             if notify:
-                from PyQt6.QtWidgets import QMessageBox
-
                 QMessageBox.information(
                     self,
                     self.tr("Chart"),
                     self.tr(
-                        "No candles stored yet. Load a CSV file first "
-                        "(File → Load CSV file)."
+                        "No candles stored yet. Download historical data "
+                        "or load a CSV file first."
                     ),
                 )
             return None
 
+        symbol = dataset.symbol if dataset else "BTC/USDT"
+        interval = dataset.interval if dataset else "1m"
         chart = PyQtGraphCandleChart()
-        chart.setWindowTitle(
-            self.tr("Crypto Trading Lab — Chart")
-        )
+        chart.setWindowTitle(self.tr("Crypto Trading Lab — Chart"))
         chart.resize(1000, 600)
-        chart.set_candles(
-            CandleSeries.from_candles("BTC/USDT", "1m", candles)
-        )
+        chart.set_candles(CandleSeries.from_candles(symbol, interval, candles))
         chart.show()
         self._chart_window = chart  # keep a reference alive
-        progress.close()
         return chart
 
-        # Already loaded, just show it
-        self._chart_window.show()
-        self._chart_window.raise_()
-        return self._chart_window
+    def _open_chart(self) -> None:
+        self.open_chart()
+
+    # -- backtesting lab --------------------------------------------------
 
     def open_backtesting(
         self, paths: "AppPaths | None" = None, notify: bool = True
     ) -> "BacktestingLabWidget | None":
-        """Open the Backtesting Lab over the imported candles (37.9).
+        """Open the Backtesting Lab over the stored candles (37.9)."""
+        if self._backtesting_window is not None:
+            self._backtesting_window.show()
+            self._backtesting_window.raise_()
+            return self._backtesting_window
 
-        Uses lazy loading - the BacktestingLabWidget is only created
-        when first requested.
+        from PyQt6.QtWidgets import QMessageBox
 
-        The lab always shows chapter 40 metrics, statistical-validity
-        warnings and the beginner explanation (37.10): a profitable
-        backtest is never presented as proof of future profit.
-        ``notify=False`` skips the message box (tests).
-        """
-        if self._backtesting_window is None:
-            # Show progress dialog for first-time loading
-            progress = QProgressDialog(
-                self.tr("Loading Backtesting Lab..."), None, 0, 0, self
-            )
-            progress.setWindowTitle(self.tr("Loading"))
-            progress.setWindowModality(Qt.WindowModality.WindowModal)
-            progress.setCancelButton(None)
-            progress.setMinimumDuration(500)
-            progress.show()
-            QApplication.processEvents()
-
-            from crypto_trading_lab.configuration.xdg import AppPaths
         from crypto_trading_lab.domain.models import Symbol
+        from crypto_trading_lab.persistence.candles import CandleRepository
         from crypto_trading_lab.persistence.database import (
             create_database,
             database_engine,
             make_session_factory,
         )
-        from crypto_trading_lab.persistence.candles import CandleRepository
         from crypto_trading_lab.ui.backtesting.lab import (
             BacktestingLabWidget,
         )
 
-        paths = paths or AppPaths()
-        candles = []
-        if paths.database_file.exists():
+        progress = QProgressDialog(
+            self.tr("Loading Backtesting Lab..."), None, 0, 0, self
+        )
+        progress.setWindowTitle(self.tr("Loading"))
+        progress.setWindowModality(Qt.WindowModality.WindowModal)
+        progress.setCancelButton(None)
+        progress.setMinimumDuration(500)
+        progress.show()
+        QApplication.processEvents()
+
+        paths = paths or self._paths()
+        candles: list[Candle] = []
+        dataset, dataset_candles = self._load_candles_and_dataset(paths=paths)
+        if dataset is not None:
+            candles = dataset_candles
+        elif paths.database_file.exists():
             engine = database_engine(paths.database_file)
             create_database(engine)
             session = make_session_factory(engine)()
             try:
-                repo = CandleRepository(session)
-                candles = repo.load_candles(Symbol("BTC/USDT"), "1m")
+                candles = CandleRepository(session).load_candles(
+                    Symbol("BTC/USDT"), "1m"
+                )
             finally:
                 session.close()
                 engine.dispose()
+        progress.close()
 
         if not candles:
             if notify:
-                from PyQt6.QtWidgets import QMessageBox
-
                 QMessageBox.information(
                     self,
                     self.tr("Backtesting Lab"),
                     self.tr(
-                        "No candles stored yet. Load a CSV file first "
-                        "(File → Load CSV file)."
+                        "No candles stored yet. Download historical data "
+                        "or load a CSV file first."
                     ),
                 )
             return None
 
-        lab = BacktestingLabWidget(candles, "BTC/USDT", "1m")
+        symbol = dataset.symbol if dataset else "BTC/USDT"
+        interval = dataset.interval if dataset else "1m"
+        lab = BacktestingLabWidget(candles, symbol, interval)
         lab.setWindowTitle(self.tr("Crypto Trading Lab — Backtesting Lab"))
-        lab.resize(720, 640)
+        lab.resize(780, 700)
         lab.show()
         self._backtesting_window = lab  # keep a reference alive
-        progress.close()
         return lab
-
-        # Already loaded, just show it
-        self._backtesting_window.show()
-        self._backtesting_window.raise_()
-        return self._backtesting_window
 
     def _open_backtesting(self) -> None:
         self.open_backtesting()
 
-    def _open_chart(self) -> None:
-        self.open_chart()
+    # -- research workflow -------------------------------------------------
 
+    def _open_research_wizard(self) -> None:
+        """Guided research over the most recent dataset (analysis §15)."""
+        from PyQt6.QtWidgets import QMessageBox
 
+        from crypto_trading_lab.ui.research.wizard import ResearchWizardDialog
 
-    def _open_notebook(self) -> None:
-        """Open the research notebook UI."""
-        from crypto_trading_lab.ui.research.notebook import view_notebook
-        from crypto_trading_lab.machine_learning.experiment_manager import ExperimentManager
-        exp_manager = ExperimentManager()
-        entries = exp_manager.list_experiments()
-        if not entries:
-            from PyQt6.QtWidgets import QMessageBox
+        dataset, candles = self._load_candles_and_dataset()
+        dialog = ResearchWizardDialog(candles, dataset, self._manager(), self)
+        dialog.show()
+        self._wizard_window = dialog  # keep a reference alive
+        if dataset is None and not candles:
             QMessageBox.information(
                 self,
-                self.tr("Research Notebook"),
-                self.tr("No experiments recorded yet.")
+                self.tr("New research"),
+                self.tr(
+                    "There is no versioned dataset yet. Open “Get "
+                    "historical data” first."
+                ),
             )
-            return
-        view_notebook(entries)
+
+    def _open_notebook(self) -> None:
+        """Research notebook + experiment manager (chapters 52-54)."""
+        from crypto_trading_lab.ui.research.notebook import NotebookDialog
+
+        manager = self._manager()
+        if self._notebook_window is None:
+            self._notebook_window = NotebookDialog(manager, self)
+            self._notebook_window.setWindowTitle(self.tr("Research Notebook"))
+        else:
+            self._notebook_window.set_manager(manager)
+        self._notebook_window.show()
+        self._notebook_window.raise_()
 
     def _open_assistant(self) -> None:
-        """Open the AI research assistant UI."""
-        from crypto_trading_lab.ui.research.assistant import research_assistant
+        """Honest, offline research assistant (chapter 55)."""
         from crypto_trading_lab.ai_assistant import AIAssistant
-        from crypto_trading_lab.configuration.xdg import AppPaths
-        assistant = AIAssistant(AppPaths().data_dir / "ai_assistant")
-        research_assistant(assistant)
+        from crypto_trading_lab.ui.research.assistant import (
+            ResearchAssistantDialog,
+        )
+
+        manager = self._manager()
+        assistant = AIAssistant(self._paths().data_dir / "ai_assistant")
+        dialog = ResearchAssistantDialog(
+            manager=manager, assistant=assistant, parent=self
+        )
+        dialog.show()
+        self._assistant_window = dialog  # keep a reference alive
 
     def _open_strategy_builder(self) -> None:
-        """Open the visual strategy builder."""
-        from crypto_trading_lab.ui.strategy_builder import show_strategy_builder
-        show_strategy_builder()
+        """Visual strategy rule editor (chapter 34)."""
+        from crypto_trading_lab.ui.strategy_builder import StrategyBuilderDialog
+
+        dialog = StrategyBuilderDialog(self)
+        dialog.show()
+        self._strategy_builder_window = dialog  # keep a reference alive
+
+    def _open_paper(self) -> None:
+        """Paper trading over the stored dataset (chapter 57)."""
+        from PyQt6.QtWidgets import QMessageBox
+
+        from crypto_trading_lab.ui.paper.paper_trading import PaperTradingWidget
+
+        dataset, candles = self._load_candles_and_dataset()
+        if self._paper_window is None:
+            self._paper_window = PaperTradingWidget(candles, dataset, self)
+            self._paper_window.setWindowTitle(
+                self.tr("Crypto Trading Lab — Paper Trading")
+            )
+            self._paper_window.resize(900, 760)
+        else:
+            self._paper_window.set_data(candles, dataset)
+        self._paper_window.show()
+        self._paper_window.raise_()
+        if dataset is None:
+            QMessageBox.information(
+                self,
+                self.tr("Paper Trading"),
+                self.tr(
+                    "There is no dataset yet. Open “Get historical data” "
+                    "first: paper trading replays real candles."
+                ),
+            )
+
 
 def run(argv: list[str] | None = None) -> int:
-    """Launch the minimal application (used by tests and __main__)."""
+    """Launch the application (used by tests and __main__)."""
     argv = argv if argv is not None else sys.argv
     app = QApplication(argv)
     app.setApplicationName("crypto-trading-lab")
@@ -454,3 +610,6 @@ def make_app(argv: list[str] | None = None) -> tuple[QApplication, MainWindow]:
     app = QApplication.instance() or QApplication(argv)
     apply_language(app, DEFAULT_LANGUAGE)
     return app, MainWindow()
+
+
+__all__ = ["MainWindow", "run", "make_app"]

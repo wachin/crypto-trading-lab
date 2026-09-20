@@ -4943,3 +4943,188 @@ This roadmap is complete when the following architectural checks hold:
 - [x] Every chapter answers a concrete question.
 - [x] Terminology is consistent (see Chapter 2).
 - [x] A profitable backtest is never presented as evidence of future advantage.
+
+---
+
+# PART XVI — RESEARCH WORKFLOW (2026-09-19 improvements)
+
+This part specifies the work requested by
+`8vo/08-mejoras-para-crypto-trading-lab.md`: turning the existing
+scientific engine into a workflow a single person can actually walk
+through. It adds requirements only; the chapters above keep their
+canonical ownership. Items are marked `[x]` only when they are
+implemented **and tested**.
+
+---
+
+## [x] 73. Historical data acquisition and dataset identity
+
+The user must be able to research a market without hunting for a CSV
+file first (analysis §3, §8).
+
+- [x] Download historical candles from Binance Spot public REST using
+  only the Python standard library — no new dependency.
+- [x] Supported timeframes: 1m, 5m, 15m, 1h, 4h, 1d.
+- [x] A request names exchange, symbol, interval, start and end; naive
+  datetimes are rejected.
+- [x] Pagination with a hard candle cap so a mistaken range cannot
+  download forever.
+- [x] Downloads are public and never send credentials.
+- [x] Validation reports candle count, missing candles, duplicates,
+  invalid rows and timeframe-grid alignment (chapter 29).
+- [x] Every dataset receives a stable identity
+  (`EXCHANGE_SYMBOL_INTERVAL_START_END_Vn`) and a SHA-256 checksum.
+- [x] Datasets are persisted with their identity card (chapter 53.2).
+- [x] The network transport is injectable, so the test suite never
+  touches the internet.
+- [x] A beginner-readable explanation is produced on failure and on
+  validation problems.
+- [ ] Historical download from a second exchange (Coinbase) — pending,
+  chapter 26.3.
+- [ ] Automatic retry/backoff on transient network errors — pending,
+  chapter 27.
+
+---
+
+## [x] 74. Research workflow and validity dashboard
+
+A result must arrive with an explicit statement of how much of the
+research protocol was actually completed (analysis §9, §15, §16).
+
+- [x] One service runs hypothesis → strategy → costs → backtest →
+  benchmark → out-of-sample → robustness → (optional) walk-forward →
+  qualification.
+- [x] Every run is deterministic for identical inputs.
+- [x] Every run records an experiment with dataset id and checksum,
+  parameters, execution assumptions, metrics and conclusion
+  (chapter 52).
+- [x] A validity checklist reports, per item, pass/fail plus a plain
+  explanation: dataset quality, look-ahead protection, train/test
+  separation, transaction costs, slippage model, benchmark,
+  out-of-sample, walk-forward, Monte Carlo, parameter sensitivity,
+  sample size, multiple testing, liquidity realism.
+- [x] Liquidity/market impact is reported as **not satisfied** until it
+  is genuinely modelled: the laboratory never marks its own homework.
+- [x] The number of tested configurations is recorded and triggers a
+  multiple-testing warning (chapter 43.1).
+- [x] A plain-language verdict never upgrades an observation into
+  evidence.
+- [x] The validity evidence ladder is shown in the interface.
+- [ ] A dedicated experiment-comparison screen — partially done (the
+  notebook compares selected experiments).
+
+---
+
+## [x] 75. Observable experiment lifecycle
+
+Experiments must be visible, searchable, taggable and persistent
+(analysis §5).
+
+- [x] Statuses: draft, running, completed, failed, cancelled, archived,
+  qualified, rejected.
+- [x] Rejected experiments are kept, never deleted.
+- [x] Every mutation persists to the research directory.
+- [x] Search over hypothesis, strategy, dataset, notes and tags.
+- [x] Side-by-side comparison with a union of metric keys.
+- [x] Export and import of the experiment history as JSON.
+- [ ] Queued batch research jobs with progress and cancellation.
+
+---
+
+## [x] 76. Integrated research notebook
+
+The notebook is the trader's scientific record, not a text box
+(analysis §6).
+
+- [x] Entries are experiment records: hypothesis, dataset identity and
+  checksum, parameters, execution assumptions, metrics and conclusion.
+- [x] Research notes can be appended over time.
+- [x] Records are searchable and comparable.
+- [x] The history can be exported as JSON.
+- [ ] Auto-filling the manifest from a completed backtest inside the
+  notebook (the wizard records it automatically today).
+
+---
+
+## [x] 77. Honest assistant and strategy rule builder
+
+- [x] The assistant is offline and deterministic by default; it states
+  that it is not a generative model.
+- [x] A real model backend can be injected without changing the UI; the
+  chapter-55 restrictions still apply.
+- [x] Assistant conversations are persisted.
+- [x] The strategy builder is backed by the real builder module:
+  validate, explain, export and import a versioned JSON rule.
+- [x] No `eval`/`exec` anywhere in the builder.
+- [x] The builder reports when a rule is incomplete (no entry/exit)
+  instead of pretending it is tradable.
+- [x] Executable rule strategies: builder blocks become a declarative
+  `RuleStrategySpec` (`rule_strategy.py`) the engine can run, with no
+  `eval`/`exec`; stop-loss/take-profit are evaluated on candle closes
+  and the limitation is stated.
+- [x] The Backtesting Lab can load a rule JSON and backtest it as a
+  custom strategy.
+- [x] The builder explains *why* a rule cannot run yet (arithmetic
+  operators, filters) instead of guessing.
+- [ ] Parameter sweep launched from the builder itself (the Backtesting
+  Lab sweep currently supports SMA parameters only).
+
+---
+
+## [x] 78. Complexity and multiple-testing awareness
+
+- [x] Strategy complexity is analysed from the real strategy class and
+  shown with its violations and the chapter-35 warning.
+- [x] The backtesting lab runs a real parameter sweep over SMA
+  fast/slow ranges.
+- [x] The sweep states that it is exploration, not validation, and
+  counts the configurations tried.
+- [x] The optimizer fails loudly when nothing can be evaluated instead
+  of silently reporting zero combinations.
+
+---
+
+## [ ] 79. Paper trading over real market data and trading journal
+
+The largest remaining gap (analysis §10, §11, §13). Replaying a
+downloaded dataset works today; a continuous feed does not.
+
+- [ ] A continuous market-data feed for paper trading (WebSocket).
+- [x] Paper orders, fills, fees and slippage against a simulated
+  account, replaying real candles (`paper_session.py`).
+- [x] The strategy never bypasses the risk manager: every intended order
+  is evaluated first and rejections are recorded in the journal.
+- [x] A trading journal recording, per trade: strategy, signal, time,
+  price, risk decision, simulated fill, slippage, fee, exit, P/L and
+  reason (`paper_session.TradeJournal`).
+- [x] The journal renders for reading and saves/loads as JSON.
+- [x] The paper-trading screen shows the account, the journal and the
+  chapter-57 limitation note.
+- [x] Beginner guide: `docs/en/beginners/paper-trading.md`.
+- [ ] A dedicated post-trade follow-up view (“what did the strategy know
+  at the time?”, answered manually from the journal today).
+- [ ] Realistic execution from chapter 56 (partial fills, market impact)
+  integrated into the paper pipeline.
+- [ ] Binance WebSocket, reconnection, rate limiting and stale-data
+  detection (chapter 26.2/27) — planned in
+  `docs/en/developers/live-trading-roadmap.md`.
+- [ ] Spot testnet (chapter 68) — and only then consider real money.
+
+---
+
+## [x] 80. Learning Center as a real course
+
+- [x] Twenty beginner lessons with quizzes exist.
+- [x] Level 2 — practical trading: support/resistance, trend, range,
+  volatility, ATR, momentum, mean reversion, breakout, volume,
+  liquidity, spread, slippage, position sizing, expectancy,
+  R-multiple, risk of ruin (`education/curriculum.py`).
+- [x] Level 3 — quantitative research: hypothesis, variables,
+  train/test, out-of-sample, walk-forward, overfitting, multiple
+  testing, Monte Carlo, bootstrap, regimes, robustness, statistical
+  significance.
+- [x] Every lesson carries a real body and a graded quiz question.
+- [x] Progress tracking, bookmarks and resume-where-you-left-off persist
+  under the user's data directory.
+- [ ] Lesson-to-screen links (each lesson opening the related tool).
+- [ ] Screenshots and tutorial media.

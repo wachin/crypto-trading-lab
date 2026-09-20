@@ -175,12 +175,17 @@ def run_optimization(
     objective: OptimizationObjective,
     backtest_config=None,
     parameter_sets=None,
+    experiment_manager: ExperimentManager | None = None,
 ) -> OptimizationReport:
     """
     Run parameter optimization (Chapter 39).
 
     Performs grid search or random search over parameter space,
     evaluates each combination, and returns the best result.
+
+    A record is written only when ``experiment_manager`` is supplied:
+    silently dropping an experiment into a throwaway manager would make
+    the run look tracked when it was not (chapter 52).
     """
     start_time = time.time()
 
@@ -196,23 +201,38 @@ def run_optimization(
     overfitting_warnings = []
 
     # Evaluate each combination
+    failures: list[str] = []
     for i, params in enumerate(combinations):
         try:
-            result = evaluate_parameter_set(candles, strategy_factory, backtest_config, objective, params)
-            all_results.append(result)
+            result = evaluate_parameter_set(
+                params, candles, strategy_factory, backtest_config, objective
+            )
+        except Exception as error:
+            # A single bad combination must not abort the sweep, but it
+            # must never be swallowed silently either: if every
+            # combination fails, the caller gets a real error below.
+            failures.append(f"{params}: {error}")
+            continue
+        all_results.append(result)
 
-            if best_result is None or _is_better(result, best_result, objective):
-                best_result = result
-
-        except Exception as e:
-            # Log error but continue
-            pass
+        if best_result is None or _is_better(result, best_result, objective):
+            best_result = result
 
         # Progress check
         if i % 10 == 0:
             elapsed = time.time() - start_time
             if elapsed > config.max_execution_time_seconds:
                 break
+
+    if best_result is None:
+        detail = (
+            failures[0]
+            if failures
+            else "no parameter combinations were generated"
+        )
+        raise ValueError(
+            "optimization evaluated no parameter set successfully: " + detail
+        )
 
     # Overfitting checks (39.4)
     if best_result:
@@ -227,29 +247,34 @@ def run_optimization(
 
     execution_time = time.time() - start_time
 
-    # Create experiment record (Chapter 52)
-    experiment_manager = ExperimentManager()
-    exp_record = experiment_manager.create(
-        hypothesis=f"Optimize {objective.name} for strategy",
-        strategy_name="optimized_strategy",
-        strategy_version="optimized",
-        dataset_version="current",
-        parameters={k: str(v) for k, v in best_result.parameters.items()} if best_result else {},
-        execution_assumptions={},
-        software_version="1.0.0",
-        random_seed=config.random_seed,
-        notes=f"Optimization for {objective.name}",
-    )
-    experiment_manager.update_status(exp_record.experiment_id, ExperimentStatus.COMPLETED)
+    # Experiment tracking is opt-in (chapter 52): a sweep is research,
+    # and an untracked sweep must be visible as untracked.
+    experiment_id = ""
+    if experiment_manager is not None:
+        exp_record = experiment_manager.create(
+            hypothesis=f"Optimize {objective.name} for strategy",
+            strategy_name="optimized_strategy",
+            strategy_version="optimized",
+            dataset_version="current",
+            parameters={
+                k: str(v) for k, v in best_result.parameters.items()
+            },
+            execution_assumptions={},
+            software_version="1.0.0",
+            random_seed=config.random_seed,
+            notes=f"Optimization for {objective.name}",
+            status=ExperimentStatus.COMPLETED,
+        )
+        experiment_id = exp_record.experiment_id
 
     return OptimizationReport(
         best_result=best_result,
         all_results=all_results,
-        best_parameters=best_result.parameters if best_result else {},
+        best_parameters=best_result.parameters,
         objective_name=objective.name,
         n_combinations_tested=len(all_results),
         execution_time_seconds=execution_time,
-        experiment_id=exp_record.experiment_id,
+        experiment_id=experiment_id,
         timestamp=datetime.now(timezone.utc),
         overfitting_warnings=overfitting_warnings,
     )

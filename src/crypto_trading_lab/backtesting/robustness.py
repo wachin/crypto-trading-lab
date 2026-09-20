@@ -415,9 +415,14 @@ class RobustnessReport:
         if self.degradation:
             dg = self.degradation
             status = "COLLAPSED" if dg.collapsed else "stable"
+            degradation_text = (
+                f"{dg.degradation:.1%}"
+                if dg.degradation is not None
+                else "N/A"
+            )
             parts.append(
                 f"Out-of-sample: {dg.out_of_sample_return:.1%} ({status}, "
-                f"degradation {dg.degradation:.1% if dg.degradation else 'N/A'})"
+                f"degradation {degradation_text})"
             )
         if self.perturbation and any(p.collapsed for p in self.perturbation):
             parts.append("WARNING: Some parameter variations caused collapse.")

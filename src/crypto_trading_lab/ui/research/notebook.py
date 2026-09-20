@@ -1,205 +1,296 @@
-"""Research notebook UI (Chapter 54).
+"""Research notebook (chapters 52-54, analysis §6).
 
-Provides a simple notebook interface for documenting research experiments.
+The trader's scientific notebook. Every entry *is* an experiment
+record: hypothesis, dataset identity and checksum, parameters,
+execution assumptions, metrics, conclusion and research notes. Nothing
+here is decorative — the widget reads and writes the same
+``ExperimentManager`` the wizard and the CLI use.
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from pathlib import Path
 
 from PyQt6.QtWidgets import (
-    QApplication,
-    QComboBox,
+    QAbstractItemView,
     QDialog,
-    QDialogButtonBox,
-    QFormLayout,
-    QGroupBox,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QMessageBox,
     QPushButton,
-    QTextEdit,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
 from PyQt6.QtCore import Qt
 
+from crypto_trading_lab.machine_learning.experiment_manager import (
+    ExperimentManager,
+    ExperimentRecord,
+    ExperimentStatus,
+)
 
-class NotebookEntry:
-    """A single research notebook entry."""
+__all__ = ["NotebookDialog", "render_experiment", "render_comparison"]
 
-    def __init__(
-        self,
-        experiment_id: str,
-        hypothesis: str,
-        notes: str,
-        created_at: datetime = None,
+#: Fields shown, in order, when a record is opened.
+_RECORD_FIELDS = (
+    "experiment_id",
+    "hypothesis",
+    "strategy_name",
+    "strategy_version",
+    "dataset_id",
+    "dataset_version",
+    "dataset_checksum",
+    "status",
+    "conclusion",
+    "notes",
+)
+
+
+def render_experiment(record: ExperimentRecord) -> str:
+    """Full notebook entry for one experiment (chapter 52)."""
+    lines = ["== Experiment =="]
+    for field_name in _RECORD_FIELDS:
+        value = getattr(record, field_name)
+        if not value:
+            continue
+        if field_name == "status":
+            value = record.status.value
+        lines.append(f"{field_name}: {value}")
+    lines.append(f"timestamp: {record.timestamp.isoformat()}")
+    if record.random_seed is not None:
+        lines.append(f"random_seed: {record.random_seed}")
+    if record.tags:
+        lines.append("tags: " + ", ".join(record.tags))
+
+    for title, mapping in (
+        ("Parameters", record.parameters),
+        ("Execution assumptions", record.execution_assumptions),
+        ("Results (from the backtest)", record.metrics),
     ):
-        self.experiment_id = experiment_id
-        self.hypothesis = hypothesis
-        self.notes = notes
-        self.created_at = created_at or datetime.now(timezone.utc)
+        if mapping:
+            lines.append("")
+            lines.append(f"== {title} ==")
+            lines.extend(f"  {k}: {v}" for k, v in mapping.items())
+    return "\n".join(lines)
 
 
-class NotebookEditor(QDialog):
-    """Editor for creating research notebook entries."""
-
-    def __init__(
-        self,
-        experiment_id: str = None,
-        parent: QWidget = None,
-    ):
-        super().__init__(parent)
-        self.setWindowTitle("Research Notebook Entry")
-        self.resize(600, 500)
-        self.experiment_id = experiment_id
-
-        self._setup_ui()
-
-    def _setup_ui(self):
-        layout = QVBoxLayout()
-
-        # Experiment ID
-        id_group = QGroupBox("Experiment ID")
-        id_layout = QHBoxLayout()
-        self.id_field = QLineEdit()
-        if self.experiment_id:
-            self.id_field.setText(self.experiment_id)
-            self.id_field.setEnabled(False)
-        id_layout.addWidget(self.id_field)
-        id_group.setLayout(id_layout)
-        layout.addWidget(id_group)
-
-        # Hypothesis
-        hyp_group = QGroupBox("Hypothesis")
-        hyp_layout = QVBoxLayout()
-        self.hyp_field = QTextEdit()
-        self.hyp_field.setMaximumHeight(80)
-        self.hyp_field.setPlaceholderText("Enter your research hypothesis...")
-        hyp_layout.addWidget(self.hyp_field)
-        hyp_group.setLayout(hyp_layout)
-        layout.addWidget(hyp_group)
-
-        # Notes
-        notes_group = QGroupBox("Notes")
-        notes_layout = QVBoxLayout()
-        self.notes_field = QTextEdit()
-        self.notes_field.setPlaceholderText("Document your research process, observations, and conclusions...")
-        notes_layout.addWidget(self.notes_field)
-        notes_group.setLayout(notes_layout)
-        layout.addWidget(notes_group)
-
-        # Buttons
-        buttons = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Save |
-            QDialogButtonBox.StandardButton.Cancel
+def render_comparison(comparison: dict) -> str:
+    """Side-by-side experiment comparison (chapter 52.3)."""
+    rows = comparison.get("rows", [])
+    if not rows:
+        return "No experiments selected."
+    lines = ["== Experiment comparison =="]
+    for row in rows:
+        lines.append("")
+        lines.append(f"- {row['experiment_id'][:8]}: {row['hypothesis']}")
+        lines.append(
+            f"    strategy: {row['strategy_name']} "
+            f"(v{row['strategy_version']}), status: {row['status']}"
         )
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        layout.addWidget(buttons)
+        lines.append(f"    dataset: {row['dataset_id']}")
+        for key, value in row["metrics"].items():
+            if value:
+                lines.append(f"    {key}: {value}")
+        if row["conclusion"]:
+            lines.append(f"    conclusion: {row['conclusion']}")
+    return "\n".join(lines)
 
-        self.setLayout(layout)
 
-    def get_entry(self) -> Optional[NotebookEntry]:
-        """Get the created entry."""
-        if not self.hyp_field.toPlainText().strip():
+class NotebookDialog(QDialog):
+    """Browse, create and annotate experiment records."""
+
+    def __init__(self, manager: ExperimentManager, parent: QWidget | None = None):
+        super().__init__(parent)
+        self._manager = manager
+        self.setWindowTitle(self.tr("Research Notebook"))
+        self.resize(920, 640)
+
+        layout = QVBoxLayout(self)
+
+        search_row = QHBoxLayout()
+        search_row.addWidget(QLabel(self.tr("Search:")))
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText(
+            self.tr("hypothesis, strategy, dataset, tag…")
+        )
+        self.search_edit.textChanged.connect(self.refresh)
+        search_row.addWidget(self.search_edit)
+        layout.addLayout(search_row)
+
+        body = QHBoxLayout()
+        self.list_widget = QListWidget()
+        self.list_widget.setSelectionMode(
+            QAbstractItemView.SelectionMode.ExtendedSelection
+        )
+        self.list_widget.currentItemChanged.connect(self._on_selection)
+        body.addWidget(self.list_widget, 2)
+
+        self.detail = QTextBrowser()
+        body.addWidget(self.detail, 3)
+        layout.addLayout(body)
+
+        buttons = QHBoxLayout()
+        self.new_button = QPushButton(self.tr("New entry"))
+        self.new_button.clicked.connect(self.create_entry_interactive)
+        self.note_button = QPushButton(self.tr("Add note"))
+        self.note_button.clicked.connect(self.add_note_interactive)
+        self.compare_button = QPushButton(self.tr("Compare selected"))
+        self.compare_button.clicked.connect(self.compare_selected)
+        self.export_button = QPushButton(self.tr("Export…"))
+        self.export_button.clicked.connect(self.export_interactive)
+        for button in (
+            self.new_button,
+            self.note_button,
+            self.compare_button,
+            self.export_button,
+        ):
+            buttons.addWidget(button)
+        layout.addLayout(buttons)
+
+        self.hint = QLabel(
+            self.tr(
+                "Negative experiments are kept on purpose: knowing what "
+                "does NOT work is real research."
+            )
+        )
+        self.hint.setWordWrap(True)
+        layout.addWidget(self.hint)
+
+        self.refresh()
+
+    # -- data ------------------------------------------------------------
+
+    def set_manager(self, manager: ExperimentManager) -> None:
+        """Point the dialog at another manager and reload the list."""
+        self._manager = manager
+        self.refresh()
+
+    def refresh(self) -> None:
+        """Rebuild the list from the manager (search-aware)."""
+        selected = self.selected_id()
+        self.list_widget.clear()
+        records = self._manager.search(self.search_edit.text())
+        for record in records:
+            item = QListWidgetItem(
+                f"[{record.status.value}] {record.experiment_id[:8]} — "
+                f"{record.hypothesis[:60]}"
+            )
+            item.setData(Qt.ItemDataRole.UserRole, record.experiment_id)
+            self.list_widget.addItem(item)
+        if selected:
+            self.select_experiment(selected)
+        elif self.list_widget.count():
+            self.list_widget.setCurrentRow(0)
+
+    def selected_id(self) -> str | None:
+        item = self.list_widget.currentItem()
+        if item is None:
             return None
+        return item.data(Qt.ItemDataRole.UserRole)
 
-        return NotebookEntry(
-            experiment_id=self.id_field.text() or f"exp_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            hypothesis=self.hyp_field.toPlainText(),
-            notes=self.notes_field.toPlainText(),
+    def select_experiment(self, experiment_id: str) -> None:
+        for row in range(self.list_widget.count()):
+            item = self.list_widget.item(row)
+            if item.data(Qt.ItemDataRole.UserRole) == experiment_id:
+                self.list_widget.setCurrentRow(row)
+                return
+
+    def detail_text(self, experiment_id: str) -> str:
+        record = self._manager.get(experiment_id)
+        if record is None:
+            return self.tr("Experiment not found.")
+        return render_experiment(record)
+
+    # -- actions ---------------------------------------------------------
+
+    def select_experiments(self, experiment_ids: list[str]) -> None:
+        """Select the given ids by their stable item data (tests/UI)."""
+        wanted = set(experiment_ids)
+        first = True
+        for row in range(self.list_widget.count()):
+            item = self.list_widget.item(row)
+            if item.data(Qt.ItemDataRole.UserRole) in wanted:
+                item.setSelected(True)
+                if first:
+                    self.list_widget.setCurrentRow(row)
+                    first = False
+
+    def compare_selected(self) -> str:
+        ids = [
+            item.data(Qt.ItemDataRole.UserRole)
+            for item in self.list_widget.selectedItems()
+        ]
+        text = render_comparison(self._manager.compare(ids))
+        self.detail.setPlainText(text)
+        return text
+
+    def create_entry(self, hypothesis: str, notes: str = "") -> ExperimentRecord:
+        """Create a draft experiment from the notebook (chapter 52)."""
+        record = self._manager.create(
+            hypothesis=hypothesis,
+            strategy_name="draft",
+            strategy_version="0.0.0",
+            dataset_version="unassigned",
+            parameters={},
+            notes=notes,
+            status=ExperimentStatus.DRAFT,
         )
+        self.refresh()
+        self.select_experiment(record.experiment_id)
+        return record
 
+    def create_entry_interactive(self) -> ExperimentRecord | None:
+        hypothesis, accepted = QInputDialog.getText(
+            self, self.tr("New entry"), self.tr("Hypothesis:")
+        )
+        if not accepted or not hypothesis.strip():
+            return None
+        return self.create_entry(hypothesis.strip())
 
-class NotebookViewer(QDialog):
-    """Viewer for research notebook entries."""
+    def add_note(self, note: str) -> ExperimentRecord | None:
+        experiment_id = self.selected_id()
+        if experiment_id is None:
+            return None
+        record = self._manager.add_note(experiment_id, note)
+        if record is not None:
+            self.detail.setPlainText(render_experiment(record))
+        return record
 
-    def __init__(self, entries: List[NotebookEntry], parent: QWidget = None):
-        super().__init__(parent)
-        self.setWindowTitle("Research Notebook")
-        self.resize(800, 600)
-        self.entries = entries
+    def add_note_interactive(self) -> None:
+        if self.selected_id() is None:
+            QMessageBox.information(
+                self, self.tr("Notebook"), self.tr("Select an experiment first.")
+            )
+            return
+        note, accepted = QInputDialog.getMultiLineText(
+            self, self.tr("Add note"), self.tr("Note:")
+        )
+        if accepted and note.strip():
+            self.add_note(note.strip())
 
-        self._setup_ui()
+    def export_to(self, path: Path | str) -> Path:
+        target = Path(path)
+        target.write_text(self._manager.export(), encoding="utf-8")
+        return target
 
-    def _setup_ui(self):
-        layout = QVBoxLayout()
+    def export_interactive(self) -> None:
+        from PyQt6.QtWidgets import QFileDialog
 
-        # Header
-        header = QLabel(f"Research Notebook ({len(self.entries)} entries)")
-        header.setStyleSheet("font-size: 14px; font-weight: bold;")
-        layout.addWidget(header)
+        path, _ = QFileDialog.getSaveFileName(
+            self, self.tr("Export experiments"), "experiments.json",
+            self.tr("JSON (*.json)"),
+        )
+        if path:
+            self.export_to(path)
 
-        # Entries
-        scroll = QWidget()
-        scroll_layout = QVBoxLayout()
-        scroll_layout.setContentsMargins(0, 0, 0, 0)
-
-        for entry in self.entries:
-            group = QGroupBox()
-            group_layout = QVBoxLayout()
-            group_layout.setContentsMargins(12, 12, 12, 12)
-
-            # Header row
-            row = QHBoxLayout()
-            exp_label = QLabel(f"ID: {entry.experiment_id}")
-            date_label = QLabel(entry.created_at.strftime("%Y-%m-%d %H:%M"))
-            row.addWidget(exp_label)
-            row.addStretch()
-            row.addWidget(date_label)
-            group_layout.addLayout(row)
-
-            # Hypothesis
-            hyp_label = QLabel("Hypothesis:")
-            hyp_label.setStyleSheet("font-weight: bold;")
-            group_layout.addWidget(hyp_label)
-            hyp_text = QLabel(entry.hypothesis)
-            hyp_text.setWordWrap(True)
-            group_layout.addWidget(hyp_text)
-
-            # Notes
-            notes_label = QLabel("Notes:")
-            notes_label.setStyleSheet("font-weight: bold;")
-            group_layout.addWidget(notes_label)
-            notes_text = QLabel(entry.notes)
-            notes_text.setWordWrap(True)
-            group_layout.addWidget(notes_text)
-
-            group_layout.addStretch()
-            group.setLayout(group_layout)
-            scroll_layout.addWidget(group)
-
-        scroll.setLayout(scroll_layout)
-        layout.addWidget(scroll)
-
-        self.setLayout(layout)
-
-
-def create_notebook_entry(experiment_id: str = None) -> Optional[NotebookEntry]:
-    """Open editor and create a new entry."""
-    import sys
-    app = QApplication.instance() or QApplication(sys.argv)
-    dialog = NotebookEditor(experiment_id)
-    if dialog.exec():
-        return dialog.get_entry()
-    return None
-
-
-def view_notebook(entries: List[NotebookEntry]) -> None:
-    """View research notebook entries."""
-    import sys
-    app = QApplication.instance() or QApplication(sys.argv)
-    dialog = NotebookViewer(entries)
-    dialog.exec()
-
-
-__all__ = [
-    "NotebookEntry",
-    "NotebookEditor",
-    "NotebookViewer",
-    "create_notebook_entry",
-    "view_notebook",
-]
+    def _on_selection(self, current: QListWidgetItem | None, _prev) -> None:
+        if current is None:
+            return
+        self.detail.setPlainText(
+            self.detail_text(current.data(Qt.ItemDataRole.UserRole))
+        )

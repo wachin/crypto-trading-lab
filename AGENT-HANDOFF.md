@@ -9,41 +9,58 @@ A new AI Agent must read this file **before** doing anything else, then
 
 ---
 
-## 1. Project state (last updated 2026-09-17)
+## 1. Project state (last updated 2026-09-19)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
-  (branch `main`, pushed and in sync)
-- **State verified at commit:** `f34a0f7 docs: reconcile ROADMAP chapters 7,
-  26, 27 and 30 against the code` (an ancestor of the commit that carries
-  this file)
-- **Tests:** 442 passed, 2 skipped —
+  (branch `main`)
+- **State verified at commit:** the commit that carries this file.
+- **Tests:** 522 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 62 Python files under `src/crypto_trading_lab/`
-- **Tests:** 60 Python files under `tests/`
-- **Documentation:** `docs/en/beginners/` (8 files) and
-  `docs/en/developers/` (`reference-projects.md`, `afml-techniques.md`,
-  `adr/0001-exchange-adapter-spike.md`, `debian-dependencies.md`,
-  `working-method.md`, `configuration-guide.md`, `research-ethics.md`,
-  `capital-protection.md`, `live-monitoring.md`, `live-vs-backtest-drift.md`,
-  `architecture-proposal.md`, `threat-model.md`)
-- **Specification:** `ROADMAP.md` — 72 chapters; 70+ chapters complete
+- **Source:** 99 Python files under `src/crypto_trading_lab/`
+- **Tests:** 53 test modules under `tests/`
+- **Documentation:** `docs/en/beginners/` and
+  `docs/en/developers/` (see §1.1)
+- **Specification:** `ROADMAP.md` — 72 chapters, plus Part XVI
+  (chapters 73–79) added for the research-workflow improvements
 - **Git submodules:** 8 reference projects under `external/`; a fresh clone
   needs `git submodule update --init --recursive`
-- **Current phase:** Phase 3 (backtesting) complete; Phase 4+ in progress.
-  Most research infrastructure (Chapters 52-55, 62-67) is complete.
+- **Current phase:** the scientific engine is mature; work is now focused
+  on turning it into a usable research workflow (Fase A–C of
+  `8vo/08-mejoras-para-crypto-trading-lab.md`). Real trading remains
+  disabled.
 
-### Honest status of the earlier phases
+### What changed on 2026-09-19 (direction correction + Fase A/B)
 
-Phase 0 (research) and Phase 2 (data & charts) are functionally done. Phase 1
-(foundation) is done except for the items below — do not repeat "all phases
-completed"; Chapter 69 and Chapter 71 track the real state.
+The previous session had drifted: commits announced features that were
+only unused imports or canned text. Those were fixed and backed by real,
+tested code:
 
-Still missing from the foundation (required by Chapter 19.1 / Chapter 71 and
-not yet written):
-
-- the initial Debian package (Chapter 16)
-
-These are ordinary pending work items, not blockers for Chapter 40.
+- `MainWindow._open_notebook` used to crash (`ExperimentManager` has no
+  `list_experiments`); the manager now really has it, with persistence,
+  statuses, tags, search and comparison.
+- The research assistant no longer ignores the question and returns
+  canned text: it is an honest, offline methodology assistant with an
+  injectable model backend and persisted conversations.
+- `run_optimization` passed arguments in the wrong order and swallowed
+  the error, reporting “0 combinations tested”; fixed and tested.
+- `RobustnessReport.summary()` raised `ValueError` (invalid f-string);
+  fixed with a regression test.
+- `strategy_builder.py` imported a non-existent `IndicatorFactory`, so
+  the module could not be imported; fixed.
+- New: historical-data download + validation + versioned datasets
+  (`market_data/historical.py`, `persistence/datasets.py`), a research
+  workflow service (`research.py`), the Research Wizard, validity
+  dashboard, Research Notebook UI and strategy-builder UI, all i18n.
+- Round 1 also found and fixed: the Learning Center crashed on lesson
+  click (`Qt.AlignHCenter`) and on the quiz (`QHBoxBoxLayout`, always
+  returned False, progress never loaded); and the strategy-builder
+  module was unimportable while its launcher opened the dialog twice.
+- New in round 1: a 48-lesson curriculum in three levels
+  (`education/curriculum.py`), a rewritten Learning Center with a working
+  quiz and persisted progress, executable rule strategies
+  (`rule_strategy.py`) wired into the Backtesting Lab, and paper trading
+  with a mandatory risk gate and a trading journal (`paper_session.py`,
+  `ui/paper/paper_trading.py`).
 
 ### Implemented modules (all with passing tests)
 
@@ -82,6 +99,15 @@ These are ordinary pending work items, not blockers for Chapter 40.
 | Chronological data splitting (train/validation/test) | `src/crypto_trading_lab/market_data/splitting.py` | 38 |
 | Walk-forward analysis (rolling windows, per-window selection) | `src/crypto_trading_lab/backtesting/walk_forward.py` | 45 |
 | AFML technique specifications | `docs/en/developers/afml-techniques.md` | 49, 47.4, 48 |
+| Historical data download + validation + dataset identity | `src/crypto_trading_lab/market_data/historical.py` | 26.2, 28, 29, 53 |
+| Dataset repository (versioned, checksummed) | `src/crypto_trading_lab/persistence/datasets.py` | 29, 53 |
+| Download-and-store service | `src/crypto_trading_lab/market_data/dataset_service.py` | 28, 29 |
+| End-to-end research workflow + validity checklist | `src/crypto_trading_lab/research.py` | 37-45, 53, 66 |
+| Historical-data screen | `src/crypto_trading_lab/ui/data/historical_data.py` | 26.2, 28, 29 |
+| Research Wizard | `src/crypto_trading_lab/ui/research/wizard.py` | 37-45, 66 |
+| Research-validity dashboard | `src/crypto_trading_lab/ui/research/validity.py` | 43, 72 |
+| Research Notebook / experiment manager UI | `src/crypto_trading_lab/ui/research/notebook.py` | 52-54 |
+| Offline research assistant (injectable model backend) | `src/crypto_trading_lab/ui/research/assistant.py` | 55 |
 
 ### Domain-model naming and the chapter 7/26/30 reconciliation
 
@@ -258,7 +284,27 @@ Per `ROADMAP.md` and the last iteration report:
 29. ~~Live vs backtest drift (Chapter 63)~~ — documented
 30. ~~ADRs 0002-0007~~ — documented
 
-**Next tasks** (per ROADMAP order):
+**Done on 2026-09-19 (round 1)**: Learning Center levels 1–3 with a
+working quiz and persisted progress (ch. 80); executable rule strategies
+from the builder into the engine (ch. 77); paper trading over a replayed
+dataset with a mandatory risk gate and a trading journal (ch. 79); the
+Spanish `.ts`/`.qm` regenerated.
+
+**Next tasks** (2026-09-19 update; see `ROADMAP.md` Part XVI for the
+canonical requirements):
+
+1. Binance WebSocket / reconnection / rate limiting / stale-data
+   detection — chapters 26.2, 27 (plan:
+   `docs/en/developers/live-trading-roadmap.md`).
+2. Parameter sweep launched from the Strategy Builder itself
+   (ch. 77), and realistic execution from chapter 56 in the paper
+   pipeline (ch. 79).
+3. Lesson-to-screen links, quizzes UI polish, screenshots (ch. 80).
+4. Translate the 191 new `.ts` strings into Spanish (they currently
+   fall back to English).
+5. Spot testnet (ch. 68) — and only then consider real money.
+
+**Older tasks** (per ROADMAP order):
 
 - Chapter 68 (Real trading) — requires explicit activation flow, API credential handling, strategy restrictions, testing restrictions, monitoring, failure handling, beginner protection
 - Chapter 69 (Development phases) — check remaining items like Debian package

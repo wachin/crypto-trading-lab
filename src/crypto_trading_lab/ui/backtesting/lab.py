@@ -50,10 +50,16 @@ from crypto_trading_lab.backtesting.metrics import (
     compute_performance,
 )
 from crypto_trading_lab.domain.models import Candle
+from crypto_trading_lab.rule_strategy import (
+    RuleError,
+    RuleStrategy,
+    RuleStrategySpec,
+)
 
 STRATEGY_SMA = "sma_crossover"
 STRATEGY_BUY_HOLD = "buy_and_hold"
 STRATEGY_NULL = "null"
+STRATEGY_RULE = "custom_rule"
 
 
 class BacktestingLabWidget(QWidget):
@@ -70,6 +76,7 @@ class BacktestingLabWidget(QWidget):
         self._candles = list(candles)
         self._symbol = symbol
         self._interval = interval
+        self._rule_spec: RuleStrategySpec | None = None
 
         layout = QVBoxLayout(self)
         form = QFormLayout()
@@ -122,6 +129,21 @@ class BacktestingLabWidget(QWidget):
         layout.addWidget(self.save_button)
         self._last_export: tuple | None = None  # (result, report, warning)
 
+        tools = QHBoxLayout()
+        self.complexity_button = QPushButton(self.tr("Analyze complexity"))
+        self.complexity_button.clicked.connect(self.analyze_complexity)
+        self.optimize_button = QPushButton(self.tr("Parameter sweep…"))
+        self.optimize_button.clicked.connect(self.optimize_parameters)
+        self.load_rule_button = QPushButton(self.tr("Load rule…"))
+        self.load_rule_button.clicked.connect(self._load_rule_dialog)
+        tools.addWidget(self.complexity_button)
+        tools.addWidget(self.optimize_button)
+        tools.addWidget(self.load_rule_button)
+        layout.addLayout(tools)
+        #: Number of configurations the user has evaluated for this idea,
+        #: used for the multiple-testing warning (chapter 43.1).
+        self.trials = 0
+
         self.results_view = QTextBrowser()
         self.results_view.setPlainText(
             self.tr(
@@ -165,6 +187,15 @@ class BacktestingLabWidget(QWidget):
             strategy = MACrossoverStrategy(fast=fast, slow=slow)
         elif kind == STRATEGY_BUY_HOLD:
             strategy = BuyAndHoldStrategy()
+        elif kind == STRATEGY_RULE:
+            if self._rule_spec is None:
+                message = self.tr(
+                    "No custom rule loaded. Use “Load rule…” to open one "
+                    "exported by the Strategy Builder."
+                )
+                self.results_view.setPlainText(message)
+                return message
+            strategy = RuleStrategy(self._rule_spec)
         else:
             strategy = NullStrategy()
 
@@ -233,6 +264,186 @@ class BacktestingLabWidget(QWidget):
                 handle.write(render(data))
             written.append(path)
         return written
+
+    # -- research tools: complexity and parameter sweep (ch. 35, 39) -----
+
+    def set_rule_spec(self, spec: RuleStrategySpec) -> str:
+        """Make a builder rule available as a backtestable strategy."""
+        self._rule_spec = spec
+        label = self.tr("Custom rule: {name}").format(name=spec.name)
+        for index in range(self.strategy_combo.count()):
+            if self.strategy_combo.itemData(index) == STRATEGY_RULE:
+                self.strategy_combo.setItemText(index, label)
+                self.strategy_combo.setCurrentIndex(index)
+                return label
+        self.strategy_combo.addItem(label, STRATEGY_RULE)
+        self.strategy_combo.setCurrentIndex(self.strategy_combo.count() - 1)
+        return label
+
+    def load_rule(self, path: str) -> RuleStrategySpec | None:
+        """Load a rule JSON exported by the Strategy Builder."""
+        import json
+
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            spec = RuleStrategySpec.from_dict(data)
+        except (OSError, ValueError, RuleError) as error:
+            self.results_view.setPlainText(
+                self.tr("Could not load the rule: {error}").format(error=error)
+            )
+            return None
+        self.set_rule_spec(spec)
+        self.results_view.setPlainText(
+            self.tr("Loaded rule “{name}”: {description}").format(
+                name=spec.name, description=spec.describe()
+            )
+        )
+        return spec
+
+    def _load_rule_dialog(self) -> None:
+        from PyQt6.QtWidgets import QFileDialog
+
+        path, _ = QFileDialog.getOpenFileName(
+            self, self.tr("Load rule"), "", self.tr("JSON (*.json)")
+        )
+        if path:
+            self.load_rule(path)
+
+    def _strategy_class(self):
+        """Class of the currently selected strategy (for complexity)."""
+        kind = self.strategy_combo.currentData()
+        if kind == STRATEGY_SMA:
+            return MACrossoverStrategy
+        if kind == STRATEGY_BUY_HOLD:
+            return BuyAndHoldStrategy
+        if kind == STRATEGY_RULE:
+            return RuleStrategy
+        return NullStrategy
+
+    def analyze_complexity(self) -> str:
+        """Chapter 35 report for the selected strategy, shown to the user."""
+        try:
+            report = analyze_strategy_complexity(self._strategy_class())
+        except Exception as error:  # source may be unavailable when frozen
+            message = self.tr(
+                "Complexity analysis is unavailable here: {error}"
+            ).format(error=error)
+            self.results_view.setPlainText(message)
+            return message
+        lines = [
+            self.tr("== Strategy complexity (chapter 35) =="),
+            self.tr("Level: {level}").format(level=report.level.value),
+            self.tr("Cyclomatic complexity: {x}").format(
+                x=report.metrics.cyclomatic_complexity
+            ),
+            self.tr("Lines of code: {x}").format(x=report.metrics.lines_of_code),
+            self.tr("Parameters: {x}").format(x=report.metrics.num_parameters),
+            self.tr("Passed the configured limits: {x}").format(
+                x=report.passed
+            ),
+        ]
+        lines.extend(f"  - {v}" for v in report.violations)
+        lines.extend(f"  - {w}" for w in report.warnings)
+        lines.append("")
+        lines.append(self.tr(COMPLEXITY_CONTROL_WARNING))
+        lines.append(
+            self.tr(
+                "Remember: when two strategies show comparable evidence, "
+                "the simpler one is preferred."
+            )
+        )
+        text = "\n".join(lines)
+        self.results_view.setPlainText(text)
+        return text
+
+    def optimize_parameters(self) -> str:
+        """Real parameter sweep (chapter 39) with honest accounting.
+
+        The sweep is *exploration*: choosing the best of many
+        configurations is selection bias, so the number of trials is
+        reported and carried into the multiple-testing warning.
+        """
+        if self.strategy_combo.currentData() != STRATEGY_SMA:
+            message = self.tr(
+                "The parameter sweep currently supports the SMA "
+                "crossover strategy only."
+            )
+            self.results_view.setPlainText(message)
+            return message
+        fast, slow = self.fast_spin.value(), self.slow_spin.value()
+        if fast >= slow:
+            message = self.tr(
+                "The fast SMA period must be smaller than the slow one "
+                "before sweeping."
+            )
+            self.results_view.setPlainText(message)
+            return message
+
+        ranges = [
+            ParameterRange(
+                "fast", float(max(2, fast - 5)), float(min(slow - 1, fast + 5)), 5
+            ),
+            ParameterRange(
+                "slow", float(fast + 1), float(slow + 10), 5
+            ),
+        ]
+        config = OptimizationConfig(parameter_ranges=ranges, max_combinations=64)
+        try:
+            capital = Decimal(self.capital_edit.text().strip())
+            report = run_optimization(
+                self._candles,
+                lambda fast, slow: MACrossoverStrategy(
+                    fast=int(fast), slow=int(slow)
+                ),
+                config,
+                OBJECTIVE_SHARPE_RATIO,
+                BacktestConfig(initial_capital=capital),
+            )
+        except ValueError as error:
+            message = self.tr("The sweep found nothing to evaluate: {error}").format(
+                error=error
+            )
+            self.results_view.setPlainText(message)
+            return message
+
+        self.trials += report.n_combinations_tested
+        lines = [
+            self.tr("== Parameter sweep (chapter 39) =="),
+            self.tr("Configurations tested: {x}").format(
+                x=report.n_combinations_tested
+            ),
+            self.tr("Best parameters: {x}").format(x=report.best_parameters),
+            self.tr("Objective ({name}) value: {x}").format(
+                name=report.objective_name,
+                x=report.best_result.objective_value,
+            ),
+            self.tr("Best backtest return: {x}").format(
+                x=report.best_result.backtest_return
+            ),
+            self.tr("Trades in the best configuration: {x}").format(
+                x=report.best_result.n_trades
+            ),
+        ]
+        lines.extend(f"  - {w}" for w in report.overfitting_warnings)
+        lines += [
+            "",
+            self.tr(
+                "This sweep is EXPLORATION, not validation: picking the "
+                "best of {n} configurations makes a good historical "
+                "result more likely to be luck. Total configurations "
+                "tried for this idea so far: {total}."
+            ).format(
+                n=report.n_combinations_tested, total=self.trials
+            ),
+            self.tr(
+                "Confirm the winner out-of-sample and with walk-forward "
+                "analysis before believing it."
+            ),
+        ]
+        text = "\n".join(lines)
+        self.results_view.setPlainText(text)
+        return text
 
     def _save_dialog(self) -> None:
         from PyQt6.QtWidgets import QFileDialog, QMessageBox

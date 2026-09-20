@@ -12,7 +12,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Dict, List, Literal, Optional, Union, Set
 
-from crypto_trading_lab.indicators.library import IndicatorFactory
+#: Indicator names the builder accepts (chapter 31 catalogue).
+KNOWN_INDICATORS = frozenset({"sma", "ema", "rsi", "bb", "atr", "roc"})
 
 
 @dataclass(frozen=True)
@@ -59,7 +60,15 @@ class StrategyBuilder:
     def __init__(self):
         self._blocks: Dict[str, StrategyBlock] = {}
         self._rules: Dict[str, StrategyRule] = {}
-        self._indicator_factory = IndicatorFactory()
+
+    @property
+    def blocks(self) -> Dict[str, StrategyBlock]:
+        """Read-only view of the blocks created so far."""
+        return dict(self._blocks)
+
+    def get_block(self, block_id: str) -> StrategyBlock | None:
+        """Fetch one block by id."""
+        return self._blocks.get(block_id)
 
     # --- Block building ---
 
@@ -70,6 +79,11 @@ class StrategyBuilder:
         label: str = None,
     ) -> StrategyBlock:
         """Add an indicator block."""
+        if indicator_type not in KNOWN_INDICATORS:
+            raise ValueError(
+                f"unknown indicator {indicator_type!r}; "
+                f"known: {', '.join(sorted(KNOWN_INDICATORS))}"
+            )
         block_id = f"ind_{len(self._blocks)}"
         block = StrategyBlock(
             block_id=block_id,

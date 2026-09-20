@@ -10,7 +10,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Tests: 255 passed, 2 skipped](https://img.shields.io/badge/tests-255%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Tests: 491 passed, 2 skipped](https://img.shields.io/badge/tests-522%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
 [![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
 [![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
 [![Real trading: DISABLED](https://img.shields.io/badge/real%20trading-DISABLED-critical)](#safety-by-construction)
@@ -151,20 +151,41 @@ validity flags and assumptions (ROADMAP chapter 40).
 
 ## Current state of the build
 
-✅ Implemented and tested (255 passing):
+✅ Implemented and tested (522 passing):
 
 - Domain models, exchange adapters (Mock + CCXT read-only), credential
   store, logging with secret redaction, SQLite persistence;
 - CSV import with full validation and a pre-import summary;
+- **Historical data acquisition**: download BTC/USDT (and any Binance
+  Spot pair) for 1m-1d over a date range with the standard library,
+  validate it (gaps, duplicates, invalid rows) and store a versioned,
+  checksummed dataset;
 - Indicators: SMA, EMA, RSI, Bollinger Bands, ATR, ROC;
 - Deterministic backtesting engine (fees, spread, slippage, next-open);
 - Performance-metric catalogue with statistical-validity warnings;
-- Backtesting Lab UI with beginner explanations + HTML/CSV/JSON
-  reports;
-- Candlestick charts, Learning Center, bilingual UI (EN/ES).
+- **Research workflow**: a guided wizard (hypothesis → costs →
+  backtest → benchmark → out-of-sample → robustness → walk-forward →
+  qualification) that records every run as an experiment;
+- **Research-validity dashboard**: an explicit checklist (dataset
+  quality, look-ahead protection, costs, sample size, multiple
+  testing, liquidity realism, …) before any result is trusted;
+- Parameter optimization with honest multiple-testing accounting;
+- Research Notebook + experiment manager (search, tags, comparison,
+  export) persisted to disk;
+- **Executable rule strategies**: visual builder blocks become a
+  declarative rule the engine can backtest — no `eval`, no `exec`;
+- **Paper trading** over a replayed real dataset with a mandatory risk
+  gate and a per-trade **trading journal**;
+- Strategy Complexity control and an offline Research Assistant;
+- Backtesting Lab UI with beginner explanations + HTML/CSV/JSON reports;
+- Candlestick charts, a **three-level Learning Center** (48 lessons with
+  graded quizzes and persisted progress), bilingual UI (EN/ES).
 
-🚧 Ahead: benchmarking views (ch. 42), robustness testing (43–46),
-paper trading (57), risk manager (58), qualification pipeline (66–68).
+🚧 Ahead: a continuous WebSocket feed and its resilience layer, spot
+testnet, realistic execution (partial fills, market impact), a parameter
+sweep from the builder, Spanish translation of the new strings, and —
+only after all of that — any real-money activation (chapter 68 stays
+disabled; see `docs/en/developers/live-trading-roadmap.md`).
 
 ---
 
@@ -179,7 +200,7 @@ paper trading (57), risk manager (58), qualification pipeline (66–68).
 | `docs/en/beginners/` | Plain-language guides (start here, glossary, indicators, metrics) |
 | `docs/en/developers/` | ADRs, AFML technique specifications, reference-project studies |
 | `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, reporting, i18n, UI |
-| `tests/` | 41 test modules — engine arithmetic is hand-verified |
+| `tests/` | 53 test modules — engine arithmetic is hand-verified |
 | `external/` | 8 reference projects as git submodules (freqtrade, hummingbot, jesse, ccxt, vectorbt, backtrader, ta-lib, AFML exercises) |
 | `assets/` | Logo and figures (SVG sources rendered to PNG) |
 
@@ -187,7 +208,7 @@ paper trading (57), risk manager (58), qualification pipeline (66–68).
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 255 passed, 2 skipped
+# → 522 passed, 2 skipped
 ```
 
 ## Running
