@@ -20,6 +20,7 @@ import logging
 import urllib.request
 import urllib.error
 import urllib.parse
+from collections import defaultdict
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -35,7 +36,7 @@ from crypto_trading_lab.domain.models import (
     Symbol,
     Ticker,
 )
-from crypto_trading_lab.exchanges.base.adapter import Capability, ExchangeAdapter
+from crypto_trading_lab.exchanges.base.adapter import Capability, ExchangeAdapter, TickerHandler, CandleHandler, TradeHandler, OrderBookHandler
 from crypto_trading_lab.exchanges.binance.config import BinanceEndpoints
 from crypto_trading_lab.exchanges.errors import (
     AdapterDataError,
@@ -93,6 +94,12 @@ class BinanceRestAdapter(ExchangeAdapter):
             FeedHealthStore(health_store_path) if health_store_path else None
         )
         
+        # Handler dictionaries for WebSocket subscriptions
+        self._ticker_handlers: defaultdict[Symbol, list[TickerHandler]] = defaultdict(list)
+        self._candle_handlers: defaultdict[tuple[Symbol, str], list[CandleHandler]] = defaultdict(list)
+        self._trade_handlers: defaultdict[Symbol, list[TradeHandler]] = defaultdict(list)
+        self._order_book_handlers: defaultdict[Symbol, list[OrderBookHandler]] = defaultdict(list)
+        
         # WebSocket client for subscriptions
         self._ws_client = BinanceWebSocketClient(
             endpoints,
@@ -101,6 +108,11 @@ class BinanceRestAdapter(ExchangeAdapter):
             circuit_breaker=self._circuit_breaker,
             rate_limiter=self._rate_limiter,
         )
+        # Register internal handlers with the WebSocket client
+        self._ws_client.add_ticker_handler(self._handle_ticker_message)
+        self._ws_client.add_trade_handler(self._handle_trade_message)
+        self._ws_client.add_candle_handler(self._handle_candle_message)
+        # Note: order book handlers not yet implemented in WebSocket client
         
         if allow_trading:
             self.capabilities |= Capability.TRADING | Capability.BALANCES | Capability.ORDERS
@@ -116,6 +128,72 @@ class BinanceRestAdapter(ExchangeAdapter):
         if self._ws_client.state != ConnectionState.DISCONNECTED:
             return self._ws_client.state
         return self._state
+        
+    # -- WebSocket internal message handlers ---------------------------------
+    
+    def _handle_ticker_message(self, payload: dict) -> None:
+        """Convert Binance ticker payload to Ticker and dispatch to user handlers."""
+        try:
+            symbol_str = payload.get('s', '')
+            if not symbol_str:
+                return
+            # Convert "BTCUSDT" -> "BTC/USDT"
+            symbol = Symbol(symbol_str[:-4] + '/' + symbol_str[-4:])
+            ticker = Ticker(
+                symbol=symbol,
+                timestamp=datetime.fromtimestamp(payload['E'] / 1000, tz=timezone.utc),
+                last=Decimal(payload['c']),
+                bid=Decimal(payload['b']) if payload.get('b') else None,
+                ask=Decimal(payload['a']) if payload.get('a') else None,
+                volume=Decimal(payload['v']) if payload.get('v') else None,
+            )
+            for handler in self._ticker_handlers.get(symbol, []):
+                handler(ticker)
+        except Exception as e:
+            logger.debug("Error handling ticker message: %s", e)
+    
+    def _handle_trade_message(self, payload: dict) -> None:
+        """Convert Binance trade payload to trade data and dispatch."""
+        try:
+            symbol_str = payload.get('s', '')
+            if not symbol_str:
+                return
+            symbol = Symbol(symbol_str[:-4] + '/' + symbol_str[-4:])
+            # We don't have a Trade domain model yet; pass raw payload
+            for handler in self._trade_handlers.get(symbol, []):
+                handler(payload)
+        except Exception as e:
+            logger.debug("Error handling trade message: %s", e)
+    
+    def _handle_candle_message(self, payload: dict) -> None:
+        """Convert Binance kline payload to Candle and dispatch."""
+        try:
+            data = payload.get('k', {})
+            symbol_str = data.get('s', '')
+            if not symbol_str:
+                return
+            symbol = Symbol(symbol_str[:-4] + '/' + symbol_str[-4:])
+            interval = data.get('i', '')
+            if not interval:
+                return
+            # Only process closed candles (x = true)
+            if not data.get('x', False):
+                return
+            candle = Candle(
+                symbol=symbol,
+                interval=interval,
+                open_time=datetime.fromtimestamp(data['t'] / 1000, tz=timezone.utc),
+                close_time=datetime.fromtimestamp(data['T'] / 1000, tz=timezone.utc),
+                open=Decimal(data['o']),
+                high=Decimal(data['h']),
+                low=Decimal(data['l']),
+                close=Decimal(data['c']),
+                volume=Decimal(data['v']),
+            )
+            for handler in self._candle_handlers.get((symbol, interval), []):
+                handler(candle)
+        except Exception as e:
+            logger.debug("Error handling candle message: %s", e)
         
     def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Make a rate-limited REST request."""
@@ -257,30 +335,37 @@ class BinanceRestAdapter(ExchangeAdapter):
         return candles
         
     # Subscriptions - integrated with WebSocket client
-    def subscribe_ticker(self, symbol: Symbol, handler) -> None:
+    def subscribe_ticker(self, symbol: Symbol, handler: TickerHandler) -> None:
         stream = f"{str(symbol).replace('/', '').lower()}@ticker"
         self._ws_client.subscribe(stream)
-        # Note: WebSocket client needs handler registration logic
+        self._ticker_handlers[symbol].append(handler)
         logger.debug("Subscribed to ticker stream: %s", stream)
         
-    def subscribe_candles(self, symbol: Symbol, interval: str, handler) -> None:
+    def subscribe_candles(self, symbol: Symbol, interval: str, handler: CandleHandler) -> None:
         stream = f"{str(symbol).replace('/', '').lower()}@kline_{interval}"
         self._ws_client.subscribe(stream)
+        self._candle_handlers[(symbol, interval)].append(handler)
         logger.debug("Subscribed to kline stream: %s", stream)
         
-    def subscribe_trades(self, symbol: Symbol, handler) -> None:
+    def subscribe_trades(self, symbol: Symbol, handler: TradeHandler) -> None:
         stream = f"{str(symbol).replace('/', '').lower()}@trade"
         self._ws_client.subscribe(stream)
+        self._trade_handlers[symbol].append(handler)
         logger.debug("Subscribed to trade stream: %s", stream)
         
-    def subscribe_order_book(self, symbol: Symbol, handler) -> None:
+    def subscribe_order_book(self, symbol: Symbol, handler: OrderBookHandler) -> None:
         stream = f"{str(symbol).replace('/', '').lower()}@depth"
         self._ws_client.subscribe(stream)
+        self._order_book_handlers[symbol].append(handler)
         logger.debug("Subscribed to order book stream: %s", stream)
         
     def unsubscribe_all(self) -> None:
         self._ws_client._subscriptions.clear()
         self._ws_client._pending_subscriptions.clear()
+        self._ticker_handlers.clear()
+        self._candle_handlers.clear()
+        self._trade_handlers.clear()
+        self._order_book_handlers.clear()
         
     # Account operations - read-only
     def fetch_balances(self) -> dict[str, Balance]:

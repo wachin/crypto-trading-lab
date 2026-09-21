@@ -139,6 +139,12 @@ class BinanceWebSocketClient:
         
     def add_trade_handler(self, handler: Callable[[dict], None]) -> None:
         self._handlers['trade'].append(handler)
+
+    def add_ticker_handler(self, handler: Callable[[dict], None]) -> None:
+        self._handlers['ticker'].append(handler)
+
+    def add_candle_handler(self, handler: Callable[[dict], None]) -> None:
+        self._handlers['kline'].append(handler)
         
     def subscribe(self, stream: str) -> None:
         """Add a stream subscription (e.g., 'btcusdt@kline_1m')."""
