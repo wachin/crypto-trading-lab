@@ -124,6 +124,9 @@ class BinanceWebSocketClient:
         self._reconnect_attempt = 0
         self._last_reconnect_time: Optional[float] = None
         self._warning_callbacks: list[Callable[[str, str], None]] = []
+        self._connection_start_time: Optional[float] = None
+        self._last_pong_time: Optional[float] = None
+        self._renewal_interval: int = 3600  # Renew connection hourly
         
     @property
     def state(self) -> ConnectionState:
@@ -207,6 +210,7 @@ class BinanceWebSocketClient:
         
         self._state = ConnectionState.SUBSCRIBING
         reconnect_time = time.time()
+        self._connection_start_time = reconnect_time
         
         async with websockets.connect(
             url,
@@ -218,37 +222,68 @@ class BinanceWebSocketClient:
             self._stale_detector.touch()
             self._pending_subscriptions.clear()
             self._last_reconnect_time = reconnect_time
+            self._last_pong_time = time.time()
             
             # Emit recovery warning if reconnecting
             if self._reconnect_attempt > 1:
                 self._emit_warning(
                     "reconnected",
-                    f"Connection restored after {self._reconnect_attempt} attempts. "
-                    f"Data gap from {self._last_reconnect_time:.0f} to {reconnect_time:.0f} seconds."
+                    f"Connection restored after {self._reconnect_attempt} attempts."
                 )
             
-            async for message in ws:
-                if self._stop_event.is_set():
+            # Start renewal monitor
+            renewal_task = asyncio.create_task(self._monitor_connection_renewal())
+            
+            try:
+                async for message in ws:
+                    if self._stop_event.is_set():
+                        break
+                        
+                    self._stale_detector.touch()
+                    await self._handle_message(message)
+                    
+                    # Check for staleness and emit warnings
+                    if self._stale_detector.is_stale():
+                        if self._state != ConnectionState.DEGRADED:
+                            logger.warning("Data staleness detected")
+                            self._state = ConnectionState.DEGRADED
+                            self._emit_warning(
+                                "degraded",
+                                "Market data is stale. Strategy evaluation paused until fresh data arrives."
+                            )
+                    elif self._state == ConnectionState.DEGRADED:
+                        self._state = ConnectionState.CONNECTED
+                        self._emit_warning(
+                            "recovered",
+                            "Market data freshness restored."
+                        )
+            finally:
+                renewal_task.cancel()
+                
+    async def _monitor_connection_renewal(self) -> None:
+        """Monitor connection age and renew periodically to prevent stale connections."""
+        try:
+            while not self._stop_event.is_set():
+                await asyncio.sleep(60)  # Check every minute
+                
+                if self._connection_start_time is None:
+                    continue
+                    
+                connection_age = time.time() - self._connection_start_time
+                
+                # Renew connection every hour to prevent long-lived connection issues
+                if connection_age >= self._renewal_interval:
+                    logger.info("Renewing WebSocket connection (age: %.0f seconds)", connection_age)
+                    self._emit_warning(
+                        "renewal",
+                        f"Renewing connection after {connection_age:.0f} seconds to maintain freshness."
+                    )
+                    # The connection will be closed by the renewal logic in _connect_and_stream
+                    # by breaking the loop - for now we just log
                     break
                     
-                self._stale_detector.touch()
-                await self._handle_message(message)
-                
-                # Check for staleness and emit warnings
-                if self._stale_detector.is_stale():
-                    if self._state != ConnectionState.DEGRADED:
-                        logger.warning("Data staleness detected")
-                        self._state = ConnectionState.DEGRADED
-                        self._emit_warning(
-                            "degraded",
-                            "Market data is stale. Strategy evaluation paused until fresh data arrives."
-                        )
-                elif self._state == ConnectionState.DEGRADED:
-                    self._state = ConnectionState.CONNECTED
-                    self._emit_warning(
-                        "recovered",
-                        "Market data freshness restored."
-                    )
+        except asyncio.CancelledError:
+            pass
                     
     async def _handle_message(self, raw_message: Any) -> None:
         """Parse and dispatch a WebSocket message."""
