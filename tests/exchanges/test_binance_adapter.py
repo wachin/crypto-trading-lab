@@ -50,6 +50,21 @@ def test_adapter_with_trading_enabled():
     assert perms['trade'] is True
 
 
+def test_adapter_health_store_optional(tmp_path):
+    """Health store is disabled by default, enabled when path provided."""
+    adapter = BinanceRestAdapter(BINANCE_SPOT_TESTNET_ENDPOINTS)
+    assert adapter.health_store is None
+    assert adapter.record_health_metrics() is None
+    
+    adapter2 = BinanceRestAdapter(
+        BINANCE_SPOT_TESTNET_ENDPOINTS,
+        health_store_path=tmp_path / "health.db",
+    )
+    assert adapter2.health_store is not None
+    record = adapter2.record_health_metrics()
+    assert record is not None
+
+
 def test_market_parsing():
     """Test market parsing from exchange info."""
     adapter = BinanceRestAdapter(BINANCE_SPOT_TESTNET_ENDPOINTS)

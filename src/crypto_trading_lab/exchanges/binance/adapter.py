@@ -22,6 +22,7 @@ import urllib.error
 import urllib.parse
 from datetime import datetime, timezone
 from decimal import Decimal
+from pathlib import Path
 from typing import Any, Optional
 
 from crypto_trading_lab.domain.models import (
@@ -49,6 +50,7 @@ from crypto_trading_lab.exchanges.connection_manager import (
 )
 from crypto_trading_lab.exchanges.rate_limiter import RateLimiter
 from crypto_trading_lab.exchanges.binance.websocket_client import BinanceWebSocketClient
+from crypto_trading_lab.exchanges.feed_health import FeedHealthRecord, FeedHealthStore
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +77,7 @@ class BinanceRestAdapter(ExchangeAdapter):
         rate_limiter: Optional[RateLimiter] = None,
         circuit_breaker: Optional[CircuitBreaker] = None,
         websocket_factory=None,
+        health_store_path: Path | None = None,
     ) -> None:
         self._endpoints = endpoints
         self._allow_trading = allow_trading
@@ -83,6 +86,12 @@ class BinanceRestAdapter(ExchangeAdapter):
         self._state = ConnectionState.DISCONNECTED
         self._base_url = endpoints.rest_base_url.rstrip('/')
         self._websocket_factory = websocket_factory
+        
+        # Feed health persistence (optional; enabled when path provided)
+        self._health_store_path = health_store_path
+        self._health_store: FeedHealthStore | None = (
+            FeedHealthStore(health_store_path) if health_store_path else None
+        )
         
         # WebSocket client for subscriptions
         self._ws_client = BinanceWebSocketClient(
@@ -299,3 +308,27 @@ class BinanceRestAdapter(ExchangeAdapter):
         
     def check_api_permissions(self) -> dict[str, bool]:
         return {'read': True, 'trade': self._allow_trading}
+        
+    def record_health_metrics(self) -> FeedHealthRecord | None:
+        """Persist current feed health metrics, if storage is enabled."""
+        if self._health_store is None:
+            return None
+        metrics = self._ws_client.get_health_metrics()
+        record = FeedHealthRecord(
+            timestamp=datetime.now(timezone.utc),
+            state=self.state(),
+            stale=bool(metrics.get('stale', False)),
+            age_seconds=metrics.get('age_seconds'),
+            server_time_offset=float(metrics.get('server_time_offset', 0.0)),
+            subscriptions=metrics.get('subscriptions', []),
+            message_count=int(metrics.get('message_count', 0)),
+            reconnect_attempts=int(metrics.get('reconnect_attempts', 0)),
+            circuit_breaker_state=str(metrics.get('circuit_breaker_state', 'closed')),
+        )
+        self._health_store.record(record)
+        return record
+        
+    @property
+    def health_store(self) -> FeedHealthStore | None:
+        """Access persisted feed health metrics."""
+        return self._health_store
