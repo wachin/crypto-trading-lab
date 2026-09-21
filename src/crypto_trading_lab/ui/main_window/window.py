@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 )
 
 from crypto_trading_lab.configuration.xdg import AppPaths
-from crypto_trading_lab.domain.models import Candle
+from crypto_trading_lab.domain.models import Candle, ConnectionState
 from crypto_trading_lab.i18n.translations import (
     DEFAULT_LANGUAGE,
     apply_language,
@@ -37,6 +37,7 @@ from crypto_trading_lab.machine_learning.experiment_manager import (
     ExperimentManager,
 )
 from crypto_trading_lab.market_data.historical import DatasetVersion
+from crypto_trading_lab.ui.connection_health_widget import ConnectionHealthWidget
 
 
 class MainWindow(QMainWindow):
@@ -66,6 +67,11 @@ class MainWindow(QMainWindow):
     def _paths(self) -> AppPaths:
         """XDG paths; a single place so tests can override if needed."""
         return AppPaths()
+        
+    def _on_connection_state_changed(self, state: ConnectionState, message: str):
+        """Update status label when connection state changes."""
+        self.status_label.setText(message)
+        self.statusBar().showMessage(message)
 
     def _manager(self) -> ExperimentManager:
         """Experiment manager persisted under the user's data directory."""
@@ -203,6 +209,11 @@ class MainWindow(QMainWindow):
         self.status_label = QLabel(self.tr("Disconnected"))
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.status_label)
+        
+        # Connection health widget
+        self._connection_health = ConnectionHealthWidget()
+        self._connection_health.state_changed.connect(self._on_connection_state_changed)
+        layout.addWidget(self._connection_health)
 
         # Educational message (vision: honesty, the farmer's truth).
         message = QLabel(
