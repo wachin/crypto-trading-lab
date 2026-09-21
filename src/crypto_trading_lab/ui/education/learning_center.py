@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable, Optional
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
@@ -22,6 +23,7 @@ from PyQt6.QtWidgets import (
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QRadioButton,
     QTextBrowser,
@@ -43,6 +45,90 @@ __all__ = ["LESSONS", "Lesson", "LearningCenterWidget"]
 
 #: Bundled markdown directory — offline by design (chapter 23).
 BEGINNERS_DIR = Path(__file__).resolve().parents[4] / "docs" / "en" / "beginners"
+
+
+#: Lesson-to-screen mapping (chapter 80).
+#: Maps lesson number -> (screen_name, action_callback_name)
+LESSON_SCREEN_MAP: dict[int, tuple[str, str]] = {
+    # Level 1 - Basics
+    8: ("historical_data", "_open_historical_data"),    # What is an exchange
+    9: ("historical_data", "_open_historical_data"),    # Centralized vs decentralized exchanges
+    10: ("historical_data", "_open_historical_data"),   # Spot markets
+    11: ("historical_data", "_open_historical_data"),   # Trading pairs
+    13: ("historical_data", "_open_historical_data"),   # Order books
+    14: ("historical_data", "_open_historical_data"),   # Market orders
+    15: ("historical_data", "_open_historical_data"),   # Limit orders
+    16: ("historical_data", "_open_historical_data"),   # Fees
+    17: ("historical_data", "_open_historical_data"),   # Slippage
+    18: ("historical_data", "_open_historical_data"),   # Liquidity
+    19: ("historical_data", "_open_historical_data"),   # Volatility
+    20: ("chart", "_open_chart"),                       # Candlestick charts
+    21: ("historical_data", "_open_historical_data"),   # OHLCV data
+    22: ("historical_data", "_open_historical_data"),   # Timeframes
+    25: ("chart", "_open_chart"),                       # Technical indicators
+    26: ("chart", "_open_chart"),                       # Moving averages
+    27: ("chart", "_open_chart"),                       # RSI
+    28: ("chart", "_open_chart"),                       # MACD
+    29: ("chart", "_open_chart"),                       # Bollinger Bands
+    30: ("chart", "_open_chart"),                       # ATR and volatility
+    31: ("strategy_builder", "_open_strategy_builder"), # What is a trading strategy
+    32: ("paper", "_open_paper"),                       # Risk management
+    33: ("paper", "_open_paper"),                       # Position sizing
+    34: ("paper", "_open_paper"),                       # Stop-loss
+    35: ("paper", "_open_paper"),                       # Take-profit
+    36: ("paper", "_open_paper"),                       # Drawdown
+    37: ("paper", "_open_paper"),                       # Paper trading
+    38: ("backtesting", "_open_backtesting"),           # Backtesting
+    39: ("backtesting", "_open_backtesting"),           # Look-ahead bias
+    40: ("backtesting", "_open_backtesting"),           # Overfitting
+    41: ("backtesting", "_open_backtesting"),           # Train/validation/test
+    42: ("backtesting", "_open_backtesting"),           # Why backtests can lie
+    43: ("paper", "_open_paper"),                       # Why paper trading is different
+    44: ("historical_data", "_open_historical_data"),   # API keys
+    45: ("historical_data", "_open_historical_data"),   # API key security
+    # Level 2 - Practical trading (lessons 48-67)
+    48: ("historical_data", "_open_historical_data"),
+    49: ("historical_data", "_open_historical_data"),
+    50: ("chart", "_open_chart"),
+    51: ("chart", "_open_chart"),
+    52: ("chart", "_open_chart"),
+    53: ("chart", "_open_chart"),
+    54: ("chart", "_open_chart"),
+    55: ("chart", "_open_chart"),
+    56: ("chart", "_open_chart"),
+    57: ("chart", "_open_chart"),
+    58: ("chart", "_open_chart"),
+    59: ("chart", "_open_chart"),
+    60: ("chart", "_open_chart"),
+    61: ("strategy_builder", "_open_strategy_builder"),
+    62: ("strategy_builder", "_open_strategy_builder"),
+    63: ("backtesting", "_open_backtesting"),
+    64: ("backtesting", "_open_backtesting"),
+    65: ("backtesting", "_open_backtesting"),
+    66: ("backtesting", "_open_backtesting"),
+    67: ("paper", "_open_paper"),
+    # Level 3 - Quantitative research (lessons 68-87)
+    68: ("wizard", "_open_research_wizard"),
+    69: ("wizard", "_open_research_wizard"),
+    70: ("wizard", "_open_research_wizard"),
+    71: ("wizard", "_open_research_wizard"),
+    72: ("backtesting", "_open_backtesting"),
+    73: ("backtesting", "_open_backtesting"),
+    74: ("backtesting", "_open_backtesting"),
+    75: ("backtesting", "_open_backtesting"),
+    76: ("backtesting", "_open_backtesting"),
+    77: ("backtesting", "_open_backtesting"),
+    78: ("backtesting", "_open_backtesting"),
+    79: ("backtesting", "_open_backtesting"),
+    80: ("backtesting", "_open_backtesting"),
+    81: ("wizard", "_open_research_wizard"),
+    82: ("wizard", "_open_research_wizard"),
+    83: ("wizard", "_open_research_wizard"),
+    84: ("wizard", "_open_research_wizard"),
+    85: ("backtesting", "_open_backtesting"),
+    86: ("backtesting", "_open_backtesting"),
+    87: ("backtesting", "_open_backtesting"),
+}
 
 
 @dataclass(frozen=True)
@@ -144,8 +230,12 @@ class LearningCenterWidget(QWidget):
         self.complete_button.clicked.connect(self._complete_current)
         self.bookmark_button = QPushButton(self.tr("Bookmark this lesson"))
         self.bookmark_button.clicked.connect(self.toggle_bookmark_current)
+        self.open_tool_button = QPushButton(self.tr("Open related tool…"))
+        self.open_tool_button.clicked.connect(self._open_lesson_tool)
+        self.open_tool_button.setEnabled(False)
         actions.addWidget(self.complete_button)
         actions.addWidget(self.bookmark_button)
+        actions.addWidget(self.open_tool_button)
         layout.addLayout(actions)
 
         self.status_label = QLabel("")
@@ -211,6 +301,18 @@ class LearningCenterWidget(QWidget):
         self._last_lesson = number
         self.lesson_view.setPlainText(self.lesson_text(number))
         self._load_quiz(lesson)
+        
+        # Enable/disable "Open related tool" button based on lesson mapping
+        has_tool = number in LESSON_SCREEN_MAP
+        self.open_tool_button.setEnabled(has_tool)
+        if has_tool:
+            screen_name, _ = LESSON_SCREEN_MAP[number]
+            self.open_tool_button.setToolTip(
+                self.tr("Open {screen} for this lesson").format(screen=screen_name)
+            )
+        else:
+            self.open_tool_button.setToolTip("")
+        
         self._save_progress()
         return self.lesson_view.toPlainText()
 
@@ -324,6 +426,38 @@ class LearningCenterWidget(QWidget):
             return
         self.mark_completed(self._current)
         self.lesson_view.setPlainText(self.lesson_text(self._current))
+
+    def _open_lesson_tool(self) -> None:
+        """Open the related tool for the current lesson (chapter 80)."""
+        if self._current is None:
+            return
+        mapping = LESSON_SCREEN_MAP.get(self._current)
+        if not mapping:
+            return
+        screen_name, action_name = mapping
+        
+        # Find the main window to call the action
+        from PyQt6.QtWidgets import QApplication
+        main_window = None
+        for widget in QApplication.topLevelWidgets():
+            if hasattr(widget, action_name):
+                main_window = widget
+                break
+        
+        if main_window is not None:
+            action = getattr(main_window, action_name)
+            action()
+        else:
+            # Fallback: show a helpful message
+            self.lesson_view.setPlainText(
+                self.tr(
+                    "Lesson {number} relates to {screen}.\n\n"
+                    "Open the {screen} from the main menu to try it."
+                ).format(
+                    number=self._current,
+                    screen=screen_name.replace("_", " ").title()
+                )
+            )
 
     def completed_lessons(self) -> set[int]:
         return set(self._completed)
