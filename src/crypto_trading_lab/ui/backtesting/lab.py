@@ -445,6 +445,190 @@ class BacktestingLabWidget(QWidget):
         self.results_view.setPlainText(text)
         return text
 
+    def launch_rule_parameter_sweep(self) -> str:
+        """Parameter sweep for a RuleStrategy (chapter 77).
+
+        Sweeps numeric parameters from the loaded rule:
+        - stop_loss_fraction (if present)
+        - take_profit_fraction (if present)
+        - Indicator periods in entry/exit conditions
+        """
+        if self._rule_spec is None:
+            message = self.tr("No custom rule loaded for sweep.")
+            self.results_view.setPlainText(message)
+            return message
+
+        spec = self._rule_spec
+        ranges = self._build_sweep_ranges(spec)
+
+        if not ranges:
+            message = self.tr(
+                "No sweepable parameters found in this rule. "
+                "Add a stop-loss, take-profit, or indicators with periods."
+            )
+            self.results_view.setPlainText(message)
+            return message
+
+        try:
+            capital = Decimal(self.capital_edit.text().strip())
+            if capital <= 0:
+                raise ValueError
+        except Exception:
+            message = self.tr(
+                "Initial capital must be a positive number, "
+                "for example 10000."
+            )
+            self.results_view.setPlainText(message)
+            return message
+
+        config = OptimizationConfig(parameter_ranges=ranges, max_combinations=64)
+        try:
+            report = run_optimization(
+                self._candles,
+                lambda **params: RuleStrategy(self._make_spec_variant(spec, params)),
+                config,
+                OBJECTIVE_SHARPE_RATIO,
+                BacktestConfig(initial_capital=capital),
+            )
+        except ValueError as error:
+            message = self.tr("The sweep found nothing to evaluate: {error}").format(
+                error=error
+            )
+            self.results_view.setPlainText(message)
+            return message
+
+        self.trials += report.n_combinations_tested
+        lines = [
+            self.tr("== Parameter sweep: {name} (chapter 39, 77) ==").format(
+                name=spec.name
+            ),
+            self.tr("Configurations tested: {x}").format(
+                x=report.n_combinations_tested
+            ),
+            self.tr("Best parameters: {x}").format(x=report.best_parameters),
+            self.tr("Objective ({name}) value: {x}").format(
+                name=report.objective_name,
+                x=report.best_result.objective_value,
+            ),
+            self.tr("Best backtest return: {x}").format(
+                x=report.best_result.backtest_return
+            ),
+            self.tr("Trades in the best configuration: {x}").format(
+                x=report.best_result.n_trades
+            ),
+        ]
+        lines.extend(f"  - {w}" for w in report.overfitting_warnings)
+        lines += [
+            "",
+            self.tr(
+                "This sweep is EXPLORATION, not validation: picking the "
+                "best of {n} configurations makes a good historical "
+                "result more likely to be luck. Total configurations "
+                "tried for this idea so far: {total}."
+            ).format(
+                n=report.n_combinations_tested, total=self.trials
+            ),
+            self.tr(
+                "Confirm the winner out-of-sample and with walk-forward "
+                "analysis before believing it."
+            ),
+        ]
+        text = "\n".join(lines)
+        self.results_view.setPlainText(text)
+        return text
+
+    def _build_sweep_ranges(self, spec: RuleStrategySpec) -> list:
+        """Extract sweepable parameters from a RuleStrategySpec."""
+        ranges = []
+
+        # Stop-loss fraction
+        if spec.stop_loss_fraction is not None:
+            base = float(spec.stop_loss_fraction)
+            ranges.append(ParameterRange(
+                "stop_loss_fraction",
+                max(0.01, base * 0.5),
+                min(0.5, base * 2.0),
+                step=0.01
+            ))
+
+        # Take-profit fraction
+        if spec.take_profit_fraction is not None:
+            base = float(spec.take_profit_fraction)
+            ranges.append(ParameterRange(
+                "take_profit_fraction",
+                max(0.01, base * 0.5),
+                min(1.0, base * 2.0),
+                step=0.01
+            ))
+
+        # Indicator periods from entry conditions
+        for condition in spec.entry:
+            self._extract_indicator_periods(condition.left, ranges)
+            self._extract_indicator_periods(condition.right, ranges)
+
+        # Indicator periods from exit conditions
+        for condition in spec.exit:
+            self._extract_indicator_periods(condition.left, ranges)
+            self._extract_indicator_periods(condition.right, ranges)
+
+        return ranges
+
+    def _extract_indicator_periods(self, operand: str, ranges: list) -> None:
+        """Extract indicator period from operand and add to ranges."""
+        import re
+        match = re.match(r'^(sma|ema|rsi|atr|roc)\((\d+)\)$', operand.strip().lower())
+        if match:
+            name, period = match.group(1), int(match.group(2))
+            param_name = f"{name}_{period}"
+            # Only add if not already in ranges
+            if not any(r.name == param_name for r in ranges):
+                ranges.append(ParameterRange(
+                    param_name,
+                    max(2, period - 5),
+                    period + 10,
+                    step=5
+                ))
+
+    def _make_spec_variant(self, spec: RuleStrategySpec, params: dict) -> RuleStrategySpec:
+        """Create a variant of the spec with updated parameters."""
+        import re
+
+        # Update stop_loss and take_profit
+        stop_loss = params.get("stop_loss_fraction", spec.stop_loss_fraction)
+        take_profit = params.get("take_profit_fraction", spec.take_profit_fraction)
+
+        # Update indicator periods in conditions
+        def update_conditions(conditions):
+            updated = []
+            for c in conditions:
+                left = self._update_operand(c.left, params)
+                right = self._update_operand(c.right, params)
+                updated.append(type(c)(left, c.operator, right))
+            return tuple(updated)
+
+        return type(spec)(
+            name=spec.name,
+            entry=update_conditions(spec.entry),
+            exit=update_conditions(spec.exit),
+            entry_mode=spec.entry_mode,
+            exit_mode=spec.exit_mode,
+            stop_loss_fraction=Decimal(str(stop_loss)) if stop_loss is not None else None,
+            take_profit_fraction=Decimal(str(take_profit)) if take_profit is not None else None,
+            version=spec.version,
+        )
+
+    def _update_operand(self, operand: str, params: dict) -> str:
+        """Update indicator period in operand based on params."""
+        import re
+        match = re.match(r'^(sma|ema|rsi|atr|roc)\((\d+)\)$', operand.strip().lower())
+        if match:
+            name, period = match.group(1), int(match.group(2))
+            param_name = f"{name}_{period}"
+            if param_name in params:
+                new_period = int(params[param_name])
+                return f"{name}({new_period})"
+        return operand
+
     def _save_dialog(self) -> None:
         from PyQt6.QtWidgets import QFileDialog, QMessageBox
 

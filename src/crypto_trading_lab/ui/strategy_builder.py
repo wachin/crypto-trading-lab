@@ -121,6 +121,8 @@ class StrategyBuilderDialog(QDialog):
         self.export_button.clicked.connect(self._export_interactive)
         self.import_button = QPushButton(self.tr("Import…"))
         self.import_button.clicked.connect(self._import_interactive)
+        self.sweep_button = QPushButton(self.tr("Parameter sweep…"))
+        self.sweep_button.clicked.connect(self.launch_parameter_sweep)
         for button in (
             self.validate_button,
             self.explain_button,
@@ -128,6 +130,7 @@ class StrategyBuilderDialog(QDialog):
             self.remove_button,
             self.export_button,
             self.import_button,
+            self.sweep_button,
         ):
             actions.addWidget(button)
         layout.addLayout(actions)
@@ -379,6 +382,62 @@ class StrategyBuilderDialog(QDialog):
                 self, self.tr("Import rule"),
                 self.tr("Could not read the file: {error}").format(error=error),
             )
+
+    def launch_parameter_sweep(self) -> None:
+        """Launch parameter sweep in the Backtesting Lab for the current rule."""
+        # Check if rule is executable
+        try:
+            spec = self.to_rule_spec()
+        except RuleError as error:
+            QMessageBox.warning(
+                self, self.tr("Parameter sweep"),
+                self.tr("This rule cannot run in the engine yet: {reason}").format(
+                    reason=error
+                )
+            )
+            return
+
+        # Check if rule has entry and exit
+        rule = self.build_rule()
+        if not rule.blocks:
+            QMessageBox.warning(
+                self, self.tr("Parameter sweep"),
+                self.tr("The rule is empty: add at least one condition.")
+            )
+            return
+
+        has_entry = any(b.type == "entry" for b in rule.blocks)
+        has_exit = any(b.type == "exit" for b in rule.blocks)
+        if not (has_entry and has_exit):
+            QMessageBox.warning(
+                self, self.tr("Parameter sweep"),
+                self.tr("A tradable rule needs both an entry and an exit signal.")
+            )
+            return
+
+        # Find the Backtesting Lab window
+        from crypto_trading_lab.ui.backtesting.lab import BacktestingLabWidget
+        from PyQt6.QtWidgets import QApplication
+
+        lab = None
+        for widget in QApplication.topLevelWidgets():
+            if isinstance(widget, BacktestingLabWidget):
+                lab = widget
+                break
+
+        if lab is None:
+            QMessageBox.information(
+                self, self.tr("Parameter sweep"),
+                self.tr(
+                    "No Backtesting Lab window is open. Please open the "
+                    "Backtesting Lab first, then try again."
+                )
+            )
+            return
+
+        # Load the rule into the lab and launch sweep
+        lab.set_rule_spec(spec)
+        lab.launch_rule_parameter_sweep()
 
 
 def show_strategy_builder() -> None:
