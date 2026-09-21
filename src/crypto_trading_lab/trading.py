@@ -8,11 +8,14 @@ configuration was imported.
 
 from __future__ import annotations
 
+from PyQt6.QtCore import QObject, pyqtSignal
+
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
+from typing import Callable, Optional
 
 
 class TradingMode(Enum):
@@ -60,33 +63,40 @@ class RealTradingConfig:
     real_trading_indicator_visible: bool = False
 
 
-@dataclass
-class RealTradingManager:
-    """
-    Manages real trading activation and safety (68).
+class RealTradingManager(QObject):
+    state_changed = pyqtSignal(object, str)  # state, message
+    """Manages real trading activation and safety (68).
     
     Implements multiple independent safety protections as required by
     Chapter 68. Real trading remains disabled by default and requires
     explicit multi-step activation.
     """
-    state: RealTradingState = RealTradingState.DISABLED
-    config: RealTradingConfig = field(default_factory=RealTradingConfig)
-    activation_timestamp: Optional[datetime] = None
+    def __init__(self) -> None:
+        super().__init__()
+        self.state: RealTradingState = RealTradingState.DISABLED
+        self.config: RealTradingConfig = RealTradingConfig()
+        self.activation_timestamp: Optional[datetime] = None
+        self._observers: list[Callable[[RealTradingState], None]] = []
     
-    # Safety requirements from Chapter 68.3
-    _risk_manager_override_attempts: int = 0
-    _credential_access_attempts: int = 0
-    _strategy_modification_attempts: int = 0
+    def add_observer(self, callback: Callable[[RealTradingState], None]) -> None:
+        """Register an observer to be notified of state changes."""
+        self._observers.append(callback)
     
+    def remove_observer(self, callback: Callable[[RealTradingState], None]) -> None:
+        """Unregister an observer."""
+        self._observers = [c for c in self._observers if c != callback]
+    
+    def set_state(self, state: RealTradingState) -> None:
+        """Set the trading state and notify observers."""
+        self.state = state
+        for callback in self._observers:
+            callback(self.state)
+        self.state_changed.emit(self.state, f"State changed to {state.value}")
+
     def request_activation(self) -> bool:
-        """
-        User requests to activate real trading (68.1).
-        
-        Returns True if activation request was accepted for processing.
-        """
+        """User requests to activate real trading (68.1)."""
         if self.state != RealTradingState.DISABLED:
             return False
-            
         self.state = RealTradingState.PENDING_ACTIVATION
         return True
     
@@ -115,7 +125,6 @@ class RealTradingManager:
         """Step 4: Check API key has no withdrawal permission (68.1.4, 68.2)."""
         if self.state != RealTradingState.PENDING_ACTIVATION:
             return False
-        # In reality, this would check actual exchange API permissions
         self.config.api_key_has_no_withdrawal = not has_withdrawal
         return not has_withdrawal  # Return True only if NO withdrawal permission
     
@@ -204,8 +213,8 @@ class RealTradingManager:
         
         if all_requirements_met:
             self.state = RealTradingState.ACTIVE
-            self.activation_timestamp = datetime.now(timezone.utc)
             self.config.real_trading_indicator_visible = True
+            self.activation_timestamp = datetime.now(timezone.utc)
             return True
         else:
             self.state = RealTradingState.FAILED
@@ -223,6 +232,7 @@ class RealTradingManager:
         if self.state == RealTradingState.SUSPENDED:
             # In reality, would re-check all safety conditions
             self.state = RealTradingState.ACTIVE
+            self.config.real_trading_indicator_visible = True
             return True
         return False
     

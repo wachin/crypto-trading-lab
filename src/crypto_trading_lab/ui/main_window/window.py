@@ -36,6 +36,7 @@ from crypto_trading_lab.i18n.translations import (
 from crypto_trading_lab.machine_learning.experiment_manager import (
     ExperimentManager,
 )
+from crypto_trading_lab.trading import RealTradingManager, RealTradingConfig, RealTradingState
 from crypto_trading_lab.market_data.historical import DatasetVersion
 from crypto_trading_lab.ui.connection_health_widget import ConnectionHealthWidget
 
@@ -58,6 +59,10 @@ class MainWindow(QMainWindow):
         self._assistant_window = None
         self._strategy_builder_window = None
         self._paper_window = None
+        self._trading_window = None
+
+        self._trading_manager = RealTradingManager()
+        self._trading_manager.state_changed.connect(self._on_trading_state_changed)
 
         self._build_menus()
         self._build_central()
@@ -71,6 +76,16 @@ class MainWindow(QMainWindow):
     def _on_connection_state_changed(self, state: ConnectionState, message: str):
         """Update status label when connection state changes."""
         self.status_label.setText(message)
+        self.statusBar().showMessage(message)
+
+    def _on_trading_state_changed(self, state: RealTradingState, message: str):
+        """Update REAL TRADING status indicators (chapter 68)."""
+        self.real_trading_label.setText(self.tr(f"Real trading: {state.value.capitalize()}"))
+        if state == RealTradingState.ACTIVE:
+            self.real_trading_indicator.setVisible(True)
+            self.real_trading_indicator.setText(self.tr("REAL TRADING"))
+        else:
+            self.real_trading_indicator.setVisible(False)
         self.statusBar().showMessage(message)
 
     def _manager(self) -> ExperimentManager:
@@ -205,6 +220,19 @@ class MainWindow(QMainWindow):
         self.real_trading_label = QLabel(self.tr("Real trading: Disabled"))
         self.real_trading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.real_trading_label)
+
+        self.real_trading_indicator = QLabel("")
+        self.real_trading_indicator.setVisible(False)
+        self.real_trading_indicator.setStyleSheet("""
+            QLabel {
+                color: #d32f2f;
+                font-weight: bold;
+                padding: 2px 8px;
+                background-color: #ffebee;
+                border-radius: 4px;
+            }
+        """)
+        layout.addWidget(self.real_trading_indicator)
 
         self.status_label = QLabel(self.tr("Disconnected"))
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
