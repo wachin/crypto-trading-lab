@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
+<?xml version='1.0' encoding='utf-8'?>
 <TS version="2.1" language="es">
   <context>
     <name>BacktestingLabWidget</name>
@@ -62,17 +61,17 @@
     <message>
       <location filename="../../ui/backtesting/lab.py" line="133" />
       <source>Analyze complexity</source>
-      <translation type="unfinished" />
+      <translation>Analizar complejidad</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="135" />
       <source>Parameter sweep…</source>
-      <translation type="unfinished" />
+      <translation>Barrido de parámetros…</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="137" />
       <source>Load rule…</source>
-      <translation type="unfinished" />
+      <translation>Cargar regla…</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="149" />
@@ -92,7 +91,7 @@
     <message>
       <location filename="../../ui/backtesting/lab.py" line="192" />
       <source>No custom rule loaded. Use “Load rule…” to open one exported by the Strategy Builder.</source>
-      <translation type="unfinished" />
+      <translation>No hay ninguna regla personalizada cargada. Usa «Cargar regla…» para abrir una exportada por el Constructor de Estrategias.</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="220" />
@@ -102,122 +101,122 @@
     <message>
       <location filename="../../ui/backtesting/lab.py" line="273" />
       <source>Custom rule: {name}</source>
-      <translation type="unfinished" />
+      <translation>Regla personalizada: {name}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="293" />
       <source>Could not load the rule: {error}</source>
-      <translation type="unfinished" />
+      <translation>No se pudo cargar la regla: {error}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="298" />
       <source>Loaded rule “{name}”: {description}</source>
-      <translation type="unfinished" />
+      <translation>Regla cargada «{name}»: {description}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="308" />
       <source>Load rule</source>
-      <translation type="unfinished" />
+      <translation>Cargar regla</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="308" />
       <source>JSON (*.json)</source>
-      <translation type="unfinished" />
+      <translation>JSON (*.json)</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="329" />
       <source>Complexity analysis is unavailable here: {error}</source>
-      <translation type="unfinished" />
+      <translation>El análisis de complejidad no está disponible aquí: {error}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="335" />
       <source>== Strategy complexity (chapter 35) ==</source>
-      <translation type="unfinished" />
+      <translation>== Complejidad de la estrategia (capítulo 35) ==</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="336" />
       <source>Level: {level}</source>
-      <translation type="unfinished" />
+      <translation>Nivel: {level}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="337" />
       <source>Cyclomatic complexity: {x}</source>
-      <translation type="unfinished" />
+      <translation>Complejidad ciclomática: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="340" />
       <source>Lines of code: {x}</source>
-      <translation type="unfinished" />
+      <translation>Líneas de código: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="341" />
       <source>Parameters: {x}</source>
-      <translation type="unfinished" />
+      <translation>Parámetros: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="342" />
       <source>Passed the configured limits: {x}</source>
-      <translation type="unfinished" />
+      <translation>Se cumplen los límites configurados: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="351" />
       <source>Remember: when two strategies show comparable evidence, the simpler one is preferred.</source>
-      <translation type="unfinished" />
+      <translation>Recuerda: cuando dos estrategias muestran evidencia comparable, se prefiere la más simple.</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="368" />
       <source>The parameter sweep currently supports the SMA crossover strategy only.</source>
-      <translation type="unfinished" />
+      <translation>El barrido de parámetros solo soporta la estrategia de cruce de SMA por ahora.</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="376" />
       <source>The fast SMA period must be smaller than the slow one before sweeping.</source>
-      <translation type="unfinished" />
+      <translation>El período de la SMA rápida debe ser menor que el de la lenta antes del barrido.</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="404" />
       <source>The sweep found nothing to evaluate: {error}</source>
-      <translation type="unfinished" />
+      <translation>El barrido no encontró nada que evaluar: {error}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="412" />
       <source>== Parameter sweep (chapter 39) ==</source>
-      <translation type="unfinished" />
+      <translation>== Barrido de parámetros (capítulo 39) ==</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="413" />
       <source>Configurations tested: {x}</source>
-      <translation type="unfinished" />
+      <translation>Configuraciones probadas: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="416" />
       <source>Best parameters: {x}</source>
-      <translation type="unfinished" />
+      <translation>Mejores parámetros: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="417" />
       <source>Objective ({name}) value: {x}</source>
-      <translation type="unfinished" />
+      <translation>Valor del objetivo ({name}): {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="421" />
       <source>Best backtest return: {x}</source>
-      <translation type="unfinished" />
+      <translation>Mejor retorno en backtest: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="424" />
       <source>Trades in the best configuration: {x}</source>
-      <translation type="unfinished" />
+      <translation>Operaciones en la mejor configuración: {x}</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="431" />
       <source>This sweep is EXPLORATION, not validation: picking the best of {n} configurations makes a good historical result more likely to be luck. Total configurations tried for this idea so far: {total}.</source>
-      <translation type="unfinished" />
+      <translation>Este barrido es EXPLORACIÓN, no validación: elegir la mejor de {n} configuraciones hace que un buen resultado histórico sea más probable por suerte. Configuraciones totales probadas para esta idea hasta ahora: {total}.</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="439" />
       <source>Confirm the winner out-of-sample and with walk-forward analysis before believing it.</source>
-      <translation type="unfinished" />
+      <translation>Confirma al ganador fuera de muestra y con análisis walk-forward antes de creerlo.</translation>
     </message>
     <message>
       <location filename="../../ui/backtesting/lab.py" line="453" />
@@ -514,73 +513,73 @@
     <message>
       <location filename="../../ui/data/historical_data.py" line="62" />
       <source>Get historical data</source>
-      <translation type="unfinished" />
+      <translation>Obtener datos históricos</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="70" />
       <source>A dataset is a frozen copy of the market's history. Its identity (exchange, market, timeframe, period and checksum) is recorded so every experiment can say exactly which data it used. Data is public: no API key is needed.</source>
-      <translation type="unfinished" />
+      <translation>Un conjunto de datos es una copia congelada de la historia del mercado. Su identidad (exchange, mercado, marco temporal, período y suma de verificación) queda registrada para que cada experimento pueda decir exactamente qué datos usó. Los datos son públicos: no se necesita clave API.</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="85" />
       <source>Exchange:</source>
-      <translation type="unfinished" />
+      <translation>Exchange:</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="90" />
       <source>Market:</source>
-      <translation type="unfinished" />
+      <translation>Mercado:</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="96" />
       <source>Timeframe:</source>
-      <translation type="unfinished" />
+      <translation>Marco temporal:</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="108" />
       <source>to</source>
-      <translation type="unfinished" />
+      <translation>a</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="110" />
       <source>Period (UTC):</source>
-      <translation type="unfinished" />
+      <translation>Período (UTC):</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="193" />
       <location filename="../../ui/data/historical_data.py" line="114" />
       <source>Download historical data</source>
-      <translation type="unfinished" />
+      <translation>Descargar datos históricos</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="125" />
       <source>Choose a market, a timeframe and a period, then press “Download historical data”.</source>
-      <translation type="unfinished" />
+      <translation>Elige un mercado, un marco temporal y un período, luego pulsa «Descargar datos históricos».</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="171" />
       <source>Please check the form: {error}</source>
-      <translation type="unfinished" />
+      <translation>Revisa el formulario: {error}</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="179" />
       <source>Downloading…</source>
-      <translation type="unfinished" />
+      <translation>Descargando…</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="187" />
       <source>Download failed</source>
-      <translation type="unfinished" />
+      <translation>La descarga falló</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="189" />
       <source>Historical data</source>
-      <translation type="unfinished" />
+      <translation>Datos históricos</translation>
     </message>
     <message>
       <location filename="../../ui/data/historical_data.py" line="201" />
       <source>What this means: the candles are stored locally and every later result can name this exact dataset. Downloading the same period again may return different data if the exchange revises it, which is why the checksum matters.</source>
-      <translation type="unfinished" />
+      <translation>Qué significa: las velas se guardan localmente y cada resultado posterior puede referirse a este conjunto exacto. Volver a descargar el mismo período puede devolver datos distintos si el exchange los revisa, por eso importa la suma de verificación.</translation>
     </message>
   </context>
   <context>
@@ -598,32 +597,32 @@
     <message>
       <location filename="../../ui/education/learning_center.py" line="99" />
       <source>Level:</source>
-      <translation type="unfinished" />
+      <translation>Nivel:</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="105" />
       <source>Continue where I left off</source>
-      <translation type="unfinished" />
+      <translation>Continuar donde lo dejé</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="120" />
       <source>Quiz</source>
-      <translation type="unfinished" />
+      <translation>Cuestionario</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="132" />
       <source>Submit answer</source>
-      <translation type="unfinished" />
+      <translation>Enviar respuesta</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="143" />
       <source>Mark lesson as completed</source>
-      <translation type="unfinished" />
+      <translation>Marcar lección como completada</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="145" />
       <source>Bookmark this lesson</source>
-      <translation type="unfinished" />
+      <translation>Marcar esta lección</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="155" />
@@ -633,62 +632,62 @@
     <message>
       <location filename="../../ui/education/learning_center.py" line="189" />
       <source>Lesson not found.</source>
-      <translation type="unfinished" />
+      <translation>Lección no encontrada.</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="190" />
       <source>completed</source>
-      <translation type="unfinished" />
+      <translation>completada</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="190" />
       <source>not completed yet</source>
-      <translation type="unfinished" />
+      <translation>no completada aún</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="198" />
       <source>Lesson</source>
-      <translation type="unfinished" />
+      <translation>Lección</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="199" />
       <source>Level</source>
-      <translation type="unfinished" />
+      <translation>Nivel</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="231" />
       <source>You already answered this quiz correctly.</source>
-      <translation type="unfinished" />
+      <translation>Ya respondiste a este cuestionario correctamente.</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="235" />
       <source>Your previous answer was wrong — try again.</source>
-      <translation type="unfinished" />
+      <translation>Tu respuesta anterior fue incorrecta — inténtalo de nuevo.</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="288" />
       <source>Choose one answer before submitting.</source>
-      <translation type="unfinished" />
+      <translation>Elige una respuesta antes de enviar.</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="294" />
       <source>Correct. {why}</source>
-      <translation type="unfinished" />
+      <translation>Correcto. {why}</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="299" />
       <source>Not correct. Re-read the lesson and try again. The right answer is worth understanding, not guessing.</source>
-      <translation type="unfinished" />
+      <translation>No es correcto. Relee la lección y vuelve a intentarlo. Vale la pena entender la respuesta correcta, no adivinarla.</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="357" />
       <source>Every lesson is completed. Well done.</source>
-      <translation type="unfinished" />
+      <translation>Todas las lecciones están completadas. ¡Bien hecho!</translation>
     </message>
     <message>
       <location filename="../../ui/education/learning_center.py" line="376" />
       <source>{done} of {total} lessons completed · {bookmarks} bookmarked</source>
-      <translation type="unfinished" />
+      <translation>{done} de {total} lecciones completadas · {bookmarks} marcadas</translation>
     </message>
     <message>
       <source>0 of 20 lessons completed</source>
@@ -720,7 +719,7 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="128" />
       <source>Get historical data...</source>
-      <translation type="unfinished" />
+      <translation>Obtener datos históricos...</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="133" />
@@ -753,35 +752,35 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="150" />
       <source>New research...</source>
-      <translation type="unfinished" />
+      <translation>Nueva investigación...</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="588" />
       <location filename="../../ui/main_window/window.py" line="248" />
       <location filename="../../ui/main_window/window.py" line="154" />
       <source>Paper Trading</source>
-      <translation type="unfinished" />
+      <translation>Trading Simulado</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="158" />
       <source>&amp;Research</source>
-      <translation type="unfinished" />
+      <translation>&amp;Investigación</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="539" />
       <location filename="../../ui/main_window/window.py" line="159" />
       <source>Research Notebook</source>
-      <translation type="unfinished" />
+      <translation>Cuaderno de Investigación</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="163" />
       <source>Research Assistant</source>
-      <translation type="unfinished" />
+      <translation>Asistente de Investigación</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="167" />
       <source>Strategy Builder</source>
-      <translation type="unfinished" />
+      <translation>Constructor de Estrategias</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="171" />
@@ -822,7 +821,7 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="232" />
       <source>Get historical data</source>
-      <translation type="unfinished" />
+      <translation>Obtener datos históricos</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="328" />
@@ -834,7 +833,7 @@
       <location filename="../../ui/main_window/window.py" line="525" />
       <location filename="../../ui/main_window/window.py" line="246" />
       <source>New research</source>
-      <translation type="unfinished" />
+      <translation>Nueva investigación</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="278" />
@@ -844,7 +843,7 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="330" />
       <source>CSV candles (*.csv);;All files (*)</source>
-      <translation type="unfinished" />
+      <translation>Velas CSV (*.csv);;Todos los archivos (*)</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="335" />
@@ -854,18 +853,18 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="348" />
       <source>Crypto Trading Lab — Historical data</source>
-      <translation type="unfinished" />
+      <translation>Crypto Trading Lab — Datos históricos</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="380" />
       <source>Loading chart...</source>
-      <translation type="unfinished" />
+      <translation>Cargando gráfico...</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="461" />
       <location filename="../../ui/main_window/window.py" line="382" />
       <source>Loading</source>
-      <translation type="unfinished" />
+      <translation>Cargando</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="413" />
@@ -876,7 +875,7 @@
       <location filename="../../ui/main_window/window.py" line="491" />
       <location filename="../../ui/main_window/window.py" line="414" />
       <source>No candles stored yet. Download historical data or load a CSV file first.</source>
-      <translation type="unfinished" />
+      <translation>Aún no hay velas guardadas. Descarga datos históricos o carga un archivo CSV primero.</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="424" />
@@ -886,7 +885,7 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="459" />
       <source>Loading Backtesting Lab...</source>
-      <translation type="unfinished" />
+      <translation>Cargando Laboratorio de Backtesting...</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="490" />
@@ -901,17 +900,17 @@
     <message>
       <location filename="../../ui/main_window/window.py" line="526" />
       <source>There is no versioned dataset yet. Open “Get historical data” first.</source>
-      <translation type="unfinished" />
+      <translation>Aún no hay ningún conjunto de datos con versión. Abre «Obtener datos históricos» primero.</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="578" />
       <source>Crypto Trading Lab — Paper Trading</source>
-      <translation type="unfinished" />
+      <translation>Crypto Trading Lab — Trading Simulado</translation>
     </message>
     <message>
       <location filename="../../ui/main_window/window.py" line="589" />
       <source>There is no dataset yet. Open “Get historical data” first: paper trading replays real candles.</source>
-      <translation type="unfinished" />
+      <translation>Aún no hay conjunto de datos. Abre «Obtener datos históricos» primero: el trading simulado reproduce velas reales.</translation>
     </message>
     <message>
       <source>No candles stored yet. Load a CSV file first (File → Load CSV file).</source>
@@ -923,79 +922,79 @@
     <message>
       <location filename="../../ui/research/notebook.py" line="110" />
       <source>Research Notebook</source>
-      <translation type="unfinished" />
+      <translation>Cuaderno de Investigación</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="116" />
       <source>Search:</source>
-      <translation type="unfinished" />
+      <translation>Buscar:</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="119" />
       <source>hypothesis, strategy, dataset, tag…</source>
-      <translation type="unfinished" />
+      <translation>hipótesis, estrategia, datos, etiqueta…</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="249" />
       <location filename="../../ui/research/notebook.py" line="138" />
       <source>New entry</source>
-      <translation type="unfinished" />
+      <translation>Nueva entrada</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="271" />
       <location filename="../../ui/research/notebook.py" line="140" />
       <source>Add note</source>
-      <translation type="unfinished" />
+      <translation>Añadir nota</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="142" />
       <source>Compare selected</source>
-      <translation type="unfinished" />
+      <translation>Comparar seleccionados</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="144" />
       <source>Export…</source>
-      <translation type="unfinished" />
+      <translation>Exportar…</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="156" />
       <source>Negative experiments are kept on purpose: knowing what does NOT work is real research.</source>
-      <translation type="unfinished" />
+      <translation>Los experimentos negativos se conservan a propósito: saber lo que NO funciona es verdadera investigación.</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="206" />
       <source>Experiment not found.</source>
-      <translation type="unfinished" />
+      <translation>Experimento no encontrado.</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="249" />
       <source>Hypothesis:</source>
-      <translation type="unfinished" />
+      <translation>Hipótesis:</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="267" />
       <source>Notebook</source>
-      <translation type="unfinished" />
+      <translation>Cuaderno</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="267" />
       <source>Select an experiment first.</source>
-      <translation type="unfinished" />
+      <translation>Selecciona un experimento primero.</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="271" />
       <source>Note:</source>
-      <translation type="unfinished" />
+      <translation>Nota:</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="285" />
       <source>Export experiments</source>
-      <translation type="unfinished" />
+      <translation>Exportar experimentos</translation>
     </message>
     <message>
       <location filename="../../ui/research/notebook.py" line="286" />
       <source>JSON (*.json)</source>
-      <translation type="unfinished" />
+      <translation>JSON (*.json)</translation>
     </message>
   </context>
   <context>
@@ -1003,97 +1002,97 @@
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="63" />
       <source>Paper Trading</source>
-      <translation type="unfinished" />
+      <translation>Trading Simulado</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="66" />
       <source>Paper trading: real prices, fake money</source>
-      <translation type="unfinished" />
+      <translation>Trading simulado: precios reales, dinero ficticio</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="79" />
       <source>SMA crossover</source>
-      <translation type="unfinished">Cruce de medias SMA</translation>
+      <translation>Cruce de medias SMA</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="80" />
       <source>Buy and hold</source>
-      <translation type="unfinished">Comprar y mantener</translation>
+      <translation>Comprar y mantener</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="81" />
       <source>Null (never trades)</source>
-      <translation type="unfinished">Nula (nunca opera)</translation>
+      <translation>Nula (nunca opera)</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="82" />
       <source>Strategy:</source>
-      <translation type="unfinished">Estrategia:</translation>
+      <translation>Estrategia:</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="85" />
       <source>Simulated capital:</source>
-      <translation type="unfinished" />
+      <translation>Capital simulado:</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="88" />
       <source>Fraction of capital per trade:</source>
-      <translation type="unfinished" />
+      <translation>Fracción de capital por operación:</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="99" />
       <source>Fee / slippage / spread:</source>
-      <translation type="unfinished" />
+      <translation>Comisión / deslizamiento / diferencial:</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="108" />
       <source>SMA fast / slow:</source>
-      <translation type="unfinished">SMA rápida / lenta:</translation>
+      <translation>SMA rápida / lenta:</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="112" />
       <source>Run paper session</source>
-      <translation type="unfinished" />
+      <translation>Ejecutar sesión simulada</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="114" />
       <source>Save journal…</source>
-      <translation type="unfinished" />
+      <translation>Guardar diario…</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="137" />
       <source>Dataset: none. Download historical data first; paper trading needs real candles to replay.</source>
-      <translation type="unfinished" />
+      <translation>Conjunto de datos: ninguno. Descarga datos históricos primero; el trading simulado necesita reproducir velas reales.</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="141" />
       <source>Dataset: {id} · {count} candles · strategy decisions are filled at the next candle's open.</source>
-      <translation type="unfinished" />
+      <translation>Conjunto: {id} · {count} velas · las decisiones de la estrategia se ejecutan en la apertura de la siguiente vela.</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="169" />
       <source>No candles available: download historical data first.</source>
-      <translation type="unfinished" />
+      <translation>No hay velas disponibles: descarga datos históricos primero.</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="182" />
       <source>Capital must be positive and the position fraction must be between 0 and 1 (for example 10000 and 0.5).</source>
-      <translation type="unfinished" />
+      <translation>El capital debe ser positivo y la fracción de posición debe estar entre 0 y 1 (por ejemplo 10000 y 0.5).</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="216" />
       <source>Session complete: {trades} closed trades.</source>
-      <translation type="unfinished" />
+      <translation>Sesión completada: {trades} operaciones cerradas.</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="227" />
       <source>Save trading journal</source>
-      <translation type="unfinished" />
+      <translation>Guardar diario de operaciones</translation>
     </message>
     <message>
       <location filename="../../ui/paper/paper_trading.py" line="228" />
       <source>JSON (*.json)</source>
-      <translation type="unfinished" />
+      <translation>JSON (*.json)</translation>
     </message>
   </context>
   <context>
@@ -1101,52 +1100,52 @@
     <message>
       <location filename="../../ui/research/assistant.py" line="214" />
       <source>Research Assistant</source>
-      <translation type="unfinished" />
+      <translation>Asistente de Investigación</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="222" />
       <source>Offline research assistant: a methodology checklist, not a prediction machine and not financial advice.</source>
-      <translation type="unfinished" />
+      <translation>Asistente de investigación sin conexión: una lista de verificación metodológica, no una máquina predictiva ni asesoramiento financiero.</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="231" />
       <source>Research context:</source>
-      <translation type="unfinished" />
+      <translation>Contexto de la investigación:</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="237" />
       <source>Ask your research question:</source>
-      <translation type="unfinished" />
+      <translation>Haz tu pregunta de investigación:</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="241" />
       <source>Describe your research question or task…</source>
-      <translation type="unfinished" />
+      <translation>Describe tu pregunta o tarea de investigación…</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="245" />
       <source>Assistant response:</source>
-      <translation type="unfinished" />
+      <translation>Respuesta del asistente:</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="252" />
       <source>Ask</source>
-      <translation type="unfinished" />
+      <translation>Preguntar</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="255" />
       <source>Close</source>
-      <translation type="unfinished" />
+      <translation>Cerrar</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="269" />
       <source>Error</source>
-      <translation type="unfinished" />
+      <translation>Error</translation>
     </message>
     <message>
       <location filename="../../ui/research/assistant.py" line="270" />
       <source>Could not produce an answer: {error}</source>
-      <translation type="unfinished" />
+      <translation>No se pudo generar una respuesta: {error}</translation>
     </message>
   </context>
   <context>
@@ -1154,137 +1153,137 @@
     <message>
       <location filename="../../ui/research/wizard.py" line="65" />
       <source>New research</source>
-      <translation type="unfinished" />
+      <translation>Nueva investigación</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="70" />
       <source>New research: from hypothesis to verdict</source>
-      <translation type="unfinished" />
+      <translation>Nueva investigación: de la hipótesis al veredicto</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="85" />
       <source>Example: when price is above EMA200 and RSI crosses 50 upwards, a statistical advantage may exist</source>
-      <translation type="unfinished" />
+      <translation>Ejemplo: cuando el precio está sobre EMA200 y el RSI cruza 50 al alza, puede existir una ventaja estadística</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="90" />
       <source>1. Hypothesis:</source>
-      <translation type="unfinished" />
+      <translation>1. Hipótesis:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="94" />
       <source>SMA crossover</source>
-      <translation type="unfinished">Cruce de medias SMA</translation>
+      <translation>Cruce de medias SMA</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="97" />
       <source>Buy and hold (passive)</source>
-      <translation type="unfinished" />
+      <translation>Comprar y mantener (pasivo)</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="99" />
       <source>2. Strategy:</source>
-      <translation type="unfinished" />
+      <translation>2. Estrategia:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="112" />
       <source>3. SMA fast / slow:</source>
-      <translation type="unfinished" />
+      <translation>3. SMA rápida / lenta:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="115" />
       <source>4. Initial capital:</source>
-      <translation type="unfinished" />
+      <translation>4. Capital inicial:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="126" />
       <source>5. Fee / slippage / spread:</source>
-      <translation type="unfinished" />
+      <translation>5. Comisión / deslizamiento / diferencial:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="129" />
       <source>6. Compare against buy and hold</source>
-      <translation type="unfinished" />
+      <translation>6. Comparar con comprar y mantener</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="132" />
       <source>Benchmark:</source>
-      <translation type="unfinished">Referencia:</translation>
+      <translation>Referencia:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="135" />
       <source>7. Attempt to refute it (Monte Carlo, costs, OOS)</source>
-      <translation type="unfinished" />
+      <translation>7. Intentar refutarla (Monte Carlo, costes, OOS)</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="138" />
       <source>Robustness:</source>
-      <translation type="unfinished" />
+      <translation>Robustez:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="141" />
       <source>8. Walk-forward analysis</source>
-      <translation type="unfinished" />
+      <translation>8. Análisis walk-forward</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="149" />
       <source>Walk-forward:</source>
-      <translation type="unfinished" />
+      <translation>Walk-forward:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="155" />
       <source>How many configurations have you tried for this idea? The more you try, the more likely the best one is luck.</source>
-      <translation type="unfinished" />
+      <translation>¿Cuántas configuraciones has probado para esta idea? Cuantas más pruebes, más probable es que la mejor sea por suerte.</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="160" />
       <source>9. Configurations tried so far:</source>
-      <translation type="unfinished" />
+      <translation>9. Configuraciones probadas hasta ahora:</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="166" />
       <source>Run research</source>
-      <translation type="unfinished" />
+      <translation>Ejecutar investigación</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="169" />
       <source>Close</source>
-      <translation type="unfinished" />
+      <translation>Cerrar</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="181" />
       <source>There is no versioned dataset yet. Open “Get historical data” first: without a named dataset a result cannot be reproduced, so the laboratory will not pretend to validate one.</source>
-      <translation type="unfinished" />
+      <translation>Aún no hay ningún conjunto de datos con versión. Abre «Obtener datos históricos» primero: sin un conjunto con nombre un resultado no se puede reproducir, por lo que el laboratorio no pretenderá validarlo.</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="193" />
       <source>Dataset: none. Download historical data first.</source>
-      <translation type="unfinished" />
+      <translation>Conjunto de datos: ninguno. Descarga datos históricos primero.</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="196" />
       <source>Dataset: {id} · {count} candles · checksum {checksum}…</source>
-      <translation type="unfinished" />
+      <translation>Conjunto: {id} · {count} velas · suma de verificación {checksum}…</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="234" />
       <source>Write the hypothesis first. A research question you cannot state is a question you cannot test.</source>
-      <translation type="unfinished" />
+      <translation>Escribe la hipótesis primero. Una pregunta de investigación que no puedes formular es una pregunta que no puedes probar.</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="242" />
       <source>Download a dataset before running research.</source>
-      <translation type="unfinished" />
+      <translation>Descarga un conjunto de datos antes de ejecutar la investigación.</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="249" />
       <source>The fast SMA period must be smaller than the slow one (for example 10 and 30).</source>
-      <translation type="unfinished">El período de la SMA rápida debe ser menor que el de la lenta (por ejemplo 10 y 30).</translation>
+      <translation>El período de la SMA rápida debe ser menor que el de la lenta (por ejemplo 10 y 30).</translation>
     </message>
     <message>
       <location filename="../../ui/research/wizard.py" line="259" />
       <source>Capital and costs must be numbers, for example 10000, 0.001, 0.0005, 0.0002.</source>
-      <translation type="unfinished" />
+      <translation>El capital y los costes deben ser números, por ejemplo 10000, 0.001, 0.0005, 0.0002.</translation>
     </message>
   </context>
   <context>
@@ -1292,222 +1291,224 @@
     <message>
       <location filename="../../ui/strategy_builder.py" line="59" />
       <source>Strategy Builder</source>
-      <translation type="unfinished" />
+      <translation>Constructor de Estrategias</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="68" />
       <source>Visual strategy builder</source>
-      <translation type="unfinished" />
+      <translation>Constructor visual de estrategias</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="75" />
       <source>Rule identity</source>
-      <translation type="unfinished" />
+      <translation>Identidad de la regla</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="78" />
       <source>Rule name, e.g. EMA+RSI</source>
-      <translation type="unfinished" />
+      <translation>Nombre de la regla, ej. EMA+RSI</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="81" />
       <source>When does this rule enter and exit?</source>
-      <translation type="unfinished" />
+      <translation>¿Cuándo entra y sale esta regla?</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="83" />
       <source>Name:</source>
-      <translation type="unfinished" />
+      <translation>Nombre:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="85" />
       <source>Description:</source>
-      <translation type="unfinished" />
+      <translation>Descripción:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="89" />
       <source>Block palette</source>
-      <translation type="unfinished" />
+      <translation>Paleta de bloques</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="194" />
       <location filename="../../ui/strategy_builder.py" line="188" />
       <location filename="../../ui/strategy_builder.py" line="92" />
       <source>Indicator</source>
-      <translation type="unfinished" />
+      <translation>Indicador</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="206" />
       <location filename="../../ui/strategy_builder.py" line="93" />
       <source>Value</source>
-      <translation type="unfinished" />
+      <translation>Valor</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="94" />
       <source>Crossover</source>
-      <translation type="unfinished" />
+      <translation>Cruce alcista</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="95" />
       <source>Crossunder</source>
-      <translation type="unfinished" />
+      <translation>Cruce bajista</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="96" />
       <source>AND</source>
-      <translation type="unfinished" />
+      <translation>Y (AND)</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="97" />
       <source>OR</source>
-      <translation type="unfinished" />
+      <translation>O (OR)</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="98" />
       <source>Entry</source>
-      <translation type="unfinished" />
+      <translation>Entrada</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="99" />
       <source>Exit</source>
-      <translation type="unfinished" />
+      <translation>Salida</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="213" />
       <location filename="../../ui/strategy_builder.py" line="100" />
       <source>Stop-loss</source>
-      <translation type="unfinished" />
+      <translation>Stop-loss</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="221" />
       <location filename="../../ui/strategy_builder.py" line="101" />
       <source>Take-profit</source>
-      <translation type="unfinished" />
+      <translation>Take-profit</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="112" />
       <source>Validate</source>
-      <translation type="unfinished" />
+      <translation>Validar</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="114" />
       <source>Explain</source>
-      <translation type="unfinished" />
+      <translation>Explicar</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="116" />
       <source>Check executability</source>
-      <translation type="unfinished" />
+      <translation>Comprobar ejecutabilidad</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="118" />
       <source>Remove selected</source>
-      <translation type="unfinished" />
+      <translation>Eliminar seleccionado</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="120" />
       <source>Export…</source>
-      <translation type="unfinished" />
+      <translation>Exportar…</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="122" />
       <source>Import…</source>
-      <translation type="unfinished" />
+      <translation>Importar…</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="188" />
       <source>Indicator type:</source>
-      <translation type="unfinished" />
+      <translation>Tipo de indicador:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="194" />
       <source>Period:</source>
-      <translation type="unfinished" />
+      <translation>Período:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="206" />
       <source>Value:</source>
-      <translation type="unfinished" />
+      <translation>Valor:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="221" />
       <location filename="../../ui/strategy_builder.py" line="213" />
       <source>Fraction of price:</source>
-      <translation type="unfinished" />
+      <translation>Fracción del precio:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="242" />
       <source>Untitled rule</source>
-      <translation type="unfinished" />
+      <translation>Regla sin título</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="255" />
       <source>The rule is empty: add at least one condition.</source>
-      <translation type="unfinished" />
+      <translation>La regla está vacía: añade al menos una condición.</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="269" />
       <source>A tradable rule needs both an entry and an exit signal. Until they exist, the rule is incomplete.</source>
-      <translation type="unfinished" />
+      <translation>Una regla operable necesita tanto una señal de entrada como una de salida. Mientras no existan, la regla está incompleta.</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="274" />
       <source>No problems found in the rule structure.</source>
-      <translation type="unfinished" />
+      <translation>No se encontraron problemas en la estructura de la regla.</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="286" />
       <source>Possible overfitting:</source>
-      <translation type="unfinished" />
+      <translation>Posible sobreajuste:</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="288" />
       <source>This is a description of the rule, not evidence that it works. Test it and try to refute it.</source>
-      <translation type="unfinished" />
+      <translation>Esta es una descripción de la regla, no evidencia de que funcione. Pruébala e intenta refutarla.</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="319" />
       <source>This rule cannot run in the engine yet: {reason}</source>
-      <translation type="unfinished" />
+      <translation>Esta regla no se puede ejecutar en el motor todavía: {reason}</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="324" />
       <source>Executable rule ready: {description}
 
 The engine will fill signals at the next candle's open. Stop-loss and take-profit are evaluated on candle closes, not intrabar.</source>
-      <translation type="unfinished" />
+      <translation>Regla ejecutable lista: {description}
+
+El motor ejecutará las señales en la apertura de la siguiente vela. El stop-loss y take-profit se evalúan al cierre de las velas, no entre velas.</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="338" />
       <source>The file is not a valid strategy rule.</source>
-      <translation type="unfinished" />
+      <translation>El archivo no es una regla de estrategia válida.</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="352" />
       <source>Imported rule “{name}” (version {version}).</source>
-      <translation type="unfinished" />
+      <translation>Regla importada «{name}» (versión {version}).</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="360" />
       <source>Export rule</source>
-      <translation type="unfinished" />
+      <translation>Exportar regla</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="370" />
       <location filename="../../ui/strategy_builder.py" line="361" />
       <source>JSON (*.json)</source>
-      <translation type="unfinished" />
+      <translation>JSON (*.json)</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="379" />
       <location filename="../../ui/strategy_builder.py" line="370" />
       <source>Import rule</source>
-      <translation type="unfinished" />
+      <translation>Importar regla</translation>
     </message>
     <message>
       <location filename="../../ui/strategy_builder.py" line="380" />
       <source>Could not read the file: {error}</source>
-      <translation type="unfinished" />
+      <translation>No se pudo leer el archivo: {error}</translation>
     </message>
   </context>
 </TS>
