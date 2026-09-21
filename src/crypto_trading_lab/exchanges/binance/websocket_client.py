@@ -97,6 +97,7 @@ class BinanceWebSocketClient:
     def __init__(
         self,
         endpoints: BinanceEndpoints,
+        websocket_factory: Optional[Callable[[str], Any]] = None,
         *,
         policy: Optional[ReconnectionPolicy] = None,
         circuit_breaker: Optional[CircuitBreaker] = None,
@@ -104,6 +105,7 @@ class BinanceWebSocketClient:
         stale_detector: Optional[StaleDataDetector] = None,
     ) -> None:
         self._endpoints = endpoints
+        self._websocket_factory = websocket_factory
         self._policy = policy or ReconnectionPolicy(base_delay=1.0, max_delay=60.0, jitter=0.3)
         self._circuit_breaker = circuit_breaker or CircuitBreaker(failure_threshold=5, reset_timeout=60.0)
         self._rate_limiter = rate_limiter or RateLimiter(max_weight=1200, window_seconds=60)
@@ -206,18 +208,22 @@ class BinanceWebSocketClient:
         streams = '/'.join(self._subscriptions)
         url = f"{self._endpoints.websocket_base_url}/stream?streams={streams}"
         
-        import websockets
-        
         self._state = ConnectionState.SUBSCRIBING
         reconnect_time = time.time()
         self._connection_start_time = reconnect_time
         
-        async with websockets.connect(
-            url,
-            ping_interval=20,
-            ping_timeout=10,
-            close_timeout=10,
-        ) as ws:
+        if self._websocket_factory is None:
+            import websockets
+            ws_cm = websockets.connect(
+                url,
+                ping_interval=20,
+                ping_timeout=10,
+                close_timeout=10,
+            )
+        else:
+            ws_cm = self._websocket_factory(url)
+            
+        async with ws_cm as ws:
             self._state = ConnectionState.CONNECTED
             self._stale_detector.touch()
             self._pending_subscriptions.clear()

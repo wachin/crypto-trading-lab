@@ -48,6 +48,7 @@ from crypto_trading_lab.exchanges.connection_manager import (
     StaleDataDetector,
 )
 from crypto_trading_lab.exchanges.rate_limiter import RateLimiter
+from crypto_trading_lab.exchanges.binance.websocket_client import BinanceWebSocketClient
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,7 @@ class BinanceRestAdapter(ExchangeAdapter):
         allow_trading: bool = False,
         rate_limiter: Optional[RateLimiter] = None,
         circuit_breaker: Optional[CircuitBreaker] = None,
+        websocket_factory=None,
     ) -> None:
         self._endpoints = endpoints
         self._allow_trading = allow_trading
@@ -80,6 +82,16 @@ class BinanceRestAdapter(ExchangeAdapter):
         self._circuit_breaker = circuit_breaker or CircuitBreaker()
         self._state = ConnectionState.DISCONNECTED
         self._base_url = endpoints.rest_base_url.rstrip('/')
+        self._websocket_factory = websocket_factory
+        
+        # WebSocket client for subscriptions
+        self._ws_client = BinanceWebSocketClient(
+            endpoints,
+            websocket_factory,
+            policy=ReconnectionPolicy(),
+            circuit_breaker=self._circuit_breaker,
+            rate_limiter=self._rate_limiter,
+        )
         
         if allow_trading:
             self.capabilities |= Capability.TRADING | Capability.BALANCES | Capability.ORDERS
@@ -91,6 +103,9 @@ class BinanceRestAdapter(ExchangeAdapter):
         self._state = ConnectionState.STOPPED
         
     def state(self) -> ConnectionState:
+        # Proxy WebSocket client state if active
+        if self._ws_client.state != ConnectionState.DISCONNECTED:
+            return self._ws_client.state
         return self._state
         
     def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -232,21 +247,31 @@ class BinanceRestAdapter(ExchangeAdapter):
                 
         return candles
         
-    # Subscriptions - stub for now, requires WebSocket integration
+    # Subscriptions - integrated with WebSocket client
     def subscribe_ticker(self, symbol: Symbol, handler) -> None:
-        logger.info("Ticker subscription not yet implemented for REST adapter")
+        stream = f"{str(symbol).replace('/', '').lower()}@ticker"
+        self._ws_client.subscribe(stream)
+        # Note: WebSocket client needs handler registration logic
+        logger.debug("Subscribed to ticker stream: %s", stream)
         
     def subscribe_candles(self, symbol: Symbol, interval: str, handler) -> None:
-        logger.info("Candle subscription not yet implemented for REST adapter")
+        stream = f"{str(symbol).replace('/', '').lower()}@kline_{interval}"
+        self._ws_client.subscribe(stream)
+        logger.debug("Subscribed to kline stream: %s", stream)
         
     def subscribe_trades(self, symbol: Symbol, handler) -> None:
-        logger.info("Trade subscription not yet implemented for REST adapter")
+        stream = f"{str(symbol).replace('/', '').lower()}@trade"
+        self._ws_client.subscribe(stream)
+        logger.debug("Subscribed to trade stream: %s", stream)
         
     def subscribe_order_book(self, symbol: Symbol, handler) -> None:
-        logger.info("Order book subscription not yet implemented for REST adapter")
+        stream = f"{str(symbol).replace('/', '').lower()}@depth"
+        self._ws_client.subscribe(stream)
+        logger.debug("Subscribed to order book stream: %s", stream)
         
     def unsubscribe_all(self) -> None:
-        pass
+        self._ws_client._subscriptions.clear()
+        self._ws_client._pending_subscriptions.clear()
         
     # Account operations - read-only
     def fetch_balances(self) -> dict[str, Balance]:
