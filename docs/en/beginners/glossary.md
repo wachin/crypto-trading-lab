@@ -337,3 +337,243 @@ otherwise sound strategies. Look at them before you look at profits.
 
 **Warning:** Limit orders can leave you unfilled, meaning you don't enter or exit the position, which can be frustrating if you're trying to capitalize on a fast-moving move.
 
+---
+
+### API
+
+**Definition:** Application Programming Interface — a set of rules that lets software talk to an exchange programmatically.
+
+**In simple words:** An API is how your trading bot or this application talks to the exchange without you clicking buttons. It lets you fetch prices, place orders, and check balances automatically.
+
+**Warning:** API keys are like passwords — anyone who has them can trade on your account. Never share them, and never put them in code repositories.
+
+---
+
+### API key
+
+**Definition:** A unique string that identifies you to the exchange's API.
+
+**In simple words:** Like a username and password combined into one long string. The exchange uses it to know who's making the request.
+
+**Warning:** Never hard-code API keys in code. Use a secure credential store (like the OS keyring). This application uses the system keyring.
+
+---
+
+### altcoin
+
+**Definition:** Any cryptocurrency other than Bitcoin.
+
+**In simple words:** "Alternative coin." After Bitcoin, thousands of other coins were created (Ethereum, Litecoin, etc.). All are called altcoins.
+
+**Warning:** Most altcoins are far more volatile and illiquid than Bitcoin. Many go to zero.
+
+---
+
+### asset
+
+**Definition:** Anything of value that can be owned or traded.
+
+**In simple words:** An asset is something you own that has value — like Bitcoin, a share of stock, or a house. In crypto, the asset is the coin or token you're trading.
+
+**See also:** base asset, quote asset.
+
+---
+
+### base asset
+
+**Definition:** The first asset in a trading pair, the one being bought or sold.
+
+**In simple words:** In `BTC/USDT`, BTC is the base asset. When you "buy BTC/USDT" you are buying the base asset (BTC) using the quote asset (USDT).
+
+**See also:** quote asset, trading pair.
+
+---
+
+### bid
+
+**Definition:** The highest price a buyer is willing to pay for an asset.
+
+**In simple words:** If you want to sell right now, you get the bid price. It's the "buyer's price."
+
+**See also:** ask, spread.
+
+---
+
+### blockchain
+
+**Definition:** A public, append-only ledger shared across many computers. Once data is written, it cannot be changed without rewriting all subsequent blocks.
+
+**In simple words:** Think of a shared notebook where everyone can write but nobody can erase. Every transaction is a new line, and the math of cryptography makes sure nobody can sneak in and change old lines.
+
+**See also:** cryptocurrency, Bitcoin.
+
+---
+
+### commission
+
+**Definition:** The fee charged by an exchange or broker for executing a trade, usually a percentage of the trade value.
+
+**In simple words:** The middleman's cut. Every time you buy or sell, the exchange takes a small cut. It's called "commission" or "fee" — same thing.
+
+**See also:** fee, slippage.
+
+---
+
+### dataset
+
+**Definition:** A stored, versioned collection of market data used for research.
+
+**In simple words:** A dataset is a frozen copy of the market's history. Its identity (exchange, market, timeframe, period, and checksum) is recorded so every experiment can say exactly which data it used. Data is public: no API key is needed.
+
+**See also:** backtesting, paper trading.
+
+---
+
+### look-ahead bias
+
+**Definition:** A backtest error where the strategy uses future data to make decisions.
+
+**In simple words:** If your backtest "peeks into the future" — using tomorrow's price to decide today's trade — the results are fake. You would never have that info in real life.
+
+**Warning:** Always check that your strategy logic only uses data available *at the time* of the signal.
+
+---
+
+### limit order
+
+**Definition:** An order to buy at or below a specific price, or to sell at or above a specific price.
+
+**In simple words:** A limit order says "I want to buy, but only if the price is $X or lower." It gives you price control, but the order might not execute if the price never reaches your limit.
+
+**Warning:** Limit orders can leave you unfilled, meaning you don't enter or exit the position, which can be frustrating if you're trying to capitalize on a fast-moving move.
+
+---
+
+### market order
+
+**Definition:** An order to buy or sell immediately at the best available current price.
+
+**In simple words:** A market order says "I want to buy/sell right now, no matter what the price is." It's the fastest way to get in or out of a position, but you might not get the exact price you saw a moment ago.
+
+**Warning:** Market orders in illiquid markets can result in very poor fill prices due to slippage.
+
+---
+
+### OHLCV
+
+**Definition:** Open, High, Low, Close, Volume — the five numbers that define one candle.
+
+**In simple words:** Every candle is just these five numbers: where price started (Open), how high it went (High), how low it went (Low), where it ended (Close), and how much traded (Volume).
+
+**See also:** candle, timeframe.
+
+---
+
+### order book
+
+**Definition:** The list of all open limit orders on an exchange, organized by price.
+
+**In simple words:** The order book shows all the people waiting to buy (bids) and sell (asks), and at what prices. The "spread" is the gap between the highest bid and lowest ask.
+
+**See also:** bid, ask, spread, liquidity.
+
+---
+
+### quote asset
+
+**Definition:** The second asset in a trading pair, the one used to price the base asset.
+
+**In simple words:** In `BTC/USDT`, USDT is the quote asset. The price tells you how much quote asset one unit of base asset costs.
+
+**See also:** base asset, trading pair.
+
+---
+
+### rate limit
+
+**Definition:** A restriction on how many API requests you can make in a given time window.
+
+**In simple words:** Exchanges limit how fast you can ask for data or send orders. Hit the limit and you get blocked temporarily.
+
+**Warning:** A trading bot that ignores rate limits will get banned from the exchange. This application respects limits automatically.
+
+---
+
+### REST
+
+**Definition:** Representational State Transfer — a common web API style using HTTP verbs (GET, POST, DELETE).
+
+**In simple words:** The exchange gives you URLs like `GET /api/v3/ticker/price` to fetch data. You call them like a webpage, but get JSON back instead of HTML.
+
+**See also:** API, WebSocket.
+
+---
+
+### seed phrase
+
+**Definition:** A sequence of words (usually 12 or 24) that can restore a crypto wallet's private keys.
+
+**In simple words:** The master backup of your wallet. Write it on paper, store it safely. Anyone with the seed phrase owns the wallet.
+
+**Warning:** Never store the seed phrase digitally. Never share it. If you lose it, you lose the wallet forever.
+
+---
+
+### signal
+
+**Definition:** The output of a strategy: "enter long," "exit long," or "hold."
+
+**In simple words:** A signal is the strategy's decision. It is *not* an order — the risk manager decides whether to act on it.
+
+**See also:** strategy, Order, RiskManager.
+
+---
+
+### spread
+
+**Definition:** The difference between the lowest ask (seller price) and the highest bid (buyer price).
+
+**In simple words:** The spread is the "gap" in the order book. A tight spread means a liquid market; a wide spread means it costs more to trade.
+
+**See also:** bid, ask, liquidity.
+
+---
+
+### stop-loss
+
+**Definition:** An order that automatically sells your position if the price falls to a certain level.
+
+**In simple words:** A safety net. You say "if the price drops to $X, sell everything." It limits your loss on a trade.
+
+**Warning:** In a flash crash, a stop-loss may fill at a much worse price than your trigger.
+
+---
+
+### take-profit
+
+**Definition:** An order that automatically sells your position when the price reaches a target level.
+
+**In simple words:** The opposite of stop-loss. You say "if the price hits $Y, take my profit and sell." It locks in gains.
+
+**Warning:** A take-profit can cause you to exit too early if the trend continues strongly.
+
+---
+
+### timeframe
+
+**Definition:** The duration each candle represents (e.g., 1 minute, 1 hour, 1 day).
+
+**In simple words:** A 1-hour chart has one candle per hour. A daily chart has one candle per day. Shorter timeframes show more detail but more noise.
+
+**See also:** candle, OHLCV.
+
+---
+
+### WebSocket
+
+**Definition:** A persistent, two-way connection between your app and the exchange for real-time data.
+
+**In simple words:** Instead of asking "what's the price?" over and over (REST), WebSocket pushes updates the moment they happen. Like a phone call that stays open.
+
+**See also:** REST, API.
+
