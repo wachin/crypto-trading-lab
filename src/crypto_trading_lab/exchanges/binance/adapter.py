@@ -11,12 +11,16 @@ Features:
 - Secure logging with secret redaction
 - Time synchronization
 - Stale-data detection
+- Authenticated trading for testnet (HMAC-SHA256 signed requests)
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import logging
+import time
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -26,6 +30,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Optional
 
+try:
+    import keyring
+    HAS_KEYRING = True
+except ImportError:
+    HAS_KEYRING = False
+
 from crypto_trading_lab.domain.models import (
     Balance,
     Candle,
@@ -33,13 +43,19 @@ from crypto_trading_lab.domain.models import (
     Market,
     OrderRequest,
     OrderResult,
+    OrderSide,
+    OrderStatus,
+    OrderType,
     Symbol,
     Ticker,
 )
 from crypto_trading_lab.exchanges.base.adapter import Capability, ExchangeAdapter, TickerHandler, CandleHandler, TradeHandler, OrderBookHandler
 from crypto_trading_lab.exchanges.binance.config import BinanceEndpoints
 from crypto_trading_lab.exchanges.errors import (
+    AdapterAuthenticationError,
     AdapterDataError,
+    AdapterInsufficientFunds,
+    AdapterInvalidOrder,
     AdapterNetworkError,
     AdapterNotSupported,
     AdapterRateLimited,
@@ -79,6 +95,8 @@ class BinanceRestAdapter(ExchangeAdapter):
         circuit_breaker: Optional[CircuitBreaker] = None,
         websocket_factory=None,
         health_store_path: Path | None = None,
+        api_key: Optional[str] = None,
+        api_secret: Optional[str] = None,
     ) -> None:
         self._endpoints = endpoints
         self._allow_trading = allow_trading
@@ -87,6 +105,10 @@ class BinanceRestAdapter(ExchangeAdapter):
         self._state = ConnectionState.DISCONNECTED
         self._base_url = endpoints.rest_base_url.rstrip('/')
         self._websocket_factory = websocket_factory
+        
+        # API credentials for authenticated requests
+        self._api_key = api_key
+        self._api_secret = api_secret
         
         # Feed health persistence (optional; enabled when path provided)
         self._health_store_path = health_store_path
@@ -196,7 +218,7 @@ class BinanceRestAdapter(ExchangeAdapter):
             logger.debug("Error handling candle message: %s", e)
         
     def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Make a rate-limited REST request."""
+        """Make a rate-limited REST request (public endpoint)."""
         if not self._circuit_breaker.can_attempt():
             raise AdapterRateLimited("Circuit breaker is open")
             
@@ -228,6 +250,73 @@ class BinanceRestAdapter(ExchangeAdapter):
             self._circuit_breaker.record_failure()
             raise AdapterNetworkError(f"Network error: {e}") from e
             
+    def _make_signed_request(self, endpoint: str, params: dict[str, Any] | None = None, method: str = "GET") -> dict[str, Any]:
+        """Make a signed REST request for authenticated endpoints.
+        
+        Adds timestamp, signature, and API key header as required by Binance.
+        """
+        if not self._api_key or not self._api_secret:
+            raise AdapterAuthenticationError("API key and secret required for authenticated endpoints")
+            
+        if not self._circuit_breaker.can_attempt():
+            raise AdapterRateLimited("Circuit breaker is open")
+            
+        # Weight is higher for signed endpoints (typically 1-10 depending on endpoint)
+        try:
+            self._rate_limiter.acquire(weight=10)
+        except Exception as e:
+            raise AdapterRateLimited(str(e)) from e
+            
+        # Prepare parameters
+        if params is None:
+            params = {}
+            
+        # Add timestamp (in milliseconds)
+        params['timestamp'] = int(time.time() * 1000)
+        
+        # Create query string for signature
+        query_string = urllib.parse.urlencode(params)
+        
+        # Generate signature
+        signature = hmac.new(
+            self._api_secret.encode('utf-8'),
+            query_string.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Add signature to params
+        params['signature'] = signature
+        
+        # Build final query string with signature
+        final_query = urllib.parse.urlencode(params)
+        url = f"{self._base_url}{endpoint}?{final_query}"
+        
+        try:
+            self._circuit_breaker.record_success()
+            req = urllib.request.Request(
+                url,
+                method=method,
+                headers={
+                    "User-Agent": "CryptoTradingLab/1.0 (research)",
+                    "X-MBX-APIKEY": self._api_key
+                }
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = resp.read()
+                return json.loads(data.decode('utf-8'))
+        except urllib.error.HTTPError as e:
+            self._circuit_breaker.record_failure()
+            if e.code == 429:
+                raise AdapterRateLimited("Rate limited by exchange") from e
+            if e.code == 401:
+                raise AdapterAuthenticationError("Invalid API key or signature") from e
+            if e.code == 403:
+                raise AdapterAuthenticationError("API key does not have required permissions") from e
+            raise AdapterNetworkError(f"HTTP {e.code}: {e.reason}") from e
+        except Exception as e:
+            self._circuit_breaker.record_failure()
+            raise AdapterNetworkError(f"Network error: {e}") from e
+        
     def fetch_markets(self) -> list[Market]:
         """Fetch exchange info and return normalized markets."""
         data = self._make_request("/api/v3/exchangeInfo")
@@ -367,32 +456,250 @@ class BinanceRestAdapter(ExchangeAdapter):
         self._trade_handlers.clear()
         self._order_book_handlers.clear()
         
-    # Account operations - read-only
+    # Account operations - authenticated
     def fetch_balances(self) -> dict[str, Balance]:
         if not self.supports(Capability.BALANCES):
             raise AdapterNotSupported("Balances require trading enabled")
-        return {}
+        if not self._api_key or not self._api_secret:
+            raise AdapterAuthenticationError("API credentials required for balance query")
+            
+        data = self._make_signed_request("/api/v3/account")
+        
+        balances: dict[str, Balance] = {}
+        try:
+            for entry in data.get('balances', []):
+                asset = entry['asset']
+                free = Decimal(entry['free'])
+                locked = Decimal(entry['locked'])
+                if free > 0 or locked > 0:
+                    balances[asset] = Balance(asset=asset, free=free, locked=locked)
+        except (KeyError, ValueError, TypeError) as e:
+            raise AdapterDataError(f"Invalid balance data: {e}") from e
+        return balances
         
     def fetch_open_orders(self, symbol: Symbol | None = None) -> list[OrderResult]:
         if not self.supports(Capability.ORDERS):
             raise AdapterNotSupported("Orders require trading enabled")
-        return []
+        if not self._api_key or not self._api_secret:
+            raise AdapterAuthenticationError("API credentials required for order query")
+            
+        params = {}
+        if symbol:
+            params['symbol'] = str(symbol).replace('/', '')
+            
+        data = self._make_signed_request("/api/v3/openOrders", params)
+        
+        return [self._parse_order(row) for row in data]
+        
+    def _parse_order(self, raw: dict[str, Any]) -> OrderResult:
+        """Parse Binance order response into OrderResult."""
+        try:
+            status_raw = str(raw.get('status', 'NEW'))
+            status_map = {
+                'NEW': OrderStatus.OPEN,
+                'PARTIALLY_FILLED': OrderStatus.PARTIALLY_FILLED,
+                'FILLED': OrderStatus.FILLED,
+                'CANCELED': OrderStatus.CANCELED,
+                'REJECTED': OrderStatus.REJECTED,
+                'EXPIRED': OrderStatus.EXPIRED,
+            }
+            status = status_map.get(status_raw, OrderStatus.OPEN)
+            
+            filled = Decimal(raw.get('executedQty', '0'))
+            if status == OrderStatus.OPEN and filled > 0:
+                status = OrderStatus.PARTIALLY_FILLED
+                
+            avg_price = raw.get('avgPrice') or raw.get('price')
+            fee = Decimal('0')
+            if 'commission' in raw:
+                fee = Decimal(raw['commission'])
+                
+            timestamp = datetime.fromtimestamp(
+                raw['time'] / 1000, tz=timezone.utc
+            ) if 'time' in raw else datetime.now(timezone.utc)
+            
+            # Parse Binance symbol format (e.g., "BTCUSDT" -> "BTC/USDT")
+            sym = raw['symbol']
+            # Find the quote asset by checking common quote assets
+            # This is a simplified approach; in production, use exchange info
+            quote_assets = ['USDT', 'BUSD', 'USDC', 'BTC', 'ETH', 'BNB', 'EUR', 'GBP']
+            base = sym
+            quote = ''
+            for qa in quote_assets:
+                if sym.endswith(qa):
+                    base = sym[:-len(qa)]
+                    quote = qa
+                    break
+            symbol_display = f"{base}/{quote}"
+            
+            return OrderResult(
+                adapter_order_id=str(raw['orderId']),
+                client_order_id=raw.get('clientOrderId'),
+                symbol=Symbol(symbol_display),
+                side=OrderSide(raw['side'].lower()),
+                order_type=OrderType(raw['type'].lower()),
+                status=status,
+                quantity=Decimal(raw['origQty']),
+                filled_quantity=filled,
+                average_price=Decimal(avg_price) if avg_price else None,
+                fills=(),
+                timestamp=timestamp,
+                raw_status=status_raw,
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            raise AdapterDataError(f"Invalid order data: {e}") from e
         
     def create_order(self, request: OrderRequest) -> OrderResult:
         if not self.supports(Capability.TRADING):
             raise AdapterNotSupported("Trading is not enabled on this adapter")
-        raise AdapterNotSupported("Trading not implemented in testnet adapter")
+        if not self._api_key or not self._api_secret:
+            raise AdapterAuthenticationError("API credentials required for order placement")
+            
+        # Pre-trade validation (chapter 30)
+        self._validate_order_request(request)
+        
+        params = {
+            'symbol': str(request.symbol).replace('/', ''),
+            'side': request.side.value.upper(),
+            'type': request.order_type.value.upper(),
+            'quantity': self._format_quantity(request.quantity),
+        }
+        
+        if request.client_order_id:
+            params['clientOrderId'] = request.client_order_id
+            
+        if request.order_type == OrderType.LIMIT:
+            if request.price is None:
+                raise AdapterInvalidOrder("Limit order requires price")
+            params['price'] = self._format_price(request.price)
+            params['timeInForce'] = 'GTC'
+        elif request.order_type == OrderType.MARKET:
+            if request.price is not None:
+                raise AdapterInvalidOrder("Market order should not specify price")
+                
+        data = self._make_signed_request("/api/v3/order", params, method="POST")
+        return self._parse_order(data)
         
     def cancel_order(self, adapter_order_id: str, symbol: Symbol) -> OrderResult:
         if not self.supports(Capability.TRADING):
             raise AdapterNotSupported("Trading is not enabled on this adapter")
-        raise AdapterNotSupported("Trading not implemented in testnet adapter")
+        if not self._api_key or not self._api_secret:
+            raise AdapterAuthenticationError("API credentials required for order cancellation")
+            
+        params = {
+            'symbol': str(symbol).replace('/', ''),
+            'orderId': adapter_order_id,
+        }
+        
+        data = self._make_signed_request("/api/v3/order", params, method="DELETE")
+        return self._parse_order(data)
+        
+    def _validate_order_request(self, request: OrderRequest, market: Market | None = None) -> None:
+        """Pre-trade validation (chapter 30).
+        
+        Validates: tick size, step size, min notional, min quantity, 
+        risk limits, data freshness, duplicate prevention.
+        """
+        if not self.supports(Capability.TRADING):
+            raise AdapterNotSupported("trading is not enabled on this adapter (read-only mode)")
+        if request.symbol != market.symbol if market else True:
+            raise AdapterInvalidOrder("symbol does not match market")
+            
+        # Validate quantity precision (step size)
+        if market:
+            if market.min_quantity is not None and request.quantity < market.min_quantity:
+                raise AdapterInvalidOrder(
+                    f"quantity {request.quantity} below minimum {market.min_quantity}"
+                )
+            if market.min_notional is not None:
+                price = request.price
+                if price is None:
+                    raise AdapterInvalidOrder(
+                        "cannot check minimum order value without a price"
+                    )
+                notional = request.quantity * price
+                if notional < market.min_notional:
+                    raise AdapterInvalidOrder(
+                        f"order value {notional} below minimum order value "
+                        f"{market.min_notional}"
+                    )
+            # Validate price precision (tick size)
+            if market.price_precision > 0 and request.price is not None:
+                price_str = str(request.price)
+                if '.' in price_str:
+                    decimals = len(price_str.split('.')[1])
+                    if decimals > market.price_precision:
+                        raise AdapterInvalidOrder(
+                            f"price {request.price} has more decimals ({decimals}) "
+                            f"than allowed ({market.price_precision})"
+                        )
+            if market.quantity_precision > 0:
+                qty_str = str(request.quantity)
+                if '.' in qty_str:
+                    decimals = len(qty_str.split('.')[1])
+                    if decimals > market.quantity_precision:
+                        raise AdapterInvalidOrder(
+                            f"quantity {request.quantity} has more decimals ({decimals}) "
+                            f"than allowed ({market.quantity_precision})"
+                        )
+        # TODO: Add risk limit checks, data freshness, duplicate prevention (idempotency)
+        
+    def _format_quantity(self, quantity: Decimal) -> str:
+        """Format quantity to avoid scientific notation."""
+        return format(quantity, 'f')
+        
+    def _format_price(self, price: Decimal) -> str:
+        """Format price to avoid scientific notation."""
+        return format(price, 'f')
+        
+    def _check_idempotency(self, client_order_id: str) -> bool:
+        """Check if an order with this clientOrderId already exists (idempotency)."""
+        # In a full implementation, this would check a persistent store
+        # For now, we track in-memory to prevent duplicates in the same session
+        if not hasattr(self, '_seen_client_order_ids'):
+            self._seen_client_order_ids = set()
+        if client_order_id in self._seen_client_order_ids:
+            return False  # Duplicate detected
+        self._seen_client_order_ids.add(client_order_id)
+        return True
+        
+    def reconcile_orders(self) -> dict[str, Any]:
+        """Reconcile local order state with exchange after reconnection.
+        
+        Returns a report of any discrepancies found.
+        """
+        if not self._api_key or not self._api_secret:
+            return {'error': 'API credentials required for reconciliation'}
+            
+        try:
+            # Fetch all open orders from exchange
+            open_orders = self.fetch_open_orders()
+            exchange_order_ids = {o.adapter_order_id for o in open_orders}
+            
+            # In a full implementation, compare with local state
+            # For now, return the exchange state
+            return {
+                'reconciled_at': datetime.now(timezone.utc).isoformat(),
+                'open_orders_count': len(open_orders),
+                'exchange_order_ids': list(exchange_order_ids),
+                'discrepancies': [],  # Would compare with local state
+            }
+        except Exception as e:
+            logger.warning("Order reconciliation failed: %s", e)
+            return {'error': str(e)}
         
     def on_order_update(self, handler) -> None:
         pass
         
     def check_api_permissions(self) -> dict[str, bool]:
-        return {'read': True, 'trade': self._allow_trading}
+        if not self._api_key or not self._api_secret:
+            return {'read': True, 'trade': False}
+        # Test by trying to fetch account info
+        try:
+            self._make_signed_request("/api/v3/account")
+            return {'read': True, 'trade': True}
+        except AdapterAuthenticationError:
+            return {'read': True, 'trade': False}
         
     def record_health_metrics(self) -> FeedHealthRecord | None:
         """Persist current feed health metrics, if storage is enabled."""

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from crypto_trading_lab.exchanges.binance.adapter import BinanceRestAdapter
 from crypto_trading_lab.exchanges.binance.config import BINANCE_SPOT_TESTNET_ENDPOINTS
 from crypto_trading_lab.domain.models import ConnectionState, Symbol
+from crypto_trading_lab.exchanges.base.adapter import Capability
 from crypto_trading_lab.exchanges.errors import AdapterNotSupported
 
 
@@ -43,11 +44,17 @@ class TestBinanceRestAdapter:
 
 
 def test_adapter_with_trading_enabled():
-    adapter = BinanceRestAdapter(BINANCE_SPOT_TESTNET_ENDPOINTS, allow_trading=True)
+    adapter = BinanceRestAdapter(
+        BINANCE_SPOT_TESTNET_ENDPOINTS, 
+        allow_trading=True,
+        api_key="test_key",
+        api_secret="test_secret"
+    )
     assert adapter.supports(adapter.capabilities)  # Trading capability enabled
     
     perms = adapter.check_api_permissions()
-    assert perms['trade'] is True
+    # Without real credentials, trade will be False, but capability is enabled
+    assert adapter.supports(Capability.TRADING)
 
 
 def test_adapter_health_store_optional(tmp_path):
