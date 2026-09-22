@@ -18,7 +18,7 @@ from decimal import Decimal
 from typing import Protocol, Sequence
 
 from crypto_trading_lab.domain.models import Candle, OrderSide
-from crypto_trading_lab.indicators.library import SMA
+from crypto_trading_lab.indicators.library import SMA, SMAStream
 
 __all__ = [
     "ExecutionModel",
@@ -136,6 +136,9 @@ class MACrossoverStrategy:
     Golden cross (fast above slow) → BUY; death cross → close (SELL).
     Signals are emitted at the close of the current candle and filled
     at the NEXT candle's open — the engine enforces this.
+
+    Uses :class:`SMAStream` for O(1) incremental updates, so backtesting
+    N candles is O(N) instead of O(N^2) (chapter 13).
     """
 
     fast: int = 10
@@ -145,37 +148,28 @@ class MACrossoverStrategy:
     def __post_init__(self) -> None:
         if self.fast >= self.slow:
             raise ValueError("fast period must be smaller than slow")
-        self._fast_sma = SMA(self.fast)
-        self._slow_sma = SMA(self.slow)
+        self._fast_stream = SMAStream(self.fast)
+        self._slow_stream = SMAStream(self.slow)
 
     @property
     def name(self) -> str:
         return f"SMA({self.fast})xSMA({self.slow}) crossover"
 
     def on_candle(self, index, candles):
-        window = candles[: index + 1]
-        fast = self._fast_sma.compute(window)
-        slow = self._slow_sma.compute(window)
-        if fast.values[index] is None or slow.values[index] is None:
+        candle = candles[index]
+        fast = self._fast_stream.update(candle)
+        slow = self._slow_stream.update(candle)
+        if fast is None or slow is None:
             return None
         if index == 0:
             return None
-        previous_fast = fast.values[index - 1]
-        previous_slow = slow.values[index - 1]
-        if (
-            previous_fast is not None
-            and previous_slow is not None
-            and previous_fast <= previous_slow
-            and fast.values[index] > slow.values[index]
-        ):
-            return OrderSide.BUY
-        if (
-            previous_fast is not None
-            and previous_slow is not None
-            and previous_fast >= previous_slow
-            and fast.values[index] < slow.values[index]
-        ):
-            return OrderSide.SELL
+        previous_fast = self._fast_stream.prev_value
+        previous_slow = self._slow_stream.prev_value
+        if previous_fast is not None and previous_slow is not None:
+            if previous_fast <= previous_slow and fast > slow:
+                return OrderSide.BUY
+            if previous_fast >= previous_slow and fast < slow:
+                return OrderSide.SELL
         return None
 
 

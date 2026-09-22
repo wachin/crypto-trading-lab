@@ -20,6 +20,7 @@ __all__ = [
     "IndicatorResult",
     "IndicatorError",
     "SMA",
+    "SMAStream",
     "EMA",
     "RSI",
     "BollingerBands",
@@ -118,6 +119,44 @@ class SMA(Indicator):
             if index >= self.period - 1:
                 values[index] = window_sum / Decimal(self.period)
         return IndicatorResult("SMA", tuple(values))
+
+    def stream(self) -> "SMAStream":
+        """An incremental, O(1)-per-update calculator for this period."""
+        return SMAStream(self.period)
+
+
+class SMAStream:
+    """Incremental simple moving average (chapter 13 performance).
+
+    Feed candles one at a time with :meth:`update`; the running mean is
+    maintained in O(1) so a strategy traversing N candles does not pay an
+    O(N) recompute per step. This removes the O(N^2) behaviour of
+    re-running :meth:`SMA.compute` on every growing window.
+    """
+
+    def __init__(self, period: int = 20) -> None:
+        if not isinstance(period, int) or period < 1:
+            raise IndicatorError(
+                f"SMA period must be a positive integer, got {period!r}"
+            )
+        self.period = period
+        self._window: list[Decimal] = []
+        self._sum = Decimal(0)
+        self.value: Decimal | None = None
+        self.prev_value: Decimal | None = None
+
+    def update(self, candle: Candle) -> Decimal | None:
+        """Feed one candle; returns the SMA value after it (or None)."""
+        self.prev_value = self.value
+        self._window.append(candle.close)
+        self._sum += candle.close
+        if len(self._window) > self.period:
+            self._sum -= self._window.pop(0)
+        if len(self._window) == self.period:
+            self.value = self._sum / Decimal(self.period)
+        else:
+            self.value = None
+        return self.value
 
 
 class EMA(Indicator):
