@@ -4638,7 +4638,6 @@ Create:
 - [x] Spanish translation framework;
 - [x] tests;
 - [x] SQLite;
-- [ ] initial Debian package;
 - [x] initial English beginner documentation;
 - [x] initial Learning Center shell.
 
@@ -4651,8 +4650,7 @@ Implement:
 - [x] candles;
 - [x] storage;
 - [x] charts;
-- [x] basic indicators;
-- [ ] beginner chart tutorials.
+- [x] basic indicators.
 
 ### Phase 3: Backtesting
 
@@ -4708,12 +4706,21 @@ Improve:
 - [ ] performance;
 - [ ] complete English documentation;
 - [ ] Spanish documentation;
-- [ ] AppImage;
 - [ ] package testing;
 - [ ] complete translations;
 - [ ] Learning Center quizzes;
 - [ ] screenshots;
 - [ ] tutorials.
+
+### Phase 8: Distribution packages (move to final phase)
+
+This phase is intentionally deferred until the program is ready for release.
+Building AppImages and Debian packages on GitHub consumes significant storage
+and should only be done when the software is stable.
+
+- [ ] AppImage packaging;
+- [ ] initial Debian package;
+- [ ] beginner chart tutorials.
 
 ### Phase 8+: Advanced research
 
