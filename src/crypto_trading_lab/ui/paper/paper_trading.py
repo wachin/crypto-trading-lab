@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -130,6 +131,29 @@ class PaperTradingWidget(QWidget):
         splitter.addWidget(self.journal_view)
         layout.addWidget(splitter)
 
+        # Post-trade follow-up view (chapter 79)
+        followup_group = QGroupBox(self.tr("Post-Trade Follow-Up"))
+        followup_layout = QVBoxLayout(followup_group)
+        self.trade_selector = QComboBox()
+        self.trade_selector.setEnabled(False)
+        self.trade_selector.currentIndexChanged.connect(self._on_trade_selected)
+        followup_layout.addWidget(self.trade_selector)
+        self.followup_view = QTextBrowser()
+        self.followup_view.setPlainText(self.tr(
+            "Select a closed trade to see what the strategy knew at the time."
+        ))
+        followup_layout.addWidget(self.followup_view)
+        self.followup_edit = QLineEdit()
+        self.followup_edit.setPlaceholderText(
+            self.tr("Add a follow-up note for this trade…")
+        )
+        followup_layout.addWidget(self.followup_edit)
+        self.followup_save_button = QPushButton(self.tr("Save follow-up note"))
+        self.followup_save_button.clicked.connect(self._save_follow_up)
+        self.followup_save_button.setEnabled(False)
+        followup_layout.addWidget(self.followup_save_button)
+        layout.addWidget(followup_group)
+
     # -- helpers ----------------------------------------------------------
 
     def _dataset_text(self) -> str:
@@ -217,6 +241,7 @@ class PaperTradingWidget(QWidget):
                 trades=len(result.journal.closed_trades())
             )
         )
+        self._update_trade_selector()
         return result
 
     def save_journal(self) -> str | None:
@@ -235,6 +260,70 @@ class PaperTradingWidget(QWidget):
     @property
     def last_result(self) -> PaperSessionResult | None:
         return self._last
+
+    # -- follow-up -------------------------------------------------------
+
+    def _on_trade_selected(self) -> None:
+        idx = self.trade_selector.currentData()
+        if self._last is None or idx is None:
+            return
+        entry = self._last.journal.entries[idx]
+        text = self.tr(
+            "Trade #{number} — {signal}\n"
+            "Decision time: {time}\n"
+            "Reference price: {ref}\n"
+            "Risk decision: {risk} — {reason}\n"
+            "Fill: {fill_time} at {fill_price}\n"
+            "Exit: {exit_time} at {exit_price}\n"
+            "P/L: {pnl}"
+        ).format(
+            number=entry.trade_number,
+            signal=entry.signal,
+            time=entry.decision_time,
+            ref=entry.reference_price,
+            risk=entry.risk_decision,
+            reason=entry.risk_reason,
+            fill_time=entry.fill_time or "—",
+            fill_price=entry.fill_price or "—",
+            exit_time=entry.exit_time or "—",
+            exit_price=entry.exit_price or "—",
+            pnl=entry.pnl if entry.pnl is not None else "—",
+        )
+        self.followup_view.setPlainText(text)
+        self.followup_edit.setText(entry.follow_up_note)
+        self.followup_save_button.setEnabled(True)
+
+    def _save_follow_up(self) -> None:
+        idx = self.trade_selector.currentData()
+        if self._last is None or idx is None:
+            return
+        note = self.followup_edit.text().strip()
+        self._last.journal.entries[idx].follow_up_note = note
+        self.status_label.setText(
+            self.tr("Follow-up note saved for trade #{number}.").format(
+                number=self._last.journal.entries[idx].trade_number
+            )
+        )
+
+    def _update_trade_selector(self) -> None:
+        self.trade_selector.clear()
+        if self._last is None:
+            self.trade_selector.setEnabled(False)
+            return
+        closed = self._last.journal.closed_trades()
+        if not closed:
+            self.trade_selector.setEnabled(False)
+            return
+        for entry in closed:
+            self.trade_selector.addItem(
+                self.tr("Trade #{number}: {signal} — P/L {pnl}").format(
+                    number=entry.trade_number,
+                    signal=entry.signal,
+                    pnl=entry.pnl if entry.pnl is not None else "—",
+                ),
+                closed.index(entry),
+            )
+        self.trade_selector.setEnabled(True)
 
 
 __all__ = ["PaperTradingWidget"]

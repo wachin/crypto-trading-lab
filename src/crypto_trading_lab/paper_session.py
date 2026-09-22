@@ -73,6 +73,7 @@ class JournalEntry:
     exit_price: Decimal | None = None
     pnl: Decimal | None = None
     reason: str = ""
+    follow_up_note: str = ""
 
     @property
     def filled(self) -> bool:
@@ -96,6 +97,7 @@ class JournalEntry:
             "exit_price": str(self.exit_price) if self.exit_price is not None else None,
             "pnl": str(self.pnl) if self.pnl is not None else None,
             "reason": self.reason,
+            "follow_up_note": self.follow_up_note,
         }
 
     @classmethod
@@ -120,6 +122,7 @@ class JournalEntry:
             exit_price=dec(data.get("exit_price")),
             pnl=dec(data.get("pnl")),
             reason=str(data.get("reason", "")),
+            follow_up_note=str(data.get("follow_up_note", "")),
         )
 
 
@@ -224,6 +227,8 @@ class TradeJournal:
                 lines.append(f"  P/L: {entry.pnl}")
             if entry.reason:
                 lines.append(f"  reason: {entry.reason}")
+            if entry.follow_up_note:
+                lines.append(f"  follow-up: {entry.follow_up_note}")
         return "\n".join(lines)
 
 
