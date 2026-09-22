@@ -273,7 +273,7 @@ class LearningCenterWidget(QWidget):
     # -- lesson display ---------------------------------------------------
 
     def lesson_text(self, number: int) -> str:
-        """Render one lesson for the detail pane."""
+        """Render one lesson for the detail pane (with optional image)."""
         lesson = get_lesson(number)
         if lesson is None:
             return self.tr("Lesson not found.")
@@ -283,14 +283,27 @@ class LearningCenterWidget(QWidget):
         body = lesson.body
         # Keep the transcript readable but preserve intended paragraphs.
         body = "\n\n".join(part.strip() for part in body.split(". "))
-        return "\n".join(
-            [
-                f"== {self.tr('Lesson')} {lesson.number}: {lesson.title} ==",
-                f"({self.tr('Level')} {lesson.level}, {state})",
-                "",
-                body,
-            ]
-        )
+        
+        parts = [
+            f"== {self.tr('Lesson')} {lesson.number}: {lesson.title} ==",
+            f"({self.tr('Level')} {lesson.level}, {state})",
+            "",
+            body,
+        ]
+        
+        # Add image if lesson has an associated image
+        if lesson.image_path:
+            # Convert to absolute path for QTextBrowser
+            from pathlib import Path
+            img_path = Path(lesson.image_path)
+            if not img_path.is_absolute():
+                # Relative to the curriculum module
+                base_dir = Path(__file__).resolve().parents[2] / "education"
+                img_path = base_dir / lesson.image_path
+            if img_path.exists():
+                parts.append(f'<img src="{img_path.as_posix()}" style="max-width: 100%; height: auto;">')
+        
+        return "\n".join(parts)
 
     def show_lesson(self, number: int) -> str:
         """Show a lesson and load its quiz; returns the rendered text."""
@@ -299,7 +312,12 @@ class LearningCenterWidget(QWidget):
             raise ValueError(f"Unknown lesson number: {number}")
         self._current = number
         self._last_lesson = number
-        self.lesson_view.setPlainText(self.lesson_text(number))
+        # Use HTML rendering to support images
+        text = self.lesson_text(number)
+        if '<img' in text:
+            self.lesson_view.setHtml(text)
+        else:
+            self.lesson_view.setPlainText(text)
         self._load_quiz(lesson)
         
         # Enable/disable "Open related tool" button based on lesson mapping

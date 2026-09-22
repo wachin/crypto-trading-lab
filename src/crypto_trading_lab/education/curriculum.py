@@ -54,13 +54,14 @@ class QuizQuestion:
 
 @dataclass(frozen=True)
 class LessonContent:
-    """A complete lesson: title, body and quiz."""
+    """A complete lesson: title, body, optional image, and quiz."""
 
     number: int
     level: int
     title: str
     body: str
     quiz: QuizQuestion
+    image_path: str | None = None
 
 
 def _q(question: str, options: tuple[str, ...], answer: int, why: str) -> QuizQuestion:
@@ -117,6 +118,7 @@ _LEVEL_1: tuple[LessonContent, ...] = (
            ("Open, high, low, close", "Bid, ask, spread, volume",
             "Buy, sell, fee, profit"),
            0, "OHLC: the four numbers that summarise a period."),
+        image_path="assets/tutorial/candlestick_chart.png",
     ),
     LessonContent(
         5, 1, "What is volume?",
@@ -184,6 +186,7 @@ _LEVEL_1: tuple[LessonContent, ...] = (
            ("The emotions and the real execution costs of live money",
             "Market prices", "Order types"),
            0, "Use paper trading to build habits, not to conclude that you will profit."),
+        image_path="assets/tutorial/paper_trading.png",
     ),
     LessonContent(
         11, 1, "What is backtesting?",
@@ -195,6 +198,7 @@ _LEVEL_1: tuple[LessonContent, ...] = (
            ("A simulation of fixed rules over historical data",
             "A prediction of next month's price", "A type of exchange order"),
            0, "A backtest is an experiment about the past; it is not a forecast."),
+        image_path="assets/tutorial/backtesting.png",
     ),
     LessonContent(
         12, 1, "Build your first simple strategy.",
@@ -207,6 +211,7 @@ _LEVEL_1: tuple[LessonContent, ...] = (
            ("Entry rule, exit rule and position size",
             "A prediction, a hope and luck", "An indicator, a colour and a hunch"),
            0, "Simple, explainable rules are the only ones you can validate."),
+        image_path="assets/tutorial/strategy_builder.png",
     ),
     LessonContent(
         13, 1, "Run your first backtest.",
@@ -355,6 +360,7 @@ _LEVEL_2: tuple[LessonContent, ...] = (
            ("Sizing stops to the market's normal movement",
             "Predicting the close", "Measuring fees"),
            0, "A stop smaller than normal noise is not a stop, it is a donation."),
+        image_path="assets/tutorial/chart_with_indicators.png",
     ),
     LessonContent(
         26, 2, "Momentum",
