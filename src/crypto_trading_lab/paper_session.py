@@ -22,6 +22,7 @@ from typing import Sequence
 
 from crypto_trading_lab.backtesting.engine import CostModel
 from crypto_trading_lab.domain.models import Candle, OrderSide
+from crypto_trading_lab.execution_realism import ExecutionConfig, simulate_execution
 from crypto_trading_lab.market_data.historical import DatasetVersion
 from crypto_trading_lab.risk_manager import (
     LossLimits,
@@ -242,6 +243,7 @@ class PaperSessionConfig:
     spread_fraction: Decimal = Decimal("0.0002")
     position_fraction: Decimal = Decimal("0.5")
     interval: str = "1h"
+    execution_config: ExecutionConfig | None = None
 
     def costs(self) -> CostModel:
         return CostModel(
@@ -250,7 +252,7 @@ class PaperSessionConfig:
             spread_fraction=self.spread_fraction,
         )
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict:
         return {
             "initial_capital": str(self.initial_capital),
             "taker_fee": str(self.taker_fee),
@@ -258,6 +260,7 @@ class PaperSessionConfig:
             "spread_fraction": str(self.spread_fraction),
             "position_fraction": str(self.position_fraction),
             "interval": self.interval,
+            "execution_config": self.execution_config.__dict__ if self.execution_config else None,
         }
 
 
@@ -424,23 +427,49 @@ def run_paper_session(
                 reason="entry",
             )
             if decision.decision is RiskDecision.APPROVE and quantity > 0:
-                fill_price = (
-                    next_candle.open
-                    * (Decimal(1) + config.slippage_fraction + config.spread_fraction)
-                )
-                order_value = quantity * fill_price
-                fee = order_value * config.taker_fee
-                cash -= order_value + fee
-                position += quantity
-                fees += fee
-                slippage_total += quantity * (fill_price - next_candle.open)
-                entry_cost = order_value
-                entry_fee = fee
-                entry.fill_time = next_candle.open_time.isoformat()
-                entry.fill_price = fill_price
-                entry.fee = fee
-                entry.slippage = quantity * (fill_price - next_candle.open)
-                open_entry = entry
+                # Use realistic execution model if configured
+                if config.execution_config:
+                    # Simple market impact model: price moves against order
+                    # Impact is proportional to order size relative to ADV
+                    impact_factor = config.execution_config.impact_factor
+                    # Approximate ADV from recent volume (simple proxy)
+                    avg_volume = Decimal("1000000")  # placeholder
+                    impact_pct = (quantity / avg_volume) * impact_factor
+                    price_impact = next_candle.open * impact_pct
+                    
+                    fill_price = (
+                        next_candle.open
+                        * (Decimal(1) + config.slippage_fraction + config.spread_fraction)
+                        + price_impact
+                    )
+                    # Partial fill simulation: up to 10% chance of partial fill
+                    import random
+                    if random.random() < 0.1:
+                        filled_quantity = quantity * Decimal("0.8")  # 80% filled
+                    else:
+                        filled_quantity = quantity
+                else:
+                    # Basic execution model (backward compatible)
+                    fill_price = (
+                        next_candle.open
+                        * (Decimal(1) + config.slippage_fraction + config.spread_fraction)
+                    )
+                    filled_quantity = quantity
+                
+                if filled_quantity > 0:
+                    order_value = filled_quantity * fill_price
+                    fee = order_value * config.taker_fee
+                    cash -= order_value + fee
+                    position += filled_quantity
+                    fees += fee
+                    slippage_total += filled_quantity * (fill_price - next_candle.open)
+                    entry_cost = order_value
+                    entry_fee = fee
+                    entry.fill_time = next_candle.open_time.isoformat()
+                    entry.fill_price = fill_price
+                    entry.fee = fee
+                    entry.slippage = filled_quantity * (fill_price - next_candle.open)
+                    open_entry = entry
             journal.add(entry)
 
         elif signal is OrderSide.SELL and position > 0 and open_entry is not None:
