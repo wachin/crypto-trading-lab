@@ -40,6 +40,8 @@ from crypto_trading_lab.education.curriculum import (
     lessons_for_level,
     total_lessons,
 )
+from crypto_trading_lab.ui.accessibility import AccessibilityHelper
+
 
 __all__ = ["LESSONS", "Lesson", "LearningCenterWidget"]
 
@@ -182,7 +184,8 @@ class LearningCenterWidget(QWidget):
         layout.addWidget(intro)
 
         level_row = QHBoxLayout()
-        level_row.addWidget(QLabel(self.tr("Level:")))
+        level_label = QLabel(self.tr("Level:"))
+        level_row.addWidget(level_label)
         self.level_combo = QComboBox()
         for level in LEVELS:
             self.level_combo.addItem(self.tr(LEVEL_NAMES[level]), level)
@@ -193,14 +196,37 @@ class LearningCenterWidget(QWidget):
         level_row.addWidget(self.resume_button)
         layout.addLayout(level_row)
 
+        AccessibilityHelper.setup_accessibility(
+            self.level_combo,
+            name=self.tr("Course level"),
+            description=self.tr("Select the difficulty level of the lessons"),
+            tooltip=self.tr("Filter lessons by difficulty level"),
+        )
+        AccessibilityHelper.setup_accessibility(
+            self.resume_button,
+            name=self.tr("Resume course"),
+            description=self.tr("Jump to the last lesson you were reading"),
+            tooltip=self.tr("Resume from where you left off"),
+        )
+
         body = QHBoxLayout()
         self.lesson_list = QListWidget()
         self.lesson_list.currentItemChanged.connect(self._on_lesson_selected)
+        AccessibilityHelper.setup_accessibility(
+            self.lesson_list,
+            name=self.tr("Lesson list"),
+            description=self.tr("List of available lessons for the selected level"),
+        )
         body.addWidget(self.lesson_list, 2)
 
         detail_column = QVBoxLayout()
         self.lesson_view = QTextBrowser()
         self.lesson_view.setOpenExternalLinks(False)
+        AccessibilityHelper.setup_accessibility(
+            self.lesson_view,
+            name=self.tr("Lesson content"),
+            description=self.tr("Detailed text and images for the selected lesson"),
+        )
         detail_column.addWidget(self.lesson_view)
 
         self.quiz_group_box = QGroupBox(self.tr("Quiz"))
@@ -210,16 +236,30 @@ class LearningCenterWidget(QWidget):
         quiz_layout.addWidget(self.quiz_question)
         self.quiz_button_group = QButtonGroup(self)
         self._quiz_buttons: list[QRadioButton] = []
-        for _ in range(4):
+        for i in range(4):
             button = QRadioButton("")
             self.quiz_button_group.addButton(button)
             quiz_layout.addWidget(button)
             self._quiz_buttons.append(button)
+            AccessibilityHelper.setup_accessibility(
+                button,
+                name=self.tr("Answer option {n}").format(n=i+1),
+            )
         self.submit_button = QPushButton(self.tr("Submit answer"))
         self.submit_button.clicked.connect(self._submit_quiz)
+        AccessibilityHelper.setup_accessibility(
+            self.submit_button,
+            name=self.tr("Submit quiz"),
+            tooltip=self.tr("Submit your selected answer for grading"),
+        )
         quiz_layout.addWidget(self.submit_button)
         self.quiz_feedback = QLabel("")
         self.quiz_feedback.setWordWrap(True)
+        AccessibilityHelper.setup_accessibility(
+            self.quiz_feedback,
+            name=self.tr("Quiz feedback"),
+            description=self.tr("Explanation showing if your answer was correct or incorrect"),
+        )
         quiz_layout.addWidget(self.quiz_feedback)
         detail_column.addWidget(self.quiz_group_box)
         body.addLayout(detail_column, 3)
@@ -233,19 +273,50 @@ class LearningCenterWidget(QWidget):
         self.open_tool_button = QPushButton(self.tr("Open related tool…"))
         self.open_tool_button.clicked.connect(self._open_lesson_tool)
         self.open_tool_button.setEnabled(False)
-        actions.addWidget(self.complete_button)
-        actions.addWidget(self.bookmark_button)
-        actions.addWidget(self.open_tool_button)
+        
+        buttons_info = [
+            (self.complete_button, self.tr("Complete lesson"), self.tr("Mark this lesson as finished to track progress")),
+            (self.bookmark_button, self.tr("Bookmark lesson"), self.tr("Save this lesson to your bookmarks for quick access")),
+            (self.open_tool_button, self.tr("Open tool"), self.tr("Open the application feature related to this lesson")),
+        ]
+        for button, name, desc in buttons_info:
+            AccessibilityHelper.setup_accessibility(button, name=name, description=desc)
+            actions.addWidget(button)
         layout.addLayout(actions)
 
         self.status_label = QLabel("")
+        AccessibilityHelper.setup_accessibility(
+            self.status_label,
+            name=self.tr("Course status"),
+            description=self.tr("Summary of your overall course progress"),
+        )
         layout.addWidget(self.status_label)
 
         self.start_button = QPushButton(
             self.tr("Start Here: Cryptocurrency for Complete Beginners.")
         )
         self.start_button.clicked.connect(self._show_first_lesson)
+        AccessibilityHelper.setup_accessibility(
+            self.start_button,
+            name=self.tr("Start introductory lesson"),
+            tooltip=self.tr("Begin the first lesson of the beginner level"),
+        )
         layout.addWidget(self.start_button)
+
+        # Set tab order
+        tab_order: list[QWidget] = [
+            self.level_combo,
+            self.resume_button,
+            self.lesson_list,
+            self.lesson_view,
+            *self._quiz_buttons,
+            self.submit_button,
+            self.complete_button,
+            self.bookmark_button,
+            self.open_tool_button,
+            self.start_button,
+        ]
+        AccessibilityHelper.set_tab_order(tab_order)
 
         self.set_level(1)
         self._update_status()
@@ -405,20 +476,29 @@ class LearningCenterWidget(QWidget):
             return
         if choice < 0:
             self.quiz_feedback.setText(
-                self.tr("Choose one answer before submitting.")
+                AccessibilityHelper.format_status_text(
+                    self.tr("Choose one answer before submitting."),
+                    is_positive=False
+                )
             )
             return
         correct = self.answer_quiz(self._current, choice)
         if correct:
             self.quiz_feedback.setText(
-                self.tr("Correct. {why}").format(why=lesson.quiz.explanation)
+                AccessibilityHelper.format_status_text(
+                    self.tr("Correct. {why}").format(why=lesson.quiz.explanation),
+                    is_positive=True
+                )
             )
             self.mark_completed(self._current)
         else:
             self.quiz_feedback.setText(
-                self.tr(
-                    "Not correct. Re-read the lesson and try again. "
-                    "The right answer is worth understanding, not guessing."
+                AccessibilityHelper.format_status_text(
+                    self.tr(
+                        "Not correct. Re-read the lesson and try again. "
+                        "The right answer is worth understanding, not guessing."
+                    ),
+                    is_positive=False
                 )
             )
 

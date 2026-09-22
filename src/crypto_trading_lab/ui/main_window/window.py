@@ -16,7 +16,7 @@ from __future__ import annotations
 import sys
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QKeySequence
 from PyQt6.QtWidgets import (
     QApplication,
     QLabel,
@@ -39,6 +39,7 @@ from crypto_trading_lab.machine_learning.experiment_manager import (
 from crypto_trading_lab.trading import RealTradingManager, RealTradingConfig, RealTradingState
 from crypto_trading_lab.market_data.historical import DatasetVersion
 from crypto_trading_lab.ui.connection_health_widget import ConnectionHealthWidget
+from crypto_trading_lab.ui.accessibility import AccessibilityHelper
 
 
 class MainWindow(QMainWindow):
@@ -76,7 +77,10 @@ class MainWindow(QMainWindow):
     def _on_connection_state_changed(self, state: ConnectionState, message: str):
         """Update status label when connection state changes."""
         self.status_label.setText(message)
-        self.statusBar().showMessage(message)
+        # Use color-independent status formatting for accessibility
+        is_positive = state == ConnectionState.CONNECTED
+        formatted = AccessibilityHelper.format_status_text(message, is_positive=is_positive)
+        self.statusBar().showMessage(formatted)
 
     def _on_trading_state_changed(self, state: RealTradingState, message: str):
         """Update REAL TRADING status indicators (chapter 68)."""
@@ -86,7 +90,10 @@ class MainWindow(QMainWindow):
             self.real_trading_indicator.setText(self.tr("REAL TRADING"))
         else:
             self.real_trading_indicator.setVisible(False)
-        self.statusBar().showMessage(message)
+        # Use color-independent status formatting
+        is_positive = state != RealTradingState.ACTIVE
+        formatted = AccessibilityHelper.format_status_text(message, is_positive=is_positive)
+        self.statusBar().showMessage(formatted)
 
     def _manager(self) -> ExperimentManager:
         """Experiment manager persisted under the user's data directory."""
@@ -210,15 +217,30 @@ class MainWindow(QMainWindow):
         font.setPointSize(20)
         font.setBold(True)
         title.setFont(font)
+        AccessibilityHelper.setup_accessibility(
+            title,
+            name=self.tr("Application title"),
+            description=self.tr("Crypto Trading Lab - Main application window title"),
+        )
         layout.addWidget(title)
 
         # Safety indicators (chapter 71.1).
         self.mode_label = QLabel(self.tr("Mode: Paper Trading"))
         self.mode_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        AccessibilityHelper.setup_accessibility(
+            self.mode_label,
+            name=self.tr("Trading mode indicator"),
+            description=self.tr("Shows current trading mode: Paper Trading"),
+        )
         layout.addWidget(self.mode_label)
 
         self.real_trading_label = QLabel(self.tr("Real trading: Disabled"))
         self.real_trading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        AccessibilityHelper.setup_accessibility(
+            self.real_trading_label,
+            name=self.tr("Real trading status"),
+            description=self.tr("Shows whether real trading is active or disabled"),
+        )
         layout.addWidget(self.real_trading_label)
 
         self.real_trading_indicator = QLabel("")
@@ -232,15 +254,30 @@ class MainWindow(QMainWindow):
                 border-radius: 4px;
             }
         """)
+        AccessibilityHelper.setup_accessibility(
+            self.real_trading_indicator,
+            name=self.tr("Real trading warning"),
+            description=self.tr("Visible warning when real trading is active"),
+        )
         layout.addWidget(self.real_trading_indicator)
 
         self.status_label = QLabel(self.tr("Disconnected"))
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        AccessibilityHelper.setup_accessibility(
+            self.status_label,
+            name=self.tr("Connection status"),
+            description=self.tr("Shows current connection state to market data source"),
+        )
         layout.addWidget(self.status_label)
         
         # Connection health widget
         self._connection_health = ConnectionHealthWidget()
         self._connection_health.state_changed.connect(self._on_connection_state_changed)
+        AccessibilityHelper.setup_accessibility(
+            self._connection_health,
+            name=self.tr("Connection health monitor"),
+            description=self.tr("Detailed connection quality metrics and diagnostics"),
+        )
         layout.addWidget(self._connection_health)
 
         # Educational message (vision: honesty, the farmer's truth).
@@ -256,6 +293,11 @@ class MainWindow(QMainWindow):
             )
         )
         message.setWordWrap(True)
+        AccessibilityHelper.setup_accessibility(
+            message,
+            name=self.tr("Risk warning"),
+            description=self.tr("Educational message about trading risks and capital protection"),
+        )
         layout.addWidget(message)
 
         welcome = QLabel(
@@ -265,28 +307,69 @@ class MainWindow(QMainWindow):
             )
         )
         welcome.setWordWrap(True)
+        AccessibilityHelper.setup_accessibility(
+            welcome,
+            name=self.tr("Welcome message"),
+            description=self.tr("Guidance for new users to start with the Learning Center"),
+        )
         layout.addWidget(welcome)
 
-        self.historical_data_button = QPushButton(
-            self.tr("Get historical data")
-        )
+        self.historical_data_button = QPushButton(self.tr("Get historical data"))
         self.historical_data_button.clicked.connect(self._open_historical_data)
         self.csv_button = QPushButton(self.tr("Load CSV file"))
         self.csv_button.clicked.connect(self._open_csv_dialog)
         self.chart_button = QPushButton(self.tr("Open Chart"))
         self.chart_button.clicked.connect(self._open_chart)
-        self.learning_center_button = QPushButton(
-            self.tr("Open Learning Center")
-        )
+        self.learning_center_button = QPushButton(self.tr("Open Learning Center"))
         self.learning_center_button.clicked.connect(self._open_learning_center)
         self.backtesting_button = QPushButton(self.tr("Open Backtesting Lab"))
-        self.backtesting_button.setEnabled(True)  # chapter 37.9
+        self.backtesting_button.setEnabled(True)
         self.backtesting_button.clicked.connect(self._open_backtesting)
         self.wizard_button = QPushButton(self.tr("New research"))
         self.wizard_button.clicked.connect(self._open_research_wizard)
         self.paper_button = QPushButton(self.tr("Paper Trading"))
         self.paper_button.clicked.connect(self._open_paper)
-        for button in (
+
+        # Add accessibility metadata to all buttons
+        buttons_info = [
+            (self.historical_data_button,
+             self.tr("Get historical data"),
+             self.tr("Download market data from exchanges"),
+             self.tr("Download real market data from supported exchanges for research")),
+            (self.csv_button,
+             self.tr("Load CSV file"),
+             self.tr("Import CSV market data"),
+             self.tr("Load market data from a local CSV file")),
+            (self.chart_button,
+             self.tr("Open Chart"),
+             self.tr("Open price chart"),
+             self.tr("View interactive price charts with indicators")),
+            (self.learning_center_button,
+             self.tr("Open Learning Center"),
+             self.tr("Start interactive trading lessons"),
+             self.tr("Open structured lessons with quizzes and progress tracking")),
+            (self.backtesting_button,
+             self.tr("Open Backtesting Lab"),
+             self.tr("Run strategy backtests"),
+             self.tr("Test trading strategies against historical data with costs")),
+            (self.wizard_button,
+             self.tr("New research"),
+             self.tr("Start guided research workflow"),
+             self.tr("Launch the research wizard for hypothesis-driven exploration")),
+            (self.paper_button,
+             self.tr("Paper Trading"),
+             self.tr("Simulated trading with real market data"),
+             self.tr("Practice trading with simulated money on real historical data")),
+        ]
+
+        for button, name, tooltip, description in buttons_info:
+            AccessibilityHelper.setup_accessibility(
+                button, name=name, tooltip=tooltip, description=description
+            )
+            layout.addWidget(button)
+
+        # Set logical tab order for keyboard navigation
+        tab_order: list[QWidget] = [
             self.historical_data_button,
             self.csv_button,
             self.chart_button,
@@ -294,15 +377,26 @@ class MainWindow(QMainWindow):
             self.backtesting_button,
             self.wizard_button,
             self.paper_button,
-        ):
-            layout.addWidget(button)
+        ]
+        AccessibilityHelper.set_tab_order(tab_order)
+
+        # Add keyboard shortcuts
+        self.historical_data_button.setShortcut(QKeySequence("Ctrl+D"))
+        self.csv_button.setShortcut(QKeySequence("Ctrl+L"))
+        self.chart_button.setShortcut(QKeySequence("Ctrl+C"))
+        self.learning_center_button.setShortcut(QKeySequence("Ctrl+E"))
+        self.backtesting_button.setShortcut(QKeySequence("Ctrl+B"))
+        self.wizard_button.setShortcut(QKeySequence("Ctrl+R"))
+        self.paper_button.setShortcut(QKeySequence("Ctrl+P"))
 
         layout.addStretch(1)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
-        self.statusBar().showMessage(self.tr("Disconnected"))
+        self.statusBar().showMessage(AccessibilityHelper.format_status_text(
+            self.tr("Disconnected"), is_positive=None
+        ))
 
     # -- learning center / charts ----------------------------------------
 
