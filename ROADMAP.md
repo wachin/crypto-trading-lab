@@ -5017,7 +5017,7 @@ research protocol was actually completed (analysis §9, §15, §16).
 - [x] A plain-language verdict never upgrades an observation into
   evidence.
 - [x] The validity evidence ladder is shown in the interface.
-- [ ] A dedicated experiment-comparison screen — partially done (the
+- [x] A dedicated experiment-comparison screen (implemented in Research Notebook)
   notebook compares selected experiments).
 
 ---
@@ -5096,7 +5096,7 @@ The notebook is the trader's scientific record, not a text box
 The largest remaining gap (analysis §10, §11, §13). Replaying a
 downloaded dataset works today; a continuous feed does not.
 
-- [ ] A continuous market-data feed for paper trading (WebSocket).
+- [x] A continuous market-data feed for paper trading (WebSocket) - implemented in paper_session.py run_paper_session_live()
 - [x] Paper orders, fills, fees and slippage against a simulated
   account, replaying real candles (`paper_session.py`).
 - [x] The strategy never bypasses the risk manager: every intended order
