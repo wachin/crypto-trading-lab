@@ -328,7 +328,7 @@ Evaluate and use the following Debian packages where appropriate:
 
 - [ ] `python3-pyqt6`
 - [ ] `python3-pyqt6.qtcharts`
-- [ ] `python3-pyqt6.qtwebsockets`
+- [x] `python3-pyqt6.qtwebsockets`
 - [ ] `python3-pyqt6.qtsvg`
 - [ ] `python3-pyqt6.qtdesigner`
 - [ ] `pyqt6-dev-tools`
@@ -390,7 +390,7 @@ Analyze whether the application should use:
 
 - [ ] 1. `aiohttp` for REST and WebSocket communication;
 - [ ] 2. `websockets` for WebSocket connections;
-- [ ] 3. `QNetworkAccessManager` and `QWebSocket` for Qt-native networking.
+- [x] 3. `QNetworkAccessManager` and `QWebSocket` for Qt-native networking. (Implemented in `ui/charts/qt_websocket_client.py`)
 
 - [ ] Create interfaces that remain independent of the specific transport implementation.
 - [ ] Never block the Qt main thread.
@@ -1152,7 +1152,7 @@ Evaluate at least:
 
 - [ ] `python3-pyqt6`
 - [ ] `python3-pyqt6.qtcharts`
-- [ ] `python3-pyqt6.qtwebsockets`
+- [x] `python3-pyqt6.qtwebsockets`
 - [ ] `python3-pyqt6.qtsvg`
 - [ ] `python3-pyqt6.qtdesigner`
 - [ ] `pyqt6-dev-tools`
