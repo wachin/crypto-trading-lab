@@ -1875,12 +1875,12 @@ Include:
 
 Initially add:
 
-- [ ] public market data;
-- [ ] an architecture prepared for Advanced Trade;
-- [ ] clearly labeled experimental support.
+- [x] public market data;
+- [x] an architecture prepared for Advanced Trade;
+- [x] clearly labeled experimental support.
 
-- [ ] Document that the Coinbase sandbox may return static or predefined data and must not be treated as a realistic profitability simulation.
-- [ ] Do not mix Coinbase-specific models with the central domain.
+- [x] Document that the Coinbase sandbox may return static or predefined data and must not be treated as a realistic profitability simulation.
+- [x] Do not mix Coinbase-specific models with the central domain.
 
 ---
 
