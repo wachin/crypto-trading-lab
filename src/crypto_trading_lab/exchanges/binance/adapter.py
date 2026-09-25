@@ -22,6 +22,7 @@ import json
 import logging
 import time
 import urllib.request
+import asyncio
 import urllib.error
 import urllib.parse
 from collections import defaultdict
@@ -140,9 +141,32 @@ class BinanceRestAdapter(ExchangeAdapter):
             self.capabilities |= Capability.TRADING | Capability.BALANCES | Capability.ORDERS
             
     def connect(self) -> None:
+        """Open the connection; start WebSocket client."""
+        if self._ws_client.state == ConnectionState.DISCONNECTED:
+            self._state = ConnectionState.CONNECTING
+            # Start WebSocket client in background without blocking
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # No running loop - we can't start the async client
+                # This is a synchronous interface; the WS client will be started
+                # when the application runs in an async context
+                self._state = ConnectionState.CONNECTED
+                return
+            
+            # Schedule the start coroutine
+            loop.create_task(self._ws_client.start())
         self._state = ConnectionState.CONNECTED
         
     def disconnect(self) -> None:
+        """Close the connection; stop WebSocket client."""
+        try:
+            loop = asyncio.get_running_loop()
+            # Schedule the stop coroutine
+            loop.create_task(self._ws_client.stop())
+        except RuntimeError:
+            # No running loop - nothing to do
+            pass
         self._state = ConnectionState.STOPPED
         
     def state(self) -> ConnectionState:

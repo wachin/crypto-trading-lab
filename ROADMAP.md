@@ -5133,5 +5133,5 @@ downloaded dataset works today; a continuous feed does not.
 - [x] Every lesson carries a real body and a graded quiz question.
 - [x] Progress tracking, bookmarks and resume-where-you-left-off persist
   under the user's data directory.
-- [ ] Lesson-to-screen links (each lesson opening the related tool).
-- [ ] Screenshots and tutorial media.
+- [x] Lesson-to-screen links (each lesson opening the related tool).
+- [x] Screenshots and tutorial media.
