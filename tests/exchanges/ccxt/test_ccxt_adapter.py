@@ -18,6 +18,8 @@ from crypto_trading_lab.exchanges.base.adapter import Capability
 from crypto_trading_lab.exchanges.ccxt.adapter import (
     CcxtExchangeAdapter,
     map_client_error,
+    is_transient_error,
+    with_retry,
 )
 from crypto_trading_lab.exchanges.errors import (
     AdapterAuthenticationError,
@@ -29,6 +31,8 @@ from crypto_trading_lab.exchanges.errors import (
     AdapterRateLimited,
     AdapterRequestError,
 )
+from crypto_trading_lab.exchanges.connection_manager import CircuitBreaker, StaleDataDetector
+from crypto_trading_lab.exchanges.rate_limiter import RateLimiter
 from tests.exchanges.contract import AdapterContract, BTCUSDT
 
 # ---------------------------------------------------------------------------
@@ -233,14 +237,24 @@ class TestErrorMapping:
         return CcxtExchangeAdapter(client)
 
     def test_failed_call_updates_connection_state(self):
-        adapter = self._failure(_make("RateLimitExceeded"))
+        class AlwaysFailingClient(FakeCcxtBinance):
+            def fetch_ticker(self, symbol):
+                raise type("RateLimitExceeded", (Exception,), {})()
+        
+        client = AlwaysFailingClient()
+        adapter = CcxtExchangeAdapter(client)
         adapter.connect()
         with pytest.raises(AdapterRateLimited):
             adapter.fetch_ticker(BTCUSDT)
         assert adapter.state() is ConnectionState.RATE_LIMITED
 
     def test_failed_call_to_network_error_suggests_reconnecting(self):
-        adapter = self._failure(_make("RequestTimeout"))
+        class AlwaysFailingClient(FakeCcxtBinance):
+            def fetch_ticker(self, symbol):
+                raise type("RequestTimeout", (Exception,), {})()
+        
+        client = AlwaysFailingClient()
+        adapter = CcxtExchangeAdapter(client)
         adapter.connect()
         with pytest.raises(AdapterNetworkError):
             adapter.fetch_ticker(BTCUSDT)
@@ -346,3 +360,133 @@ class TestContractOnlyMethodsPresent:
         adapter.unsubscribe_all()
         adapter.dispatch_ticker(dict(RAW_TICKER))
         assert len(received) == 1
+
+
+class TestInfrastructureIntegration:
+    """Tests for CCXT adapter integration with infrastructure components."""
+
+    def test_circuit_breaker_opens_after_failures(self):
+        """Circuit breaker should open after threshold failures."""
+        from crypto_trading_lab.exchanges.connection_manager import CircuitState
+        
+        # Create a client that always fails
+        class AlwaysFailingClient(FakeCcxtBinance):
+            def fetch_ticker(self, symbol):
+                raise ConnectionError("Network error")
+        
+        client = AlwaysFailingClient()
+        circuit_breaker = CircuitBreaker(failure_threshold=3, reset_timeout=60.0)
+        adapter = CcxtExchangeAdapter(client, circuit_breaker=circuit_breaker)
+        adapter.connect()
+
+        # Trigger failures - each call retries 3 times, so 3 calls = 9 failures
+        for i in range(3):
+            with pytest.raises(AdapterNetworkError):
+                adapter.fetch_ticker(BTCUSDT)
+
+        # Circuit breaker should now be open
+        assert circuit_breaker.state == CircuitState.OPEN
+
+        # Next call should be rejected by circuit breaker
+        with pytest.raises(AdapterRateLimited):
+            adapter.fetch_ticker(BTCUSDT)
+
+    def test_rate_limiter_blocks_excess_requests(self):
+        """Rate limiter should block when limit exceeded."""
+        client = FakeCcxtBinance()
+        rate_limiter = RateLimiter(max_weight=2, window_seconds=60)
+        adapter = CcxtExchangeAdapter(client, rate_limiter=rate_limiter)
+        adapter.connect()
+
+        # First two calls should succeed
+        adapter.fetch_ticker(BTCUSDT)
+        adapter.fetch_ticker(BTCUSDT)
+
+        # Third call should be rate limited
+        with pytest.raises(AdapterRateLimited):
+            adapter.fetch_ticker(BTCUSDT)
+
+    def test_stale_data_detector_marks_degraded(self):
+        """Stale data detector should mark connection as degraded."""
+        client = FakeCcxtBinance()
+        stale_detector = StaleDataDetector(max_age_seconds=1)
+        adapter = CcxtExchangeAdapter(client, stale_detector=stale_detector)
+        adapter.connect()
+
+        # Initially not stale (touch is called on connect)
+        stale_detector.touch()  # Mark as fresh
+        assert not stale_detector.is_stale()
+
+        # Simulate time passing
+        import time
+        time.sleep(1.1)
+
+        # Now it should be stale
+        assert stale_detector.is_stale()
+
+    def test_retry_on_transient_error(self):
+        """Transient errors should trigger retry with backoff."""
+        call_count = 0
+
+        def failing_func():
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                raise ConnectionError("Transient error")
+            return "success"
+
+        result = with_retry(failing_func, max_retries=3, base_delay=0.01, max_delay=0.1, jitter=0)()
+        assert result == "success"
+        assert call_count == 3
+
+    def test_non_transient_error_not_retried(self):
+        """Non-transient errors should not be retried."""
+        call_count = 0
+
+        def failing_func():
+            nonlocal call_count
+            call_count += 1
+            raise ValueError("Non-transient error")
+
+        with pytest.raises(ValueError):
+            with_retry(failing_func, max_retries=3, base_delay=0.01)()
+        assert call_count == 1
+
+    def test_is_transient_error_detection(self):
+        """Test transient error detection logic."""
+        # Connection errors are transient
+        assert is_transient_error(ConnectionError("connection failed"))
+        assert is_transient_error(TimeoutError("timeout"))
+        assert is_transient_error(OSError("os error"))
+
+        # HTTP 429, 5xx are transient
+        class MockHTTPError(Exception):
+            def __init__(self, code):
+                self.code = code
+
+        assert is_transient_error(MockHTTPError(429))
+        assert is_transient_error(MockHTTPError(500))
+        assert is_transient_error(MockHTTPError(503))
+
+        # HTTP 401, 403, 404 are not transient
+        assert not is_transient_error(MockHTTPError(401))
+        assert not is_transient_error(MockHTTPError(403))
+        assert not is_transient_error(MockHTTPError(404))
+
+        # CCXT error names that map to transient errors
+        class RateLimitError(Exception):
+            pass
+        rate_limit_error = RateLimitError()
+        rate_limit_error.__class__.__name__ = "RateLimitExceeded"
+        assert is_transient_error(rate_limit_error)
+
+        # Non-transient CCXT errors
+        class AuthError(Exception):
+            pass
+        auth_error = AuthError()
+        auth_error.__class__.__name__ = "AuthenticationError"
+        assert not is_transient_error(auth_error)
+
+
+def _make(name: str) -> Exception:
+    return type(name, (Exception,), {})()

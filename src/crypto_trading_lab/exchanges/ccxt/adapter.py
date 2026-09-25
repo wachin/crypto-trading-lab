@@ -19,7 +19,10 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Protocol
+from functools import wraps
+from typing import Any, Callable, Protocol, TypeVar
+import random
+import time
 
 from crypto_trading_lab.domain.models import (
     Balance,
@@ -38,6 +41,11 @@ from crypto_trading_lab.exchanges.base.adapter import (
     Capability,
     ExchangeAdapter,
 )
+from crypto_trading_lab.exchanges.connection_manager import (
+    CircuitBreaker,
+    ReconnectionPolicy,
+    StaleDataDetector,
+)
 from crypto_trading_lab.exchanges.errors import (
     AdapterAuthenticationError,
     AdapterDataError,
@@ -50,6 +58,8 @@ from crypto_trading_lab.exchanges.errors import (
     AdapterRequestError,
     suggest_connection_state,
 )
+from crypto_trading_lab.exchanges.rate_limiter import RateLimiter
+from crypto_trading_lab.exchanges.feed_health import FeedHealthRecord, FeedHealthStore
 
 __all__ = ["CcxtExchangeAdapter", "map_client_error"]
 
@@ -86,6 +96,7 @@ _ERROR_NAME_MAP: dict[str, type[AdapterError]] = {
     "ExchangeNotAvailable": AdapterNetworkError,
     "ExchangeUnavailable": AdapterNetworkError,
     "RequestTimeout": AdapterNetworkError,
+    "ConnectionError": AdapterNetworkError,
     "AuthenticationError": AdapterAuthenticationError,
     "PermissionDenied": AdapterAuthenticationError,
     "AccountSuspended": AdapterAuthenticationError,
@@ -97,6 +108,73 @@ _ERROR_NAME_MAP: dict[str, type[AdapterError]] = {
     "NetworkError": AdapterNetworkError,
     "ExchangeError": AdapterRequestError,
 }
+
+
+# Retry helper with exponential backoff and jitter (ROADMAP chapter 27)
+# Transient errors that should trigger a retry
+_TRANSIENT_ERRORS = (
+    TimeoutError,
+    ConnectionError,
+    OSError,
+)
+
+# HTTP status codes that are transient (5xx, 429)
+_TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+
+# Default retry configuration
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_BASE_DELAY = 1.0  # seconds
+DEFAULT_MAX_DELAY = 30.0  # seconds
+DEFAULT_JITTER = 0.2  # 20% jitter
+
+
+def is_transient_error(error: Exception) -> bool:
+    """Check if an error is transient and should trigger a retry."""
+    # Check for transient exception types
+    if any(isinstance(error, err_type) for err_type in _TRANSIENT_ERRORS):
+        return True
+    # Check for transient HTTP status codes
+    code = getattr(error, 'code', None)
+    if isinstance(code, int) and code in _TRANSIENT_HTTP_CODES:
+        return True
+    # Check for CCXT-specific transient errors by name
+    error_name = type(error).__name__
+    if error_name in _ERROR_NAME_MAP:
+        mapped = _ERROR_NAME_MAP[error_name]
+        # Rate limits and network errors are transient
+        if mapped in (AdapterRateLimited, AdapterNetworkError):
+            return True
+    return False
+
+
+T = TypeVar('T')
+
+
+def with_retry(
+    func: Callable[..., T],
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    base_delay: float = DEFAULT_BASE_DELAY,
+    max_delay: float = DEFAULT_MAX_DELAY,
+    jitter: float = DEFAULT_JITTER,
+) -> Callable[..., T]:
+    """Decorator that adds exponential backoff retry for transient errors."""
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        attempt = 0
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if not is_transient_error(e):
+                    raise
+                if attempt >= DEFAULT_MAX_RETRIES:
+                    raise
+                # Exponential backoff with jitter
+                delay = min(DEFAULT_BASE_DELAY * (2 ** attempt), DEFAULT_MAX_DELAY)
+                delay *= (1.0 + random.uniform(-DEFAULT_JITTER, DEFAULT_JITTER))
+                time.sleep(delay)
+                attempt += 1
+    return wrapper
 
 
 class CcxtClient(Protocol):
@@ -191,7 +269,15 @@ class CcxtExchangeAdapter(ExchangeAdapter):
         | Capability.PERMISSIONS
     )
 
-    def __init__(self, client: CcxtClient, *, allow_trading: bool = False) -> None:
+    def __init__(
+        self,
+        client: CcxtClient,
+        *,
+        allow_trading: bool = False,
+        rate_limiter: RateLimiter | None = None,
+        circuit_breaker: CircuitBreaker | None = None,
+        stale_detector: StaleDataDetector | None = None,
+    ) -> None:
         self._client = client
         self.capabilities = self._BASE_CAPABILITIES
         if allow_trading:
@@ -203,6 +289,12 @@ class CcxtExchangeAdapter(ExchangeAdapter):
         self._book_handlers: list[Any] = []
         self._order_update_handlers: list[Any] = []
 
+        # Infrastructure integration
+        self._rate_limiter = rate_limiter or RateLimiter(max_weight=1200, window_seconds=60)
+        self._circuit_breaker = circuit_breaker or CircuitBreaker(failure_threshold=5, reset_timeout=60.0)
+        self._stale_detector = stale_detector or StaleDataDetector(max_age_seconds=30)
+        self._allow_trading = allow_trading
+
     # ------------------------------------------------------------------
     # Error wrapping and state transitions
     # ------------------------------------------------------------------
@@ -213,14 +305,40 @@ class CcxtExchangeAdapter(ExchangeAdapter):
                 f"client does not provide {method_name!r}; is this a "
                 "compatible ccxt instance?"
             )
+        
+        # Circuit breaker check
+        if not self._circuit_breaker.can_attempt():
+            raise AdapterRateLimited("Circuit breaker is open")
+        
+        # Rate limiter
         try:
-            return method(*args, **kwargs)
-        except AdapterError:
-            raise
-        except Exception as exc:  # noqa: BLE001 - boundary translation
-            mapped = map_client_error(exc)
-            self._state = suggest_connection_state(mapped)
-            raise mapped from exc
+            self._rate_limiter.acquire(weight=1)
+        except Exception as e:
+            raise AdapterRateLimited(str(e)) from e
+        
+        # Execute with retry logic
+        attempt = 0
+        while True:
+            try:
+                result = method(*args, **kwargs)
+                self._circuit_breaker.record_success()
+                return result
+            except AdapterError:
+                raise
+            except Exception as exc:
+                # Check if this is a transient error that should be retried
+                if is_transient_error(exc) and attempt < DEFAULT_MAX_RETRIES:
+                    # Exponential backoff with jitter
+                    delay = min(DEFAULT_BASE_DELAY * (2 ** attempt), DEFAULT_MAX_DELAY)
+                    delay *= (1.0 + random.uniform(-DEFAULT_JITTER, DEFAULT_JITTER))
+                    time.sleep(delay)
+                    attempt += 1
+                    continue
+                # Non-transient error or max retries exceeded
+                self._circuit_breaker.record_failure()
+                mapped = map_client_error(exc)
+                self._state = suggest_connection_state(mapped)
+                raise mapped from exc
 
     # ------------------------------------------------------------------
     # Lifecycle
