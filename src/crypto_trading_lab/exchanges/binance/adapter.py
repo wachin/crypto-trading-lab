@@ -20,22 +20,18 @@ import hashlib
 import hmac
 import json
 import logging
+import random
 import time
 import urllib.request
 import asyncio
 import urllib.error
 import urllib.parse
+from functools import wraps
 from collections import defaultdict
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Optional
-
-try:
-    import keyring
-    HAS_KEYRING = True
-except ImportError:
-    HAS_KEYRING = False
+from typing import Any, Optional, Callable, TypeVar
 
 from crypto_trading_lab.domain.models import (
     Balance,
@@ -71,6 +67,83 @@ from crypto_trading_lab.exchanges.binance.websocket_client import BinanceWebSock
 from crypto_trading_lab.exchanges.feed_health import FeedHealthRecord, FeedHealthStore
 
 logger = logging.getLogger(__name__)
+
+
+# Retry helper with exponential backoff and jitter (ROADMAP chapter 27)
+# Transient errors that should trigger a retry
+_TRANSIENT_ERRORS = (
+    urllib.error.URLError,
+    ConnectionError,
+    TimeoutError,
+    OSError,
+)
+
+# HTTP status codes that are transient (5xx, 429)
+_TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+
+# Default retry configuration
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_BASE_DELAY = 1.0  # seconds
+DEFAULT_MAX_DELAY = 30.0  # seconds
+DEFAULT_JITTER = 0.2  # 20% jitter
+
+
+def is_transient_error(error: Exception) -> bool:
+    """Check if an error is transient and should trigger a retry."""
+    if isinstance(error, _TRANSIENT_ERRORS):
+        return True
+    if isinstance(error, urllib.error.HTTPError):
+        return error.code in _TRANSIENT_HTTP_CODES
+    return False
+
+
+T = TypeVar('T')
+
+
+def with_retry(
+    func: Callable[..., T],
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    base_delay: float = DEFAULT_BASE_DELAY,
+    max_delay: float = DEFAULT_MAX_DELAY,
+    jitter: float = DEFAULT_JITTER,
+) -> Callable[..., T]:
+    """Decorator that adds exponential backoff retry for transient errors.
+
+    Args:
+        func: Function to wrap with retry logic
+        max_retries: Maximum number of retry attempts
+        base_delay: Initial delay in seconds
+        max_delay: Maximum delay in seconds
+        jitter: Jitter factor (0.0-1.0) for randomising delay
+
+    Returns:
+        Wrapped function with retry logic
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> T:
+        attempt = 0
+        while True:
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if not is_transient_error(e):
+                    raise
+                if attempt >= DEFAULT_MAX_RETRIES:
+                    logger.warning(
+                        "Max retries (%d) exceeded for %s: %s",
+                        DEFAULT_MAX_RETRIES, func.__name__, e
+                    )
+                    raise
+                # Exponential backoff with jitter
+                delay = min(DEFAULT_BASE_DELAY * (2 ** attempt), DEFAULT_MAX_DELAY)
+                delay *= (1.0 + random.uniform(-DEFAULT_JITTER, DEFAULT_JITTER))
+                logger.debug(
+                    "Transient error in %s (attempt %d/%d): %s. Retrying in %.2fs",
+                    func.__name__, attempt + 1, DEFAULT_MAX_RETRIES, e, delay
+                )
+                time.sleep(delay)
+                attempt += 1
+    return wrapper
 
 
 class BinanceRestAdapter(ExchangeAdapter):
@@ -241,8 +314,9 @@ class BinanceRestAdapter(ExchangeAdapter):
         except Exception as e:
             logger.debug("Error handling candle message: %s", e)
         
+    @with_retry
     def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Make a rate-limited REST request (public endpoint)."""
+        """Make a rate-limited REST request (public endpoint) with automatic retry."""
         if not self._circuit_breaker.can_attempt():
             raise AdapterRateLimited("Circuit breaker is open")
             
@@ -274,6 +348,7 @@ class BinanceRestAdapter(ExchangeAdapter):
             self._circuit_breaker.record_failure()
             raise AdapterNetworkError(f"Network error: {e}") from e
             
+    @with_retry
     def _make_signed_request(self, endpoint: str, params: dict[str, Any] | None = None, method: str = "GET") -> dict[str, Any]:
         """Make a signed REST request for authenticated endpoints.
         

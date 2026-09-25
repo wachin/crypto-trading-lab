@@ -28,6 +28,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 
+from crypto_trading_lab.backtesting.engine import BacktestResult
 from crypto_trading_lab.machine_learning.experiment_manager import (
     ExperimentManager,
     ExperimentRecord,
@@ -137,6 +138,8 @@ class NotebookDialog(QDialog):
         buttons = QHBoxLayout()
         self.new_button = QPushButton(self.tr("New entry"))
         self.new_button.clicked.connect(self.create_entry_interactive)
+        self.auto_fill_button = QPushButton(self.tr("Auto-fill from backtest…"))
+        self.auto_fill_button.clicked.connect(self.auto_fill_from_backtest)
         self.note_button = QPushButton(self.tr("Add note"))
         self.note_button.clicked.connect(self.add_note_interactive)
         self.compare_button = QPushButton(self.tr("Compare selected"))
@@ -145,6 +148,7 @@ class NotebookDialog(QDialog):
         self.export_button.clicked.connect(self.export_interactive)
         for button in (
             self.new_button,
+            self.auto_fill_button,
             self.note_button,
             self.compare_button,
             self.export_button,
@@ -287,6 +291,94 @@ class NotebookDialog(QDialog):
         )
         if path:
             self.export_to(path)
+
+    def auto_fill_from_backtest(self) -> None:
+        """Auto-fill a new experiment entry from a completed backtest result.
+
+        Opens a dialog to select a completed backtest and creates a new
+        experiment entry with fields pre-filled from the backtest results.
+        """
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QListWidget, QListWidgetItem, QDialogButtonBox, QLabel
+        from crypto_trading_lab.machine_learning.experiment_manager import ExperimentStatus
+
+        # Find completed experiments that have backtest results
+        completed = self._manager.find_by_status(ExperimentStatus.COMPLETED)
+        if not completed:
+            QMessageBox.information(
+                self, self.tr("No completed backtests"),
+                self.tr("No completed backtests found. Run a backtest first.")
+            )
+            return
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(self.tr("Select backtest to auto-fill"))
+        dialog.resize(600, 400)
+        layout = QVBoxLayout(dialog)
+
+        layout.addWidget(QLabel(self.tr("Select a completed backtest to auto-fill the manifest:")))
+
+        list_widget = QListWidget()
+        for exp in completed:
+            item = QListWidgetItem(
+                f"{exp.experiment_id[:8]} — {exp.hypothesis[:60]} "
+                f"({exp.strategy_name} v{exp.strategy_version})"
+            )
+            item.setData(Qt.ItemDataRole.UserRole, exp.experiment_id)
+            list_widget.addItem(item)
+        layout.addWidget(list_widget)
+
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        item = list_widget.currentItem()
+        if item is None:
+            return
+
+        exp_id = item.data(Qt.ItemDataRole.UserRole)
+        source_exp = self._manager.get(exp_id)
+        if source_exp is None:
+            return
+
+        # Create new draft entry with fields pre-filled from the backtest
+        hypothesis, accepted = QInputDialog.getText(
+            self, self.tr("New entry from backtest"),
+            self.tr("Enter hypothesis for this research:"),
+            text=source_exp.hypothesis
+        )
+        if not accepted or not hypothesis.strip():
+            return
+
+        record = self._manager.create(
+            hypothesis=hypothesis.strip(),
+            strategy_name=source_exp.strategy_name,
+            strategy_version=source_exp.strategy_version,
+            dataset_version=source_exp.dataset_version or source_exp.dataset_id,
+            parameters=dict(source_exp.parameters),
+            execution_assumptions=dict(source_exp.execution_assumptions),
+            software_version=source_exp.software_version,
+            random_seed=source_exp.random_seed,
+            notes=f"Auto-filled from backtest {source_exp.experiment_id[:8]}. Original conclusion: {source_exp.conclusion}",
+            dataset_id=source_exp.dataset_id,
+            dataset_checksum=source_exp.dataset_checksum,
+            code_hash=source_exp.code_hash,
+            metrics=dict(source_exp.metrics),
+            tags=source_exp.tags,
+            status=ExperimentStatus.DRAFT,
+        )
+        self.refresh()
+        self.select_experiment(record.experiment_id)
+        self.detail.setPlainText(render_experiment(record))
+        QMessageBox.information(
+            self, self.tr("Auto-fill complete"),
+            self.tr("Manifest auto-filled from backtest {id}. Edit as needed.").format(id=source_exp.experiment_id[:8])
+        )
 
     def _on_selection(self, current: QListWidgetItem | None, _prev) -> None:
         if current is None:

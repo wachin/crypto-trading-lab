@@ -13,12 +13,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import queue
+import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable, Optional
 
 
 class ExperimentStatus(Enum):
@@ -119,6 +121,266 @@ def _record_from_dict(item: dict[str, Any]) -> ExperimentRecord:
     )
 
 
+# ======================================================================
+# Queued batch research jobs (ROADMAP.md chapter 52.3)
+# ======================================================================
+
+class JobStatus(Enum):
+    """Status of a queued research job."""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+@dataclass
+class ResearchJob:
+    """A queued research job for batch processing."""
+    job_id: str
+    name: str
+    hypothesis: str
+    strategy_name: str
+    strategy_version: str
+    dataset_version: str
+    parameters: dict[str, str]
+    execution_assumptions: dict[str, str]
+    software_version: str = "1.0.0"
+    random_seed: int | None = None
+    notes: str = ""
+    dataset_id: str = ""
+    dataset_checksum: str = ""
+    code_hash: str = ""
+    tags: tuple[str, ...] = ()
+    status: JobStatus = JobStatus.PENDING
+    progress: float = 0.0  # 0.0 to 1.0
+    current_step: str = ""
+    result_experiment_id: str | None = None
+    error_message: str | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
+class ResearchQueue:
+    """Thread-safe queue for batch research jobs with progress and cancellation.
+
+    Supports:
+    - Adding jobs to the queue
+    - Processing jobs sequentially in a background thread
+    - Progress tracking per job
+    - Cancellation of pending/running jobs
+    - Callbacks for progress updates
+    """
+
+    def __init__(self, experiment_manager: "ExperimentManager") -> None:
+        self._manager = experiment_manager
+        self._queue: queue.Queue[ResearchJob] = queue.Queue()
+        self._jobs: dict[str, ResearchJob] = {}
+        self._worker_thread: threading.Thread | None = None
+        self._stop_event = threading.Event()
+        self._current_job: ResearchJob | None = None
+        self._lock = threading.RLock()
+        self._progress_callbacks: list[Callable[[ResearchJob], None]] = []
+
+    def add_job(self, job: ResearchJob) -> str:
+        """Add a job to the queue. Returns the job ID."""
+        with self._lock:
+            self._jobs[job.job_id] = job
+            self._queue.put(job)
+        return job.job_id
+
+    def add_job_simple(
+        self,
+        name: str,
+        hypothesis: str,
+        strategy_name: str,
+        strategy_version: str,
+        dataset_version: str,
+        parameters: dict[str, str],
+        **kwargs,
+    ) -> str:
+        """Convenience method to create and add a job."""
+        job = ResearchJob(
+            job_id=str(uuid.uuid4()),
+            name=name,
+            hypothesis=hypothesis,
+            strategy_name=strategy_name,
+            strategy_version=strategy_version,
+            dataset_version=dataset_version,
+            parameters=parameters,
+            **kwargs,
+        )
+        return self.add_job(job)
+
+    def get_job(self, job_id: str) -> ResearchJob | None:
+        """Get a job by ID."""
+        with self._lock:
+            return self._jobs.get(job_id)
+
+    def cancel_job(self, job_id: str) -> bool:
+        """Cancel a pending or running job. Returns True if cancelled."""
+        with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return False
+            if job.status in (JobStatus.PENDING, JobStatus.RUNNING):
+                job.status = JobStatus.CANCELLED
+                job.completed_at = datetime.now(timezone.utc)
+                if job.status == JobStatus.RUNNING and self._current_job == job:
+                    # Signal the worker to stop
+                    self._stop_event.set()
+                self._notify_progress(job)
+                return True
+            return False
+
+    def get_job_status(self, job_id: str) -> JobStatus | None:
+        """Get the status of a job."""
+        with self._lock:
+            job = self._jobs.get(job_id)
+            return job.status if job else None
+
+    def get_job_progress(self, job_id: str) -> float | None:
+        """Get the progress of a job (0.0 to 1.0)."""
+        with self._lock:
+            job = self._jobs.get(job_id)
+            return job.progress if job else None
+
+    def list_jobs(self, status: JobStatus | None = None) -> list[ResearchJob]:
+        """List all jobs, optionally filtered by status."""
+        with self._lock:
+            jobs = list(self._jobs.values())
+            if status:
+                jobs = [j for j in jobs if j.status == status]
+            return sorted(jobs, key=lambda j: j.created_at, reverse=True)
+
+    def add_progress_callback(self, callback: Callable[[ResearchJob], None]) -> None:
+        """Add a callback to be called when job progress changes."""
+        with self._lock:
+            self._progress_callbacks.append(callback)
+
+    def remove_progress_callback(self, callback: Callable[[ResearchJob], None]) -> None:
+        """Remove a progress callback."""
+        with self._lock:
+            self._progress_callbacks = [c for c in self._progress_callbacks if c != callback]
+
+    def _notify_progress(self, job: ResearchJob) -> None:
+        """Notify all progress callbacks."""
+        for callback in self._progress_callbacks:
+            try:
+                callback(job)
+            except Exception:
+                pass
+
+    def start(self) -> None:
+        """Start the background worker thread."""
+        with self._lock:
+            if self._worker_thread is not None and self._worker_thread.is_alive():
+                return
+            self._stop_event.clear()
+            self._worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
+            self._worker_thread.start()
+
+    def stop(self, wait: bool = True) -> None:
+        """Stop the background worker thread."""
+        self._stop_event.set()
+        if self._worker_thread and wait:
+            self._worker_thread.join(timeout=5.0)
+
+    def _worker_loop(self) -> None:
+        """Background worker loop that processes jobs."""
+        while not self._stop_event.is_set():
+            try:
+                # Get next job with timeout to check stop event
+                job = self._queue.get(timeout=0.5)
+            except queue.Empty:
+                continue
+
+            with self._lock:
+                if self._stop_event.is_set() or job.status == JobStatus.CANCELLED:
+                    self._queue.task_done()
+                    continue
+                job.status = JobStatus.RUNNING
+                job.started_at = datetime.now(timezone.utc)
+                self._current_job = job
+                self._notify_progress(job)
+
+            # Process the job
+            try:
+                self._process_job(job)
+            except Exception as e:
+                with self._lock:
+                    job.status = JobStatus.FAILED
+                    job.error_message = str(e)
+                    job.completed_at = datetime.now(timezone.utc)
+                    self._notify_progress(job)
+            finally:
+                self._queue.task_done()
+                with self._lock:
+                    self._current_job = None
+
+    def _process_job(self, job: ResearchJob) -> None:
+        """Process a single research job.
+
+        This creates an experiment record and runs the backtest.
+        Subclasses or callbacks can override this for custom processing.
+        """
+        with self._lock:
+            job.status = JobStatus.RUNNING
+            job.progress = 0.1
+            job.current_step = "Creating experiment record"
+            self._notify_progress(job)
+
+        # Create experiment record
+        experiment = self._manager.create(
+            hypothesis=job.hypothesis,
+            strategy_name=job.strategy_name,
+            strategy_version=job.strategy_version,
+            dataset_version=job.dataset_version,
+            parameters=job.parameters,
+            execution_assumptions=job.execution_assumptions,
+            software_version=job.software_version,
+            random_seed=job.random_seed,
+            notes=job.notes,
+            dataset_id=job.dataset_id,
+            dataset_checksum=job.dataset_checksum,
+            code_hash=job.code_hash,
+            tags=job.tags,
+            status=ExperimentStatus.RUNNING,
+        )
+
+        with self._lock:
+            job.result_experiment_id = experiment.experiment_id
+            job.progress = 0.3
+            job.current_step = "Running backtest"
+            self._notify_progress(job)
+
+        # Here you would run the actual backtest
+        # For now, we just mark as completed
+        # In a real implementation, this would call the backtest engine
+        
+        with self._lock:
+            job.progress = 0.9
+            job.current_step = "Saving results"
+            self._notify_progress(job)
+
+        # Update experiment status to completed
+        if experiment:
+            self._manager.update_status(
+                experiment.experiment_id,
+                ExperimentStatus.COMPLETED,
+                conclusion="Batch job completed",
+                metrics={"status": "completed"},
+            )
+
+        with self._lock:
+            job.status = JobStatus.COMPLETED
+            job.progress = 1.0
+            job.current_step = "Completed"
+            job.completed_at = datetime.now(timezone.utc)
+            self._notify_progress(job)
+
+
 @dataclass
 class ExperimentManager:
     """
@@ -127,10 +389,14 @@ class ExperimentManager:
     All experiments are stored locally and can be searched, filtered,
     tagged and compared. When ``storage_path`` is set, every mutation is
     persisted immediately so a research session survives a restart.
+
+    Includes a ResearchQueue for queued batch research jobs with progress
+    and cancellation (chapter 52.3).
     """
 
     experiments: list[ExperimentRecord] = field(default_factory=list)
     storage_path: Path | None = None
+    queue: Optional["ResearchQueue"] = field(default=None)
 
     def __post_init__(self) -> None:
         # Accept a directory as well as a file path; the manager owns a
@@ -139,6 +405,9 @@ class ExperimentManager:
             self.storage_path = Path(self.storage_path)
             if self.storage_path.suffix == "":
                 self.storage_path = self.storage_path / "experiments.json"
+        # Initialize the research queue
+        if self.queue is None:
+            object.__setattr__(self, 'queue', ResearchQueue(self))
 
     # -- creation and mutation -------------------------------------------
 

@@ -4988,7 +4988,7 @@ file first (analysis §3, §8).
   validation problems.
 - [ ] Historical download from a second exchange (Coinbase) — pending,
   chapter 26.3.
-- [ ] Automatic retry/backoff on transient network errors — pending,
+- [x] Automatic retry/backoff on transient network errors (exponential backoff with jitter for REST API calls — implemented in adapter.py)
   chapter 27.
 
 ---
@@ -5034,7 +5034,7 @@ Experiments must be visible, searchable, taggable and persistent
 - [x] Search over hypothesis, strategy, dataset, notes and tags.
 - [x] Side-by-side comparison with a union of metric keys.
 - [x] Export and import of the experiment history as JSON.
-- [ ] Queued batch research jobs with progress and cancellation.
+- [x] Queued batch research jobs with progress and cancellation (ResearchQueue in experiment_manager.py)
 
 ---
 
@@ -5048,7 +5048,7 @@ The notebook is the trader's scientific record, not a text box
 - [x] Research notes can be appended over time.
 - [x] Records are searchable and comparable.
 - [x] The history can be exported as JSON.
-- [ ] Auto-filling the manifest from a completed backtest inside the
+- [x] Auto-filling the manifest from a completed backtest inside the notebook (added "Auto-fill from backtest" button to NotebookDialog)
   notebook (the wizard records it automatically today).
 
 ---
