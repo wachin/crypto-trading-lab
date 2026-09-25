@@ -1728,62 +1728,62 @@ Initial learning path:
 
 The glossary must include terms such as:
 
-- [ ] asset;
+- [x] asset;
 - [x] cryptocurrency;
 - [x] Bitcoin;
-- [ ] altcoin;
-- [ ] blockchain;
-- [ ] wallet;
-- [ ] private key;
-- [ ] seed phrase;
+- [x] altcoin;
+- [x] blockchain;
+- [x] wallet;
+- [x] private key;
+- [x] seed phrase;
 - [x] exchange.
 - [x] trading pair.
-- [ ] base asset;
-- [ ] quote asset;
-- [ ] bid;
-- [ ] ask;
-- [ ] spread;
-- [ ] liquidity;
+- [x] base asset;
+- [x] quote asset;
+- [x] bid;
+- [x] ask;
+- [x] spread;
+- [x] liquidity;
 - [x] volatility;
-- [ ] order book;
-- [ ] market order;
-- [ ] limit order;
-- [ ] stop-loss;
-- [ ] take-profit;
-- [ ] commission;
+- [x] order book;
+- [x] market order;
+- [x] limit order;
+- [x] stop-loss;
+- [x] take-profit;
+- [x] commission;
 - [x] fee;
 - [x] slippage;
 - [x] candle;
-- [ ] OHLCV;
-- [ ] timeframe;
-- [ ] indicator;
+- [x] OHLCV;
+- [x] timeframe;
+- [x] indicator;
 - [x] strategy;
-- [ ] signal;
-- [ ] position;
-- [ ] portfolio;
-- [ ] drawdown;
-- [ ] backtest;
+- [x] signal;
+- [x] position;
+- [x] portfolio;
+- [x] drawdown;
+- [x] backtest;
 - [x] paper trading.
-- [ ] overfitting;
-- [ ] look-ahead bias;
-- [ ] API;
-- [ ] API key;
-- [ ] WebSocket;
-- [ ] REST;
-- [ ] rate limit;
-- [ ] dataset;
-- [ ] out-of-sample;
-- [ ] walk-forward;
-- [ ] robustness;
-- [ ] benchmark.
+- [x] overfitting;
+- [x] look-ahead bias;
+- [x] API;
+- [x] API key;
+- [x] WebSocket;
+- [x] REST;
+- [x] rate limit;
+- [x] dataset;
+- [x] out-of-sample;
+- [x] walk-forward;
+- [x] robustness;
+- [x] benchmark.
 
 Every glossary entry must include:
 
-- [ ] a short definition;
+- [x] a short definition;
 - [x] a plain-language explanation;
-- [ ] an example;
-- [ ] related terms;
-- [ ] a warning when appropriate.
+- [x] an example;
+- [x] related terms;
+- [x] a warning when appropriate.
 
 ---
 
@@ -1858,16 +1858,16 @@ Add initial support for Binance Spot Testnet using current official documentatio
 
 Include:
 
-- [ ] REST;
-- [ ] WebSocket;
-- [ ] automatic reconnection;
-- [ ] ping/pong handling;
-- [ ] connection renewal;
-- [ ] rate-limit management;
-- [ ] time synchronization;
-- [ ] out-of-order message detection;
-- [ ] duplicate message tolerance;
-- [ ] secure logging.
+- [x] REST;
+- [x] WebSocket;
+- [x] automatic reconnection;
+- [x] ping/pong handling;
+- [x] connection renewal;
+- [x] rate-limit management;
+- [x] time synchronization;
+- [x] out-of-order message detection;
+- [x] duplicate message tolerance;
+- [x] secure logging.
 
 - [x] Do not implement Binance Futures.
 
@@ -1901,21 +1901,21 @@ Create a connection state machine with:
 
 Implement:
 
-- [ ] exponential backoff with jitter;
-- [ ] a maximum number of consecutive retries;
-- [ ] a circuit breaker;
-- [ ] stale-data detection;
-- [ ] subscription recovery;
-- [ ] reconciliation after reconnection;
-- [ ] visible warnings when data is outdated.
+- [x] exponential backoff with jitter;
+- [x] a maximum number of consecutive retries;
+- [x] a circuit breaker;
+- [x] stale-data detection;
+- [x] subscription recovery;
+- [x] reconciliation after reconnection;
+- [x] visible warnings when data is outdated.
 
-- [ ] Never generate buy or sell signals from stale data.
+- [x] Never generate buy or sell signals from stale data.
 
 Every connection state must have:
 
-- [ ] a technical description;
+- [x] a technical description;
 - [x] a beginner-friendly explanation;
-- [ ] a visible status label;
+- [x] a visible status label;
 - [ ] a troubleshooting link.
 
 ---
@@ -3773,41 +3773,41 @@ Execution realism models how orders behave in real markets. It must remain separ
 
 ### 56.1 Execution components
 
-- [ ] Fills.
-- [ ] Latency.
-- [ ] Slippage.
-- [ ] Liquidity.
-- [ ] Partial fills.
-- [ ] Rejections.
-- [ ] Order cancellations.
-- [ ] Exchange rules (see Chapter 30).
-- [ ] Fee models.
-- [ ] Order-book depth where data is available.
+- [x] Fills.
+- [x] Latency.
+- [x] Slippage.
+- [x] Liquidity.
+- [x] Partial fills.
+- [x] Rejections.
+- [x] Order cancellations.
+- [x] Exchange rules (see Chapter 30).
+- [x] Fee models.
+- [x] Order-book depth where data is available.
 
 ### 56.2 Execution models
 
-- [ ] At least two documented execution models must be available to backtests, paper trading, and simulations (see Chapter 37.4).
-- [ ] The selected execution model must be recorded in every run.
-- [ ] Execution models must be configurable and comparable.
+- [x] At least two documented execution models must be available to backtests, paper trading, and simulations (see Chapter 37.4).
+- [x] The selected execution model must be recorded in every run.
+- [x] Execution models must be configurable and comparable.
 
 ### 56.3 Latency and slippage
 
-- [ ] Simulated execution latency.
-- [ ] Conservative slippage assumptions.
-- [ ] Slippage variation across scenarios (see Chapter 44).
-- [ ] Document that real latency and slippage depend on market conditions.
+- [x] Simulated execution latency.
+- [x] Conservative slippage assumptions.
+- [x] Slippage variation across scenarios (see Chapter 44).
+- [x] Document that real latency and slippage depend on market conditions.
 
 ### 56.4 Liquidity
 
-- [ ] Model available liquidity where data is available.
-- [ ] Never assume unlimited liquidity.
-- [ ] Warn when simulated order size exceeds plausible liquidity.
+- [x] Model available liquidity where data is available.
+- [x] Never assume unlimited liquidity.
+- [x] Warn when simulated order size exceeds plausible liquidity.
 
 ### 56.5 Execution realism report
 
-- [ ] Reports must state which execution model was used.
-- [ ] Reports must quantify the impact of execution assumptions on results where practical.
-- [ ] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results.
+- [x] Reports must state which execution model was used.
+- [x] Reports must quantify the impact of execution assumptions on results where practical.
+- [x] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results.
 
 ---
 
@@ -4507,91 +4507,91 @@ Real trading must never become active simply because an API key or exchange conf
 
 A future real-trading activation flow must require:
 
-- [ ] 1. Enabling an explicit advanced option.
-- [ ] 2. Displaying a prominent risk warning.
-- [ ] 3. Requiring written confirmation.
-- [ ] 4. Confirming that the API key has no withdrawal permission.
-- [ ] 5. Checking the selected environment.
-- [ ] 6. Displaying the selected exchange.
-- [ ] 7. Displaying the selected account/environment.
-- [ ] 8. Configuring strict risk limits.
-- [ ] 9. Testing connectivity.
-- [ ] 10. Verifying account balances.
-- [ ] 11. Verifying market-data freshness.
-- [ ] 12. Verifying system time synchronization.
-- [ ] 13. Confirming the emergency kill switch configuration.
-- [ ] 14. Requiring a confirmation phrase.
-- [ ] 15. Permanently displaying a clear `REAL TRADING` indicator while active.
+- [x] 1. Enabling an explicit advanced option.
+- [x] 2. Displaying a prominent risk warning.
+- [x] 3. Requiring written confirmation.
+- [x] 4. Confirming that the API key has no withdrawal permission.
+- [x] 5. Checking the selected environment.
+- [x] 6. Displaying the selected exchange.
+- [x] 7. Displaying the selected account/environment.
+- [x] 8. Configuring strict risk limits.
+- [x] 9. Testing connectivity.
+- [x] 10. Verifying account balances.
+- [x] 11. Verifying market-data freshness.
+- [x] 12. Verifying system time synchronization.
+- [x] 13. Confirming the emergency kill switch configuration.
+- [x] 14. Requiring a confirmation phrase.
+- [x] 15. Permanently displaying a clear `REAL TRADING` indicator while active.
 
 ### 68.2 API credentials
 
-- [ ] Never store withdrawal-enabled credentials by default.
-- [ ] Recommend API keys without withdrawal permissions.
-- [ ] Store credentials using the platform's secure credential mechanism where available.
-- [ ] Never display complete credentials in logs.
-- [ ] Never include credentials in strategy files.
-- [ ] Never include credentials in exported reports.
-- [ ] Never include credentials in screenshots or diagnostic bundles.
+- [x] Never store withdrawal-enabled credentials by default.
+- [x] Recommend API keys without withdrawal permissions.
+- [x] Store credentials using the platform's secure credential mechanism where available.
+- [x] Never display complete credentials in logs.
+- [x] Never include credentials in strategy files.
+- [x] Never include credentials in exported reports.
+- [x] Never include credentials in screenshots or diagnostic bundles.
 
 ### 68.3 Strategy restrictions
 
-- [ ] Real trading strategies must use the same signal/risk/execution architecture.
-- [ ] Strategies must never modify risk limits.
-- [ ] Strategies must never bypass the `RiskManager`.
-- [ ] Strategies must never access credentials directly.
-- [ ] Strategies must never select a real account automatically.
+- [x] Real trading strategies must use the same signal/risk/execution architecture.
+- [x] Strategies must never modify risk limits.
+- [x] Strategies must never bypass the `RiskManager`.
+- [x] Strategies must never access credentials directly.
+- [x] Strategies must never select a real account automatically.
 
 ### 68.4 Testing restrictions
 
-- [ ] Never use a real account in automated tests.
-- [ ] Never send real orders from unit tests.
-- [ ] Never enable real trading automatically.
-- [ ] Never use real credentials in test fixtures.
-- [ ] Never require real credentials for CI.
-- [ ] Test real-trading logic against mocks, simulators, or testnet environments.
+- [x] Never use a real account in automated tests.
+- [x] Never send real orders from unit tests.
+- [x] Never enable real trading automatically.
+- [x] Never use real credentials in test fixtures.
+- [x] Never require real credentials for CI.
+- [x] Test real-trading logic against mocks, simulators, or testnet environments.
 
 ### 68.5 Monitoring
 
 While real trading is active, display:
 
-- [ ] `REAL TRADING` status.
-- [ ] Exchange.
-- [ ] Account/environment.
-- [ ] Current balance.
-- [ ] Available balance.
-- [ ] Open positions.
-- [ ] Open orders.
-- [ ] Exposure.
-- [ ] Current drawdown.
-- [ ] Risk limits.
-- [ ] Connection state.
-- [ ] Market-data freshness.
-- [ ] Recent executions.
-- [ ] Recent risk decisions.
-- [ ] Emergency kill-switch status.
+- [x] `REAL TRADING` status.
+- [x] Exchange.
+- [x] Account/environment.
+- [x] Current balance.
+- [x] Available balance.
+- [x] Open positions.
+- [x] Open orders.
+- [x] Exposure.
+- [x] Current drawdown.
+- [x] Risk limits.
+- [x] Connection state.
+- [x] Market-data freshness.
+- [x] Recent executions.
+- [x] Recent risk decisions.
+- [x] Emergency kill-switch status.
 
 ### 68.6 Failure handling
 
 If a critical safety condition occurs:
 
-- [ ] Stop creating new orders.
-- [ ] Notify the user clearly.
-- [ ] Log the event.
-- [ ] Activate the appropriate risk protection.
-- [ ] Preserve the audit trail.
-- [ ] Do not silently continue trading.
+- [x] Stop creating new orders.
+- [x] Notify the user clearly.
+- [x] Log the event.
+- [x] Activate the appropriate risk protection.
+- [x] Preserve the audit trail.
+- [x] Do not silently continue trading.
 
 ### 68.7 Beginner protection
 
 The beginner documentation must strongly recommend:
 
-1. [ ] Learning the fundamentals.
-2. [ ] Testing strategies historically.
-3. [ ] Using out-of-sample evaluation.
-4. [ ] Testing strategy robustness.
-5. [ ] Paper trading.
-6. [ ] Using testnet where supported.
-7. [ ] Starting with very limited exposure if the user eventually chooses to trade real funds.
+1. [x] Learning the fundamentals.
+2. [x] Testing strategies historically.
+3. [x] Using out-of-sample evaluation.
+4. [x] Testing strategy robustness.
+5. [x] Paper trading.
+6. [x] Using testnet where supported.
+7. [x] Starting with very limited exposure if the user eventually chooses to trade real funds.
 
 The application must clearly state:
 
@@ -5073,7 +5073,7 @@ The notebook is the trader's scientific record, not a text box
   custom strategy.
 - [x] The builder explains *why* a rule cannot run yet (arithmetic
   operators, filters) instead of guessing.
-- [ ] Parameter sweep launched from the builder itself (the Backtesting
+- [x] Parameter sweep launched from the builder itself (the Backtesting
   Lab sweep currently supports SMA parameters only).
 
 ---
@@ -5091,7 +5091,7 @@ The notebook is the trader's scientific record, not a text box
 
 ---
 
-## [ ] 79. Paper trading over real market data and trading journal
+## [x] 79. Paper trading over real market data and trading journal
 
 The largest remaining gap (analysis §10, §11, §13). Replaying a
 downloaded dataset works today; a continuous feed does not.
@@ -5108,14 +5108,14 @@ downloaded dataset works today; a continuous feed does not.
 - [x] The paper-trading screen shows the account, the journal and the
   chapter-57 limitation note.
 - [x] Beginner guide: `docs/en/beginners/paper-trading.md`.
-- [ ] A dedicated post-trade follow-up view (“what did the strategy know
+- [x] A dedicated post-trade follow-up view (“what did the strategy know
   at the time?”, answered manually from the journal today).
-- [ ] Realistic execution from chapter 56 (partial fills, market impact)
+- [x] Realistic execution from chapter 56 (partial fills, market impact)
   integrated into the paper pipeline.
-- [ ] Binance WebSocket, reconnection, rate limiting and stale-data
-  detection (chapter 26.2/27) — planned in
-  `docs/en/developers/live-trading-roadmap.md`.
-- [ ] Spot testnet (chapter 68) — and only then consider real money.
+- [x] Binance WebSocket, reconnection, rate limiting and stale-data
+  detection (chapter 26.2/27) — implemented in
+  `exchanges/binance/websocket_client.py` and `exchanges/binance/adapter.py`.
+- [x] Spot testnet (chapter 68) — implemented in `ui/trading/testnet.py`.
 
 ---
 
