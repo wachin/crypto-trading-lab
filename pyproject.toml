@@ -43,6 +43,10 @@ Changelog = "https://github.com/wachin/crypto-trading-lab/blob/main/AGENT-HANDOF
 # concludes (no python3-ccxt Debian package exists; see the CCXT study
 # in docs/en/developers/reference-projects.md).
 ccxt = ["ccxt>=4.0"]
+# Async HTTP and WebSocket libraries for live market data (Chapter 26.2, 27)
+# Optional until packaging evaluation concludes.
+aiohttp = ["aiohttp>=3.9"]
+websockets = ["websockets>=12.0"]
 # Development tooling. In practice these are installed as Debian system
 # packages (python3-pytest, python3-hypothesis, ...); this list exists for
 # contributors who knowingly choose a virtual environment.
