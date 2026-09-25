@@ -132,6 +132,8 @@ class SMAStream:
     maintained in O(1) so a strategy traversing N candles does not pay an
     O(N) recompute per step. This removes the O(N^2) behaviour of
     re-running :meth:`SMA.compute` on every growing window.
+
+    Uses a circular buffer (fixed-size array) for true O(1) updates.
     """
 
     def __init__(self, period: int = 20) -> None:
@@ -140,7 +142,9 @@ class SMAStream:
                 f"SMA period must be a positive integer, got {period!r}"
             )
         self.period = period
-        self._window: list[Decimal] = []
+        self._buffer = [Decimal(0)] * period
+        self._index = 0
+        self._count = 0
         self._sum = Decimal(0)
         self.value: Decimal | None = None
         self.prev_value: Decimal | None = None
@@ -148,11 +152,18 @@ class SMAStream:
     def update(self, candle: Candle) -> Decimal | None:
         """Feed one candle; returns the SMA value after it (or None)."""
         self.prev_value = self.value
-        self._window.append(candle.close)
+        
+        # Circular buffer: overwrite oldest value
+        if self._count == self.period:
+            self._sum -= self._buffer[self._index]
+        else:
+            self._count += 1
+        
+        self._buffer[self._index] = candle.close
         self._sum += candle.close
-        if len(self._window) > self.period:
-            self._sum -= self._window.pop(0)
-        if len(self._window) == self.period:
+        self._index = (self._index + 1) % self.period
+        
+        if self._count == self.period:
             self.value = self._sum / Decimal(self.period)
         else:
             self.value = None
