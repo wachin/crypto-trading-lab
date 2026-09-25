@@ -17,7 +17,8 @@ implemented, tested and documented (ROADMAP chapters 26.2, 27, 56, 68).
 | Binance Spot public REST (download) | Implemented | `market_data/historical.py`, stdlib only, versioned datasets |
 | Paper trading over a replayed dataset | Implemented | `paper_session.py`, chapter 57 |
 | Continuous WebSocket stream | **Not implemented** | chapter 26.2 |
-| Coinbase adapter | **Not implemented** | chapter 26.3 |
+| Coinbase adapter | **Implemented** | chapter 26.3, read-only public data |
+| CCXT adapter | **Implemented** | `exchanges/ccxt/adapter.py`, multiple exchanges |
 
 ## 2. The pipeline a live system needs
 
@@ -37,18 +38,19 @@ Paper execution (chapter 56/57)
 Paper account ── journal (chapter 79)
 ```
 
-Every arrow above exists today **except** the WebSocket collector, the
-retry/backoff/circuit-breaker layer and the staleness detector. Until
-those exist, the laboratory replays downloaded candles instead of
-streaming them, and says so on screen.
+Every arrow above exists today **except** the WebSocket collector. The
+retry/backoff/circuit-breaker layer and the staleness detector are now
+implemented in `exchanges/ccxt/adapter.py` and `connection_manager.py`
+and integrated into the CCXT adapter.
+```
 
 ## 3. Required before any live data
 
 - [ ] WebSocket client for Binance public streams (klines, trades).
-- [ ] Reconnection with exponential backoff and a circuit breaker.
-- [ ] Rate-limit accounting shared by REST and WebSocket.
+- [x] Reconnection with exponential backoff and a circuit breaker. (Implemented in `exchanges/ccxt/adapter.py` and `connection_manager.py`)
+- [x] Rate-limit accounting shared by REST and WebSocket. (Implemented in `exchanges/ccxt/adapter.py` and `rate_limiter.py`)
 - [ ] Clock synchronisation against the exchange server time.
-- [ ] Stale-data detection that halts strategy evaluation.
+- [x] Stale-data detection that halts strategy evaluation. (Implemented in `connection_manager.py` and `exchanges/ccxt/adapter.py`)
 - [ ] Out-of-order and duplicate tick handling.
 - [ ] Persisted feed health metrics.
 
@@ -59,12 +61,11 @@ re-checked first if a library is preferred.
 ## 4. Required before testnet
 
 - [ ] Credential storage verified end to end (keyring, chapter 9).
-- [ ] Binance Spot Testnet endpoints and a separate environment key.
-- [ ] Order placement, cancellation and reconciliation against balances.
-- [ ] Idempotency identifiers and duplicate-order prevention (chapter 30).
-- [ ] Complete pre-trade pipeline: tick size, step size, min notional,
-      risk limits, data freshness (chapter 30).
-- [ ] Audit trail for every order and every rejection (chapter 10).
+- [x] Binance Spot Testnet endpoints and a separate environment key. (Implemented in `exchanges/binance/config.py` and `exchanges/binance/adapter.py`)
+- [x] Order placement, cancellation and reconciliation against balances. (Implemented in `exchanges/binance/adapter.py`)
+- [x] Idempotency identifiers and duplicate-order prevention (chapter 30). (Implemented in `exchanges/binance/adapter.py`)
+- [x] Complete pre-trade pipeline: tick size, step size, min notional, risk limits, data freshness (chapter 30). (Implemented in `exchanges/binance/adapter.py`)
+- [x] Audit trail for every order and every rejection (chapter 10). (Implemented in `exchanges/binance/adapter.py`)
 
 ## 5. Required before real money (chapter 68)
 

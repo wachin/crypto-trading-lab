@@ -36,6 +36,13 @@ trivially satisfied and defers the chapter 4 dependency decision
 (no `python3-ccxt` Debian package exists; PyPI-only — see the CCXT
 study) until the app actually needs live data.
 
+
+**Status**: Implemented (2026-09-22). `CcxtExchangeAdapter` in
+`exchanges/ccxt/adapter.py` implements full `ExchangeAdapter` contract
+for public market data (markets, tickers, candles, order book, trades)
+and private data (balances, orders, order placement/cancellation) when
+`allow_trading=True`. Integrates with circuit breaker, rate limiter,
+stale data detector, and retry/backoff infrastructure.
 ### 3. Read-only is the default; trading is an explicit opt-in
 
 Both adapters strip the `TRADING` capability unless constructed with
