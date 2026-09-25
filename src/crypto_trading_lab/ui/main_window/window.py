@@ -40,6 +40,7 @@ from crypto_trading_lab.trading import RealTradingManager, RealTradingConfig, Re
 from crypto_trading_lab.market_data.historical import DatasetVersion
 from crypto_trading_lab.ui.connection_health_widget import ConnectionHealthWidget
 from crypto_trading_lab.ui.accessibility import AccessibilityHelper
+from crypto_trading_lab.ui.trading import TestnetTradingWidget
 
 
 class MainWindow(QMainWindow):
@@ -61,6 +62,7 @@ class MainWindow(QMainWindow):
         self._strategy_builder_window = None
         self._paper_window = None
         self._trading_window = None
+        self._testnet_window = None
 
         self._trading_manager = RealTradingManager()
         self._trading_manager.state_changed.connect(self._on_trading_state_changed)
@@ -329,6 +331,8 @@ class MainWindow(QMainWindow):
         self.wizard_button.clicked.connect(self._open_research_wizard)
         self.paper_button = QPushButton(self.tr("Paper Trading"))
         self.paper_button.clicked.connect(self._open_paper)
+        self.testnet_button = QPushButton(self.tr("Binance Spot Testnet"))
+        self.testnet_button.clicked.connect(self._open_testnet)
 
         # Add accessibility metadata to all buttons
         buttons_info = [
@@ -360,6 +364,10 @@ class MainWindow(QMainWindow):
              self.tr("Paper Trading"),
              self.tr("Simulated trading with real market data"),
              self.tr("Practice trading with simulated money on real historical data")),
+            (self.testnet_button,
+             self.tr("Binance Spot Testnet"),
+             self.tr("Open testnet trading with safety activation"),
+             self.tr("Practice testnet trading with full safety activation flow")),
         ]
 
         for button, name, tooltip, description in buttons_info:
@@ -377,6 +385,7 @@ class MainWindow(QMainWindow):
             self.backtesting_button,
             self.wizard_button,
             self.paper_button,
+            self.testnet_button,
         ]
         AccessibilityHelper.set_tab_order(tab_order)
 
@@ -388,6 +397,7 @@ class MainWindow(QMainWindow):
         self.backtesting_button.setShortcut(QKeySequence("Ctrl+B"))
         self.wizard_button.setShortcut(QKeySequence("Ctrl+R"))
         self.paper_button.setShortcut(QKeySequence("Ctrl+P"))
+        self.testnet_button.setShortcut(QKeySequence("Ctrl+T"))
 
         layout.addStretch(1)
 
@@ -724,6 +734,15 @@ class MainWindow(QMainWindow):
                     "first: paper trading replays real candles."
                 ),
             )
+
+    def _open_testnet(self) -> None:
+        """Open the Binance Spot Testnet trading screen (chapter 68, Phase 6)."""
+        if self._testnet_window is None:
+            self._testnet_window = TestnetTradingWidget(self._trading_manager, self)
+            self._testnet_window.setWindowTitle(self.tr("Binance Spot Testnet"))
+            self._testnet_window.resize(600, 800)
+        self._testnet_window.show()
+        self._testnet_window.raise_()
 
 
 def run(argv: list[str] | None = None) -> int:
