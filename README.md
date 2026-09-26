@@ -11,7 +11,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Tests: 599 passed, 2 skipped](https://img.shields.io/badge/tests-599%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Tests: 611 passed, 2 skipped](https://img.shields.io/badge/tests-611%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
 [![CI](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml)
 [![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
 [![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
@@ -82,7 +82,7 @@ cryptocurrency research laboratory. Follow these rules exactly.
    say so explicitly instead of guessing.
 3. Make small changes. After every change run:
        QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-    and keep the suite green (baseline: 599 passed, 2 skipped). If the
+    and keep the suite green (baseline: 611 passed, 2 skipped). If the
     count changes, report it.
 4. Do NOT install dependencies. If one is genuinely needed, STOP and
    report: package name, source (Debian or PyPI), reason, and the exact
@@ -197,7 +197,7 @@ cd crypto-trading-lab
 # 3. Verify the environment, then the baseline
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 599 passed, 2 skipped
+# → 611 passed, 2 skipped
 
 # 4. Run it
 PYTHONPATH=src python3 -m crypto_trading_lab
