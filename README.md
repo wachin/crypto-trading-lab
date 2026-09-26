@@ -187,7 +187,8 @@ reviewed and mapped in [`docs/en/developers/afml-techniques.md`](docs/en/develop
 ```bash
 # 1. Dependencies — all Debian system packages, no venv, no pip
 sudo apt install python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
-                 python3-platformdirs python3-pytest qt6-l10n-tools
+                 python3-platformdirs python3-pytest qt6-l10n-tools \
+                 python3-numba
 
 # 2. Clone (the research submodules are optional — see below)
 git clone https://github.com/wachin/crypto-trading-lab
