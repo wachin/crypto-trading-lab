@@ -370,7 +370,7 @@ Use:
 - [ ] SciPy when advanced statistical or numerical functions are required;
 - [ ] statsmodels when statistically justified;
 - [ ] scikit-learn only for optional research experiments;
-- [ ] Numba only as an optional performance optimization.
+- [x] Numba only as an optional performance optimization. (Framework ready; requires `apt install python3-numba` or `pip install numba`)
 
 - [ ] Machine learning must not be a mandatory part of the initial application.
 - [ ] Do not describe machine learning as a method that can predict the market with certainty.
