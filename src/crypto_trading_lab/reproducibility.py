@@ -15,7 +15,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 
 @dataclass(frozen=True)
@@ -44,8 +44,81 @@ class RunManifest:
     code_hash: str
 
 
-def capture_environment() -> EnvironmentSnapshot:
-    """Capture complete environment state for reproducibility (53.1)."""
+#: Environment variable names whose *value* is never written down, only the
+#: name with a placeholder. Mirrors ``_Redactor.SENSITIVE_KEYS`` in
+#: ``infrastructure/logging_setup.py`` (chapter 9).
+_SECRET_NAME_MARKERS: tuple[str, ...] = (
+    "key",
+    "secret",
+    "token",
+    "password",
+    "passwd",
+    "passphrase",
+    "signature",
+    "jwt",
+    "authorization",
+    "credential",
+)
+
+#: Prefixes worth recording because they change how a run behaves.
+_ENV_PREFIXES: tuple[str, ...] = (
+    "PYTHON",
+    "VIRTUAL_ENV",
+    "CONDA",
+    "LANG",
+    "LC_",
+    "TZ",
+    "PATH",
+    "CRYPTO_",
+    "TRADING_",
+)
+
+#: Installed distributions do not change while the process runs, and
+#: enumerating them is expensive (about a second), so the map is built once.
+_PACKAGE_VERSIONS: dict[str, str] | None = None
+
+
+def _installed_packages() -> dict[str, str]:
+    """Return ``{distribution: version}`` for the running interpreter."""
+    global _PACKAGE_VERSIONS
+    if _PACKAGE_VERSIONS is None:
+        packages: dict[str, str] = {}
+        try:
+            from importlib import metadata
+
+            for distribution in metadata.distributions():
+                name = distribution.metadata["Name"]
+                if name:
+                    packages[str(name)] = distribution.version
+        except Exception:
+            # A broken distribution must not stop an experiment.
+            packages = {}
+        _PACKAGE_VERSIONS = packages
+    return dict(_PACKAGE_VERSIONS)
+
+
+def _record_environment(environ: Mapping[str, str]) -> dict[str, str]:
+    """Keep the reproducibility-relevant variables, redacting secrets.
+
+    A variable whose name looks like a credential is stored as ``***``:
+    the experiment file must never become a place where an API key leaks
+    (chapter 9 and the threat model).
+    """
+    recorded: dict[str, str] = {}
+    for key, value in environ.items():
+        if any(marker in key.lower() for marker in _SECRET_NAME_MARKERS):
+            recorded[key] = "***"
+        elif key.startswith(_ENV_PREFIXES):
+            recorded[key] = value
+    return recorded
+
+
+def capture_environment(*, include_packages: bool = True) -> EnvironmentSnapshot:
+    """Capture complete environment state for reproducibility (53.1).
+
+    ``include_packages=False`` skips the dependency scan when only the
+    platform and git state are needed; the scan is cached per process.
+    """
     # Python and platform info
     python_version = sys.version.split()[0]
     platform_info = platform.platform()
@@ -53,38 +126,26 @@ def capture_environment() -> EnvironmentSnapshot:
     hostname = platform.node()
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    # Installed packages
-    packages = {}
-    try:
-        import pkg_resources
-        packages = {d.key: d.version for d in pkg_resources.working_set}
-    except Exception:
-        pass
+    packages = _installed_packages() if include_packages else {}
 
     # Git state
+    repo_root = Path(__file__).resolve().parents[2]
     git_commit = None
     git_dirty = False
     try:
         git_commit = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], 
-            cwd=Path(__file__).resolve().parents[2], 
-            stderr=subprocess.DEVNULL
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            stderr=subprocess.DEVNULL,
         ).decode().strip()
         dirty = subprocess.check_output(
-            ["git", "status", "--porcelain"], 
-            cwd=Path(__file__).resolve().parents[2], 
-            stderr=subprocess.DEVNULL
+            ["git", "status", "--porcelain"],
+            cwd=repo_root,
+            stderr=subprocess.DEVNULL,
         ).decode().strip()
         git_dirty = bool(dirty)
     except Exception:
         pass
-
-    # Environment variables (filtered for relevance)
-    env_vars = {}
-    relevant_prefixes = ("CRYPTO_", "TRADING_", "PYTHON", "PATH", "VIRTUAL_ENV", "CONDA")
-    for key, value in os.environ.items():
-        if any(key.startswith(p) for p in relevant_prefixes):
-            env_vars[key] = value
 
     return EnvironmentSnapshot(
         python_version=python_version,
@@ -95,23 +156,50 @@ def capture_environment() -> EnvironmentSnapshot:
         packages=packages,
         git_commit=git_commit,
         git_dirty=git_dirty,
-        environment_variables=env_vars,
+        environment_variables=_record_environment(os.environ),
     )
 
 
+def environment_summary(snapshot: EnvironmentSnapshot) -> dict[str, Any]:
+    """Compact, JSON-safe environment record for one experiment (53.2).
+
+    The full snapshot (including environment variables) belongs in a run
+    manifest; an experiment record keeps what identifies the run without
+    bloating every entry.
+    """
+    return {
+        "python_version": snapshot.python_version,
+        "platform": snapshot.platform,
+        "architecture": snapshot.architecture,
+        "hostname": snapshot.hostname,
+        "captured_at": snapshot.timestamp,
+        "git_commit": snapshot.git_commit or "",
+        "git_dirty": snapshot.git_dirty,
+        "packages": dict(snapshot.packages),
+    }
+
+
 def compute_code_hash() -> str:
-    """Compute hash of source code for reproducibility (53.3)."""
-    hash_obj = hashlib.sha256()
-    for root, dirs, files in os.walk("src"):
-        for file in sorted(files):
-            if file.endswith(".py"):
-                path = os.path.join(root, file)
-                try:
-                    with open(path, "rb") as f:
-                        hash_obj.update(f.read())
-                except Exception:
-                    pass
-    return hash_obj.hexdigest()[:16]
+    """Hash the application source, independent of the working directory.
+
+    Regression: this used to walk the relative path ``"src"``, so running
+    the app (or the tests) from any other directory silently hashed
+    nothing and returned the SHA-256 of the empty string.
+    """
+    package_root = Path(__file__).resolve().parent
+    digest = hashlib.sha256()
+    for path in sorted(package_root.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        # Include the relative path so a rename changes the hash too.
+        digest.update(path.relative_to(package_root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        try:
+            digest.update(path.read_bytes())
+        except OSError:
+            continue
+        digest.update(b"\0")
+    return digest.hexdigest()[:16]
 
 
 def set_deterministic_seeds(seed: int = 42) -> dict[str, int]:
@@ -243,6 +331,7 @@ __all__ = [
     "EnvironmentSnapshot",
     "RunManifest",
     "capture_environment",
+    "environment_summary",
     "compute_code_hash",
     "set_deterministic_seeds",
     "create_run_manifest",

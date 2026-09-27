@@ -22,6 +22,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
 
+from crypto_trading_lab.reproducibility import (
+    capture_environment,
+    compute_code_hash,
+    environment_summary,
+)
+
 
 class ExperimentStatus(Enum):
     """Lifecycle status of an experiment (52.1).
@@ -68,6 +74,9 @@ class ExperimentRecord:
     code_hash: str = ""
     metrics: dict[str, str] = field(default_factory=dict)
     tags: tuple[str, ...] = ()
+    #: Compact environment record (chapter 53.2): Python, platform,
+    #: git revision and dependency versions at the time of the run.
+    environment: dict[str, Any] = field(default_factory=dict)
 
 
 def _record_to_dict(exp: ExperimentRecord) -> dict[str, Any]:
@@ -81,6 +90,7 @@ def _record_to_dict(exp: ExperimentRecord) -> dict[str, Any]:
         "dataset_id": exp.dataset_id,
         "dataset_checksum": exp.dataset_checksum,
         "code_hash": exp.code_hash,
+        "environment": dict(exp.environment),
         "parameters": exp.parameters,
         "execution_assumptions": exp.execution_assumptions,
         "metrics": exp.metrics,
@@ -116,6 +126,7 @@ def _record_from_dict(item: dict[str, Any]) -> ExperimentRecord:
         dataset_id=item.get("dataset_id", ""),
         dataset_checksum=item.get("dataset_checksum", ""),
         code_hash=item.get("code_hash", ""),
+        environment=dict(item.get("environment", {})),
         metrics=dict(item.get("metrics", {})),
         tags=tuple(item.get("tags", ())),
     )
@@ -397,6 +408,11 @@ class ExperimentManager:
     experiments: list[ExperimentRecord] = field(default_factory=list)
     storage_path: Path | None = None
     queue: Optional["ResearchQueue"] = field(default=None)
+    #: Captured once per manager; the environment does not change while the
+    #: process runs, and the dependency scan is expensive.
+    _environment_cache: dict[str, Any] | None = field(
+        default=None, repr=False, compare=False
+    )
 
     def __post_init__(self) -> None:
         # Accept a directory as well as a file path; the manager owns a
@@ -428,8 +444,24 @@ class ExperimentManager:
         metrics: dict[str, str] | None = None,
         tags: Iterable[str] = (),
         status: ExperimentStatus = ExperimentStatus.DRAFT,
+        environment: dict[str, Any] | None = None,
     ) -> ExperimentRecord:
-        """Create a new experiment record."""
+        """Create a new experiment record.
+
+        A blank ``code_hash`` is filled with the current source hash and a
+        missing ``environment`` with a captured snapshot, so chapter 53's
+        "every experiment records its environment and code revision" holds
+        without every caller having to remember it.
+        """
+        if not code_hash:
+            code_hash = compute_code_hash()
+        if environment is None:
+            if self._environment_cache is None:
+                self._environment_cache = environment_summary(
+                    capture_environment()
+                )
+            environment = dict(self._environment_cache)
+
         experiment_id = str(uuid.uuid4())
 
         record = ExperimentRecord(
@@ -450,6 +482,7 @@ class ExperimentManager:
             code_hash=code_hash,
             metrics=dict(metrics or {}),
             tags=tuple(tags),
+            environment=dict(environment),
         )
 
         self.experiments.append(record)
@@ -483,6 +516,7 @@ class ExperimentManager:
                     dataset_id=exp.dataset_id,
                     dataset_checksum=exp.dataset_checksum,
                     code_hash=exp.code_hash,
+                    environment=exp.environment,
                     metrics=dict(metrics) if metrics is not None else exp.metrics,
                     tags=exp.tags,
                 )
