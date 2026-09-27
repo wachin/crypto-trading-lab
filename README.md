@@ -11,7 +11,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Tests: 683 passed, 2 skipped](https://img.shields.io/badge/tests-683%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Tests: 698 passed, 2 skipped](https://img.shields.io/badge/tests-698%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
 [![CI](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml)
 [![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
 [![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
@@ -52,12 +52,13 @@ ideas, research results and show-and-tell →
 ```bash
 git clone https://github.com/wachin/crypto-trading-lab   # submodules optional, see below
 cd crypto-trading-lab
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q    # → 683 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q    # → 698 passed, 2 skipped
 PYTHONPATH=src python3 -m crypto_trading_lab             # launch the app
 ```
 
-No virtualenv, no `pip install`, no network. Every dependency is a Debian
-system package (see [Dependencies](#dependencies)).
+The default setup uses Debian system packages only. If you need a PyPI-only
+extra such as `ccxt`, or an isolated environment, see
+[Using a virtualenv](docs/en/developers/venv-setup.md).
 
 ### Read these four files, in this order
 
@@ -82,7 +83,7 @@ cryptocurrency research laboratory. Follow these rules exactly.
    say so explicitly instead of guessing.
 3. Make small changes. After every change run:
        QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-    and keep the suite green (baseline: 683 passed, 2 skipped). If the
+    and keep the suite green (baseline: 698 passed, 2 skipped). If the
     count changes, report it.
 4. Do NOT install dependencies. If one is genuinely needed, STOP and
    report: package name, source (Debian or PyPI), reason, and the exact
@@ -185,7 +186,7 @@ reviewed and mapped in [`docs/en/developers/afml-techniques.md`](docs/en/develop
 ## Quick start
 
 ```bash
-# 1. Dependencies — all Debian system packages, no venv, no pip
+# 1. Dependencies — Debian system packages (virtualenv route: docs/en/developers/venv-setup.md)
 sudo apt install python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
                  python3-platformdirs python3-pytest qt6-l10n-tools
 
@@ -196,7 +197,7 @@ cd crypto-trading-lab
 # 3. Verify the environment, then the baseline
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 683 passed, 2 skipped
+# → 698 passed, 2 skipped
 
 # 4. Run it
 PYTHONPATH=src python3 -m crypto_trading_lab
@@ -523,7 +524,7 @@ profit.
 | `docs/en/developers/` | ADRs, AFML technique specifications, threat model, live-trading roadmap |
 | `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, research, reporting, i18n, UI |
 | `tests/` | 64 test modules — engine arithmetic is hand-verified |
-| `tools/` | Asset generators (e.g. the contributor banner GIF) |
+| `tools/` | Asset generators (the contributor banner GIF) and the ccxt evaluation script |
 | `Makefile` | `make test`, `make run`, `make banner`, `make translations` |
 | `.github/` | CI workflow, pull-request and issue templates |
 | `external/` | 8 optional reference projects as git submodules |
@@ -535,7 +536,7 @@ profit.
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 683 passed, 2 skipped
+# → 698 passed, 2 skipped
 ```
 
 The two skipped tests are in `tests/exchanges/contract.py:145` — they
@@ -558,8 +559,17 @@ drifting baseline is a bug, not a detail.
 Runtime: `python3-pyqt6`, `python3-pyqtgraph`, `python3-sqlalchemy`,
 `python3-platformdirs`. Development adds `python3-pytest` and the Qt
 Linguist tools (`qt6-l10n-tools`). Optional extras: `python3-pypdf` for
-PDF reports and `python3-ccxt` (PyPI-only) for the read-only CCXT
-adapter.
+PDF reports and `ccxt` (PyPI-only) for the read-only CCXT adapter.
+
+The Debian-first setup above is the supported one. If you need the
+PyPI-only extras (`ccxt`, `aiohttp`, `websockets`, `pypdf`) or an isolated
+environment, follow
+[`docs/en/developers/venv-setup.md`](docs/en/developers/venv-setup.md): it
+lists every dependency under its Debian **and** PyPI name, and the commands
+to create and activate the virtualenv, install everything in it, and
+evaluate whether `ccxt` is worth adopting.
+`pyproject.toml` also exposes the `venv`, `dev`, `pdf`, `ccxt`, `aiohttp`
+and `websockets` groups for a one-command install.
 
 The full matrix, with Debian 12/13 availability and the reasoning behind
 every choice, lives in

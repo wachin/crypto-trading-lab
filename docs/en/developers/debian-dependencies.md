@@ -44,11 +44,29 @@ crypto-trading-lab --version
 
 ## Development
 
-For development purposes, you can install from source:
+For development purposes, install from source:
 
 ```bash
-sudo apt install python3 python3-pip python3-dev python3-virtualenv
-python3 -m venv .venv
+git clone https://github.com/wachin/crypto-trading-lab
+cd crypto-trading-lab
+sudo apt install python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
+                 python3-platformdirs python3-pytest
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
+PYTHONPATH=src python3 -m crypto_trading_lab
+```
+
+## Virtualenv (optional, for PyPI-only extras)
+
+`ccxt`, `pypdf`, `aiohttp` and `websockets` have no Debian package here, so
+they need a Python virtualenv. The complete guide — dependency names under
+both their Debian and PyPI names, both venv routes, troubleshooting and how
+to evaluate whether `ccxt` is worth adopting — lives in
+[`venv-setup.md`](venv-setup.md). In short:
+
+```bash
+sudo apt install python3-venv python3-pyqt6 python3-pyqtgraph \
+                 python3-sqlalchemy python3-platformdirs
+python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
-pip install -e .
+python -m pip install ccxt
 ```

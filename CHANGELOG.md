@@ -70,9 +70,28 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   degenerate or edgeless. `RiskOfRuinReport` gained
   `recommended_risk_per_trade` and `ResearchRun` carries it to the research
   output. `tests/backtesting/test_risk_of_ruin.py` adds 15 tests.
+- `docs/en/developers/venv-setup.md`: the complete virtualenv guide —
+  every dependency under its Debian **and** PyPI name, both venv routes
+  (`--system-site-packages` over the Debian Qt stack, or fully isolated),
+  run/test commands, troubleshooting, and how to decide whether `ccxt` is
+  worth adopting. `pyproject.toml` gained the `venv` and `pdf` dependency
+  groups so `pip install -e ".[venv,dev,ccxt,pdf]"` fills a clean venv in
+  one command, and `tools/evaluate_ccxt.py` is a read-only script that
+  reports ccxt's coverage and whether the project's adapter accepts a real
+  client.
 
 ### Fixed
 
+- The documented test baseline had been left at **683 passed, 2 skipped**
+  in ten places (the README badge and body, `AGENTS.md`,
+  `AGENT-HANDOFF.md`, `CONTRIBUTING.md`, `Makefile`, the pull-request
+  template and the developer docs) after the chapter-60 turn: a previous
+  update used the wrong search value and silently changed nothing. It is
+  **698 passed, 2 skipped**.
+- `README.md` no longer states the blanket "No virtualenv, no `pip install`,
+  no network"; the Debian-first default is unchanged, and the PyPI-only
+  path is documented separately in `venv-setup.md`. `CONTRIBUTING.md` and
+  `debian-dependencies.md` say the same thing instead of "no virtualenv".
 - `render_pdf()` was broken: it called `PdfWriter._addObject` /
   `_writeObject` / `.stream`, private names that pypdf 5 removed, so every
   PDF export raised `AttributeError`. It now builds the document with the
@@ -148,7 +167,7 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   tutorial figures, so an installed copy can display them.
 - `media-generation/README.md` and `generate_tutorial_images.py` no
   longer hard-code the maintainer's `/home/wachin/...` path.
-- Documented test baseline corrected to **683 passed, 2 skipped**
+- Documented test baseline corrected to **698 passed, 2 skipped**
   across `README.md`, `AGENTS.md`, `AGENT-HANDOFF.md`,
   `CONTRIBUTING.md`, `Makefile`, the pull-request template and the
   developer docs. It had drifted between 229, 415, 522, 599 and 611.

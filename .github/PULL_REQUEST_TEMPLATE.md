@@ -31,7 +31,7 @@ Before this change: `___ passed, ___ skipped`
 After this change: `___ passed, ___ skipped`
 
 If the count differs from the documented baseline
-(**683 passed, 2 skipped**), explain why.
+(**698 passed, 2 skipped**), explain why.
 
 ## Checklist
 

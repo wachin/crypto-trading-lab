@@ -42,6 +42,18 @@ Issues = "https://github.com/wachin/crypto-trading-lab/issues"
 Changelog = "https://github.com/wachin/crypto-trading-lab/blob/main/AGENT-HANDOFF.md"
 
 [project.optional-dependencies]
+# Runtime dependencies for contributors who knowingly choose a virtualenv
+# instead of the Debian system packages. The supported default stays
+# Debian-first, so `dependencies` above stays empty on purpose; see
+# docs/en/developers/venv-setup.md.
+venv = [
+    "PyQt6>=6.6",
+    "pyqtgraph>=0.13",
+    "SQLAlchemy>=2.0",
+    "platformdirs>=4.0",
+]
+# PDF report export (chapter 41) is PyPI-only here.
+pdf = ["pypdf>=4.0"]
 # CCXT integration is optional until the chapter 4 packaging evaluation
 # concludes (no python3-ccxt Debian package exists; see the CCXT study
 # in docs/en/developers/reference-projects.md).

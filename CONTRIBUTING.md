@@ -46,12 +46,16 @@ git clone https://github.com/wachin/crypto-trading-lab
 cd crypto-trading-lab
 
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # → 683 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # → 698 passed, 2 skipped
 PYTHONPATH=src python3 -m crypto_trading_lab            # run the app
 ```
 
-- **No virtualenv and no `pip install`.** Every dependency is a Debian
-  system package. See [`docs/en/developers/debian-dependencies.md`](docs/en/developers/debian-dependencies.md).
+- **Debian first.** Every runtime dependency is a Debian system package and
+  that is the supported setup; the default workflow needs no virtualenv. A
+  virtualenv exists for **PyPI-only extras** (`ccxt`, `pypdf`, `aiohttp`,
+  `websockets`) and for an isolated environment — see
+  [`docs/en/developers/venv-setup.md`](docs/en/developers/venv-setup.md)
+  and [`docs/en/developers/debian-dependencies.md`](docs/en/developers/debian-dependencies.md).
 - **Submodules are optional.** `external/` holds ~900 MB of reference
   projects used for design research; the application builds and tests
   without them. Clone them with `git submodule update --init --recursive`
