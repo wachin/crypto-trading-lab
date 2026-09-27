@@ -17,7 +17,7 @@ implemented, tested and documented (ROADMAP chapters 26.2, 27, 56, 68).
 | Binance Spot public REST (download) | Implemented | `market_data/historical.py`, stdlib only, versioned datasets |
 | Paper trading over a replayed dataset | Implemented | `paper_session.py`, chapter 57 |
 | Continuous WebSocket stream | **Not implemented** | chapter 26.2 |
-| Coinbase adapter | **Implemented** | chapter 26.3, read-only public data |
+| Coinbase adapter | **Not implemented** | chapter 26.3 — the native adapter was removed on 2026-09-27 (dead and non-functional); reach Coinbase through the optional CCXT adapter |
 | CCXT adapter | **Implemented** | `exchanges/ccxt/adapter.py`, multiple exchanges |
 
 ## 2. The pipeline a live system needs

@@ -58,8 +58,13 @@ wired afterwards.
   (`ResearchRun.recommended_risk_per_trade` + warnings); the unsound
   closed-form ruin formulas were deliberately not ported. 15 tests added;
   suite 698 passed, 2 skipped.
-- **Still open:** `coinbase` (item 12) and `strategy_registry` (item 16).
-  Each keeps its module until the port/wiring lands.
+- **Batch B, item 12 — `exchanges/coinbase/` deleted: executed
+  2026-09-27.** Dead, unreachable and non-functional; `ROADMAP.md` §26.3 and
+  the live-trading roadmap now say Coinbase is **not implemented** instead
+  of claiming otherwise. No test count change (nothing imported it): 698
+  passed, 2 skipped.
+- **Still open:** `strategy_registry` (item 16). It keeps its module until
+  the wiring lands.
 
 ## Summary
 
@@ -76,7 +81,7 @@ wired afterwards.
 | 9 | `machine_learning/strategies.py` | 48 | `[ ]` | **Delete** — unwired draft; ensembles duplicated |
 | 10 | `risk_of_ruin.py` | 60 | `[ ]` | **Merge** the sizing formulas, then delete |
 | 11 | `research_ethics.py` | 72 | `[~]` | **Merge** `EthicsChecker` into reports, then delete |
-| 12 | `exchanges/coinbase/adapter.py` | 26.3 | `[~]` | **Merge** via CCXT, then delete |
+| 12 | `exchanges/coinbase/` | 26.3 | `[ ]` | **Delete** — dead, non-functional; ROADMAP corrected |
 | 13 | `execution_realism.py` | 56 | `[x]` | **Wire** into `paper_session` |
 | 14 | `reproducibility.py` | 53 | `[~]` | **Wire** into `ExperimentManager` |
 | 15 | `live_vs_backtest.py` | 63 | `[~]` | **Wire** (sole implementation), fix bug first |
@@ -236,20 +241,35 @@ them cannot change the suite. All are recoverable from git history.
 - `research_ethics.py` was deleted. Still open: 72.1's remaining items,
   and all of 72.3/72.4. Chapter 72 stays `[~]`.
 
-### 12. `exchanges/coinbase/adapter.py` (chapter 26.3) → CCXT
+### 12. `exchanges/coinbase/` (chapter 26.3) — DONE
 
-- Capability-identical to `CcxtExchangeAdapter`
-  (`exchanges/ccxt/adapter.py`) and structurally twin to
-  `BinanceRestAdapter`; `CcxtWebSocketClient.subscribe`
-  (`ccxt/adapter.py:725`) already generalises the Coinbase one.
-- Defects *(read)*: `record_success()` called before the request
-  (`:302`), `start()` is a placeholder (`:443-445`), `stop()` is declared
-  twice (sync at `:454` silently overrides async at `:447`), the
-  `StaleDataDetector` is built and never used (`:98`).
-- Action: keep `exchanges/coinbase/config.py`, route Coinbase through
-  `CcxtExchangeAdapter(exchange_id="coinbase")`, delete `adapter.py`, and
-  re-mark `ROADMAP.md:1848-1850` as unmet instead of implying a native
-  adapter exists.
+- **Was:** a native read-only adapter, capability-identical to
+  `CcxtExchangeAdapter` and structurally twin to `BinanceRestAdapter`, with
+  `CcxtWebSocketClient.subscribe` already generalising the Coinbase one.
+  Nothing in `src/` or `tests/` imported it, and `exchanges/__init__.py`'s
+  own layout note never listed it.
+- **Defects (verified):** `record_success()` ran **before** the request
+  (`adapter.py:302`), so the circuit breaker could never open; `stop()` was
+  declared twice, with the synchronous definition at `:454` silently
+  overriding the async one at `:447`; `start()` was a placeholder that set
+  `CONNECTED` without connecting; the `StaleDataDetector` was built and
+  never used.
+- **Action taken (2026-09-27):** the whole `exchanges/coinbase/` package
+  was deleted, including `config.py`. The audit had suggested keeping
+  `config.py`, but after removing the adapter nothing imported it either,
+  and the substitute path (CCXT) manages its own endpoints — keeping it
+  would have recreated exactly the dead-code problem this audit exists to
+  fix. The Coinbase sandbox warning it carried was preserved in
+  `ROADMAP.md` §26.3.
+- **Not routed through CCXT:** `CcxtExchangeAdapter` takes an injected ccxt
+  **client instance**, not an `exchange_id`, and `ccxt` is an optional
+  PyPI-only dependency that is not installed. Adding a caller would have
+  been unverifiable here, so instead `ROADMAP.md` §26.3 and
+  `docs/en/developers/live-trading-roadmap.md` were corrected: Coinbase is
+  **not implemented**, not "Implemented".
+- Rebuilding it later means a native adapter over the existing
+  `ExchangeAdapter` port, or a documented CCXT path with the dependency
+  decision of chapter 4.
 
 ## Batch C — wire (unique value, spec-relevant)
 

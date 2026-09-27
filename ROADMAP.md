@@ -1846,14 +1846,26 @@ Include:
 
 ### 26.3 Coinbase
 
+**Not implemented.** The native read-only adapter was removed on
+2026-09-27: nothing imported it, its WebSocket client was a placeholder
+(`start()` never connected, `stop()` was declared twice so the synchronous
+one silently overrode the async one) and its REST path recorded
+circuit-breaker *successes before the request*, so the breaker could never
+open. Coinbase can be reached through the optional CCXT adapter, which is a
+PyPI-only dependency; that path is adapter-tested but is not exposed in the
+UI. See `docs/en/developers/unwired-modules-audit.md`. Preserve this
+warning for whenever it is rebuilt: the Coinbase sandbox may return static
+or predefined data and must not be treated as a realistic profitability
+simulation.
+
 Initially add:
 
-- [x] public market data;
-- [x] an architecture prepared for Advanced Trade;
-- [x] clearly labeled experimental support.
+- [ ] public market data;
+- [ ] an architecture prepared for Advanced Trade (the `ExchangeAdapter` port already exists — chapter 6.2);
+- [ ] clearly labeled experimental support.
 
-- [x] Document that the Coinbase sandbox may return static or predefined data and must not be treated as a realistic profitability simulation.
-- [x] Do not mix Coinbase-specific models with the central domain.
+- [ ] Document that the sandbox may return static or predefined data and must not be treated as a realistic profitability simulation.
+- [ ] Do not mix Coinbase-specific models with the central domain.
 
 ---
 

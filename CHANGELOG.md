@@ -197,4 +197,12 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   present it as an "expected/median drawdown", or return 0/1 while claiming
   to be a probability. The Monte-Carlo estimate that already exists is more
   defensible.
+- The whole `exchanges/coinbase/` package (chapter 26.3): the native
+  adapter and its endpoint config. Nothing imported either; the WebSocket
+  client was a placeholder, `stop()` was declared twice so the synchronous
+  definition silently overrode the async one, and the REST path recorded
+  circuit-breaker *successes before the request*, so the breaker could never
+  open. `ROADMAP.md` §26.3 and `docs/en/developers/live-trading-roadmap.md`
+  were corrected to state that Coinbase is **not implemented**; the sandbox
+  warning the config carried is preserved in the roadmap text.
 
