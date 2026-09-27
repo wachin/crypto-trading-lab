@@ -33,8 +33,21 @@ wired afterwards.
   its own slippage calculation. 15 tests added; suite 645 passed,
   2 skipped. Backtest/robustness wiring (56.5) remains open, so chapter 56
   is `[~]`, not `[x]`.
-- **Batch B and the rest of Batch C: open.** No code has been removed for
-  these; each keeps its module until the port/wiring lands.
+- **Batch C, item 14 — `reproducibility` wired: executed 2026-09-27.**
+  `ExperimentManager.create()` now produces `code_hash` and `environment`
+  for every record. Fixed on the way: the code hash returned the empty
+  SHA-256 outside the repo root, `capture_environment()` wrote
+  `CRYPTO_*`/`TRADING_*` values (possible API keys) in clear text, and the
+  dependency scan used the deprecated `pkg_resources`. 12 tests added;
+  suite 657 passed, 2 skipped.
+- **Batch C, item 15 — `live_vs_backtest` wired: executed 2026-09-27.**
+  Four defects fixed (regime bucket, non-deterministic metric order, float
+  fill rates, zero-baseline mislabelling) and the Paper Trading screen now
+  shows the drift against the same strategy's backtest. `BacktestConfig`
+  gained `position_fraction` so the comparison cannot mistake sizing for
+  drift. 15 tests added; suite 672 passed, 2 skipped.
+- **Batch B and `strategy_registry` (item 16): open.** No code has been
+  removed for these; each keeps its module until the port/wiring lands.
 
 ## Summary
 
@@ -227,34 +240,64 @@ them cannot change the suite. All are recoverable from git history.
   and robustness (chapter 44) to use the model. They still use the simple
   `CostModel`. Chapter 56 is therefore `[~]`.
 
-### 14. `reproducibility.py` (chapter 53) → `ExperimentManager`
+### 14. `reproducibility.py` (chapter 53) → `ExperimentManager` — DONE
 
-- Unique: `capture_environment()`/`EnvironmentSnapshot` (no environment
-  capture exists anywhere), `compute_code_hash()`, `RunManifest`,
-  `save_manifest`/`load_manifest`, `set_deterministic_seeds`.
-- `ExperimentRecord.code_hash` exists (`experiment_manager.py:68`) but is
-  only ever copied from another record
-  (`ui/research/notebook.py:370`); nothing produces it.
-  `ROADMAP.md` still has "every experiment must record the environment"
-  unchecked — this module is the missing producer.
-- Fix before wiring *(verified)*: `compute_code_hash` walks the relative
-  path `"src"` (`reproducibility.py:105`), so it silently hashes nothing
-  when the cwd is not the repo root; it also uses the deprecated
-  `pkg_resources` (`:59`).
-- Action: fix those two, feed `capture_environment()` +
-  `compute_code_hash()` into `ExperimentManager.create()`, add tests.
+- **Was:** `ExperimentRecord.code_hash` existed but was only ever copied
+  from another record; nothing produced it, and no record carried the
+  environment. `ROADMAP.md` had "every experiment must record the
+  environment" unchecked.
+- **Now (2026-09-27):** `ExperimentManager.create()` fills a blank
+  `code_hash` with `compute_code_hash()` and attaches a compact
+  `environment` (Python, platform, git revision, dependency versions) from
+  `capture_environment()` → `environment_summary()`, captured once per
+  manager. `ExperimentRecord.environment` is serialised and preserved by
+  `update_status`, `add_note`, `add_tag` and `save`/`load`.
+- Three defects were fixed first:
+  - `compute_code_hash()` walked the **relative** path `"src"`, so from any
+    other working directory it hashed nothing and returned the SHA-256 of
+    the empty string (`e3b0c442…`). It now hashes the package directory,
+    includes relative paths, and is cwd-independent *(verified from
+    `/tmp`)*.
+  - `capture_environment()` recorded the **values** of every `CRYPTO_*` /
+    `TRADING_*` variable, so an API key in the environment would have been
+    written in clear text into `experiments.json`. Names that look like
+    credentials are now stored as `***`; other relevant variables keep
+    their values.
+  - The dependency scan used the deprecated `pkg_resources` and took
+    ~520 ms per call; it now uses `importlib.metadata` and is cached per
+    process.
+- Still open: 53.1's remaining items (commission/slippage/execution model,
+  time range, schema version, application version) and 53.3 (re-run
+  verification). Chapter 53 stays `[~]`.
 
-### 15. `live_vs_backtest.py` (chapter 63)
+### 15. `live_vs_backtest.py` (chapter 63) — DONE
 
-- Sole implementation of backtest-vs-live drift (no counterpart:
-  `robustness.out_of_sample_degradation` compares train vs out-of-sample
-  inside one backtest, not live data).
-- **Bug (verified):** `calculate_regime_drift` appends `live_r` into the
-  `"bt"` bucket (`:256`), so per-regime drift is identically zero.
-- Action: fix the bucket bug, add tests, then feed it from the Paper
-  Trading session (which today only reports aggregate slippage) so drift
-  becomes visible to the user. Align its default thresholds with
-  `docs/en/developers/live-vs-backtest-drift.md`.
+- **Was:** unwired, and `calculate_regime_drift` appended the *live*
+  return into the `"bt"` bucket, so every regime reported a drift of
+  exactly zero. `calculate_drift_metrics` iterated a `set`, so the metric
+  order (and therefore the report) was non-deterministic; fill rates were
+  computed with float division; a zero backtest baseline was reported as
+  "no drift".
+- **Now (2026-09-27):** all four defects fixed, plus
+  `drift_report_from_results()` (a `BacktestResult` vs a
+  `PaperSessionResult`) and `render_drift_report()`. The Paper Trading
+  screen runs the same strategy as a backtest after each session and shows
+  the drift table, so chapter 63 is visible to the user.
+- **A subtler trap found while wiring:** the backtest engine invested
+  100 % of available cash while the paper session uses
+  `position_fraction` (0.5 by default). Comparing their returns would have
+  reported a **sizing artefact as drift** — the exact kind of misleading
+  metric this project forbids. Fixed at the root: `BacktestConfig` gained
+  `position_fraction` (default `1`, so existing behaviour is unchanged),
+  the Paper screen backtests with the session's fraction, and
+  `drift_report_from_results()` emits a `SIZING MISMATCH` warning if the
+  two ever disagree.
+- The bridge also sums the engine's separate `slippage` + `spread` before
+  comparing them with the paper session's single `total_slippage`, which
+  already includes both.
+- Still open: 63.1 latency/volatility/regime-change drift, and all of 63.2
+  (drift over time, causes, degradation marking) and 63.3. Chapter 63
+  stays `[~]`.
 
 ### 16. `strategy_registry.py` (chapter 36)
 

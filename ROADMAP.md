@@ -3658,13 +3658,13 @@ Every backtest must store:
 - [x] random seed. (`ExperimentRecord.random_seed`)
 - [ ] time range;
 - [ ] schema version;
-- [ ] environment information.
+- [x] environment information. (`ExperimentRecord.environment`, captured automatically by `ExperimentManager.create()` since 2026-09-27.)
 
 - [ ] Repeating a backtest with identical data and configuration must produce identical results.
 
 ### 53.2 Research reproducibility
 
-- [ ] Every experiment must record the environment (Python version, dependency versions, platform).
+- [x] Every experiment must record the environment (Python version, dependency versions, platform). (`capture_environment()` → `environment_summary()` on every record; secret-looking environment variables are redacted.)
 - [ ] Every result must reference its experiment ID (see Chapter 52).
 - [ ] Every dataset must have a checksum (see Chapter 29).
 - [ ] Every machine-learning model must record training data, features, labels, hyperparameters, and seed (see Chapter 48).
@@ -4247,7 +4247,7 @@ The system must explain and quantify differences between:
 
 Analyze:
 
-- [x] return drift. (computed from backtest vs paper)
+- [x] return drift. (computed from backtest vs paper by `drift_report_from_results`; the comparison requires equal position sizing and emits a `SIZING MISMATCH` warning instead of passing a sizing artefact off as drift)
 - [x] drawdown drift. (computed from backtest vs paper)
 - [x] slippage drift. (computed from model vs actual)
 - [x] fill-rate drift. (computed from expected vs actual)

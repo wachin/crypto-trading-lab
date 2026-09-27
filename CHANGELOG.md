@@ -40,9 +40,48 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   `LivePaperConfig` gained a `seed`, `execution_realism` gained
   `synthetic_order_book()` / `simulate_market_order()` and an injectable
   `random.Random`, and `tests/test_execution_realism.py` adds 15 tests.
+- Chapter 53 reproducibility is now wired into research records:
+  `ExperimentManager.create()` fills `code_hash` from the source and
+  attaches a compact `environment` (Python, platform, git revision,
+  dependency versions) to every `ExperimentRecord`, which round-trips
+  through `update_status`, notes, tags and `save`/`load`.
+  `reproducibility` gained `environment_summary()`,
+  `capture_environment(include_packages=...)` and a cached dependency scan;
+  `tests/test_reproducibility.py` adds 12 tests.
+- Chapter 63 drift is now wired to the Paper Trading screen:
+  `live_vs_backtest` gained `drift_report_from_results()` and
+  `render_drift_report()`, and every paper session is compared with the
+  same strategy's backtest at the same sizing. `BacktestConfig` gained
+  `position_fraction` (default `1`, so existing backtests are unchanged);
+  it is recorded in `metadata()` and `tests/test_live_vs_backtest.py` adds
+  10 tests.
 
 ### Fixed
 
+- `live_vs_backtest.calculate_regime_drift()` put the **live** return into
+  the backtest bucket, so per-regime drift was always exactly zero. It also
+  silently truncated mismatched inputs; it now raises.
+- `calculate_drift_metrics()` iterated a `set`, so metric order and the
+  report were non-deterministic, and a zero backtest baseline was reported
+  as "no drift" instead of material.
+- `analyze_execution_drift()` computed fill rates with float division,
+  leaking binary floating point into a money-adjacent report.
+- The drift bridge cannot mistake position sizing for drift: the backtest
+  engine invested 100 % of cash while the paper session uses
+  `position_fraction`, so returns now require matched sizing and a mismatch
+  is reported as a `SIZING MISMATCH` warning rather than a fake drift.
+- `reproducibility.compute_code_hash()` walked the **relative** path
+  `"src"`, so running the app or the tests from any other directory hashed
+  nothing and returned the SHA-256 of the empty string (`e3b0c442…`). It is
+  now cwd-independent.
+- `capture_environment()` stored the **values** of every `CRYPTO_*` /
+  `TRADING_*` environment variable, so an API key present in the
+  environment would have been written in clear text into
+  `experiments.json`. Variables whose name looks like a credential are now
+  recorded as `***` (chapter 9 / threat model).
+- `reproducibility` no longer uses the deprecated `pkg_resources`; the
+  dependency scan uses `importlib.metadata` and is cached per process
+  (~520 ms per call before).
 - Chapter 56's model was inert: `paper_session` imported
   `simulate_execution` and never called it, so an `execution_config` only
   changed one `impact_factor` term and partial fills came from an
@@ -86,7 +125,7 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   tutorial figures, so an installed copy can display them.
 - `media-generation/README.md` and `generate_tutorial_images.py` no
   longer hard-code the maintainer's `/home/wachin/...` path.
-- Documented test baseline corrected to **645 passed, 2 skipped**
+- Documented test baseline corrected to **672 passed, 2 skipped**
   across `README.md`, `AGENTS.md`, `AGENT-HANDOFF.md`,
   `CONTRIBUTING.md`, `Makefile`, the pull-request template and the
   developer docs. It had drifted between 229, 415, 522, 599 and 611.

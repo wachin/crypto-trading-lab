@@ -72,6 +72,11 @@ class BacktestConfig:
     """Everything that makes a backtest reproducible (chapter 37.4)."""
 
     initial_capital: Decimal = Decimal("10000")
+    #: Fraction of available cash committed to each entry (chapter 37.4).
+    #: The default of 1 keeps the historical full-capital behaviour; the
+    #: paper-trading drift comparison sets it to the session's
+    #: ``position_fraction`` so sizing is not mistaken for execution drift.
+    position_fraction: Decimal = Decimal("1")
     costs: CostModel = field(default_factory=CostModel)
     execution_model: ExecutionModel = ExecutionModel.NEXT_OPEN
     intrabar_policy: IntrabarPolicy = IntrabarPolicy.CONSERVATIVE
@@ -81,6 +86,7 @@ class BacktestConfig:
     def metadata(self) -> dict[str, str]:
         return {
             "initial_capital": str(self.initial_capital),
+            "position_fraction": str(self.position_fraction),
             "maker_fee": str(self.costs.maker_fee),
             "taker_fee": str(self.costs.taker_fee),
             "slippage_fraction": str(self.costs.slippage_fraction),
@@ -259,6 +265,8 @@ def run_backtest(
     config = config or BacktestConfig()
     if len(candles) < 2:
         raise ValueError("need at least two candles")
+    if not (Decimal(0) < config.position_fraction <= Decimal(1)):
+        raise ValueError("position_fraction must be between 0 and 1")
 
     cash = config.initial_capital
     position = Decimal(0)          # base units held
@@ -286,7 +294,7 @@ def run_backtest(
             fill_price = current.open
             if pending_signal is OrderSide.BUY and position == 0:
                 price = config.costs.buy_price(fill_price)
-                affordable = cash / price
+                affordable = cash * config.position_fraction / price
                 quantity = _step_quantity(affordable, config.quantity_step)
                 if (
                     quantity > 0

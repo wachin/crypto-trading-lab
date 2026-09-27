@@ -270,3 +270,53 @@ def test_insufficient_candles_rejected():
 def test_ma_crossover_rejects_bad_periods():
     with pytest.raises(ValueError):
         MACrossoverStrategy(fast=30, slow=10)
+
+
+def test_position_fraction_default_is_full_capital():
+    """The default keeps the historical full-capital behaviour."""
+    candles = _candles([100, 100, 200, 200])
+    result = run_backtest(
+        candles,
+        BuyAndHoldStrategy(),
+        BacktestConfig(initial_capital=Decimal("1000"), costs=_flat_costs()),
+    )
+
+    assert result.config_metadata["position_fraction"] == "1"
+    # ~10 units bought at 100, price ends at 200.
+    assert result.net_profit > Decimal("900")
+
+
+def test_position_fraction_limits_the_committed_cash():
+    candles = _candles([100, 100, 200, 200])
+    strategy = BuyAndHoldStrategy()
+    full = run_backtest(
+        candles,
+        strategy,
+        BacktestConfig(
+            initial_capital=Decimal("1000"),
+            costs=_flat_costs(),
+            position_fraction=Decimal("1"),
+        ),
+    )
+    half = run_backtest(
+        candles,
+        strategy,
+        BacktestConfig(
+            initial_capital=Decimal("1000"),
+            costs=_flat_costs(),
+            position_fraction=Decimal("0.5"),
+        ),
+    )
+
+    assert half.config_metadata["position_fraction"] == "0.5"
+    assert Decimal(0) < half.net_profit < full.net_profit
+
+
+@pytest.mark.parametrize("fraction", [Decimal("0"), Decimal("-0.5"), Decimal("1.5")])
+def test_position_fraction_out_of_range_is_rejected(fraction):
+    with pytest.raises(ValueError):
+        run_backtest(
+            _candles([100, 101, 102]),
+            BuyAndHoldStrategy(),
+            BacktestConfig(position_fraction=fraction),
+        )

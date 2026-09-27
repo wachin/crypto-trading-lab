@@ -73,6 +73,13 @@ def test_paper_widget_runs_a_session_and_shows_the_journal(qapp):
     assert "Paper trading account" in widget.account_view.toPlainText()
     assert "Trading journal" in widget.journal_view.toPlainText()
     assert widget.save_button.isEnabled() is True
+    # Chapter 63: the same strategy is backtested at the same sizing, so the
+    # drift shown is execution/risk drift and never a sizing artefact.
+    assert widget.last_drift is not None
+    assert "Live vs backtest drift" in widget.account_view.toPlainText()
+    assert not any(
+        "SIZING MISMATCH" in warning for warning in widget.last_drift.warnings
+    )
     widget.close()
 
 

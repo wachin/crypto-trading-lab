@@ -29,11 +29,18 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 from crypto_trading_lab.backtesting.engine import (
+    BacktestConfig,
     BuyAndHoldStrategy,
     MACrossoverStrategy,
     NullStrategy,
+    run_backtest,
 )
 from crypto_trading_lab.domain.models import Candle
+from crypto_trading_lab.live_vs_backtest import (
+    DriftReport,
+    drift_report_from_results,
+    render_drift_report,
+)
 from crypto_trading_lab.market_data.historical import DatasetVersion
 from crypto_trading_lab.paper_session import (
     PAPER_TRADING_NOTE,
@@ -60,6 +67,7 @@ class PaperTradingWidget(QWidget):
         self._candles = list(candles or [])
         self._dataset = dataset
         self._last: PaperSessionResult | None = None
+        self._last_drift: DriftReport | None = None
 
         self.setWindowTitle(self.tr("Paper Trading"))
         layout = QVBoxLayout(self)
@@ -233,8 +241,30 @@ class PaperTradingWidget(QWidget):
             dataset=self._dataset,
         )
         self._last = result
+
+        # Chapter 63: compare the session with the same strategy's backtest
+        # at the same position sizing, so the difference reflects execution
+        # and risk gating rather than a sizing artefact.
+        self._last_drift = None
+        if len(self._candles) >= 2:
+            backtest = run_backtest(
+                self._candles,
+                strategy,
+                BacktestConfig(
+                    initial_capital=capital,
+                    position_fraction=position_fraction,
+                    costs=config.costs(),
+                ),
+            )
+            self._last_drift = drift_report_from_results(backtest, result)
+
+        account_text = result.summary()
+        if self._last_drift is not None:
+            account_text = (
+                f"{account_text}\n\n{render_drift_report(self._last_drift)}"
+            )
+        self.account_view.setPlainText(account_text)
         self.save_button.setEnabled(True)
-        self.account_view.setPlainText(result.summary())
         self.journal_view.setPlainText(TradeJournal.render(result.journal))
         self.status_label.setText(
             self.tr("Session complete: {trades} closed trades.").format(
@@ -260,6 +290,11 @@ class PaperTradingWidget(QWidget):
     @property
     def last_result(self) -> PaperSessionResult | None:
         return self._last
+
+    @property
+    def last_drift(self) -> DriftReport | None:
+        """Chapter-63 drift report from the last session, when available."""
+        return self._last_drift
 
     # -- follow-up -------------------------------------------------------
 
