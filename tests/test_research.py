@@ -158,3 +158,24 @@ def test_missing_dataset_is_reported_honestly():
     )
     assert dataset_check.passed is False
     assert "cannot be reproduced" in dataset_check.detail
+
+
+def test_run_research_carries_a_position_size_recommendation():
+    """Chapter 60: the run exposes an advisory size, or says why it cannot."""
+    run = run_research(
+        _candles(),
+        hypothesis="SMA crossover has an edge on BTC/USDT 1h",
+        strategy_factory=lambda: MACrossoverStrategy(fast=5, slow=20),
+        strategy_name="sma_crossover",
+        parameters={"fast": "5", "slow": "20"},
+        config=_config(),
+        dataset=_dataset(),
+        benchmark_factory=lambda: BuyAndHoldStrategy(),
+    )
+
+    assert isinstance(run.recommended_risk_per_trade, Decimal)
+    assert run.recommended_risk_per_trade >= 0
+    assert any(
+        "size" in warning.lower() or "kelly" in warning.lower()
+        for warning in run.warnings
+    ), "the run must explain its sizing recommendation (or its absence)"

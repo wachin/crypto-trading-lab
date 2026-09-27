@@ -29,6 +29,7 @@ from crypto_trading_lab.backtesting.robustness import (
     MonteCarloConfig,
     RobustnessReport,
     compute_robustness_report,
+    position_size_from_trades,
 )
 from crypto_trading_lab.backtesting.statistical_analysis import (
     warn_multiple_testing,
@@ -95,6 +96,10 @@ class ResearchRun:
     trials: int = 1
     warnings: list[str] = field(default_factory=list)
     experiment: ExperimentRecord | None = None
+    #: Chapter 60 position sizing: an advisory per-trade risk fraction from
+    #: the strategy's estimated edge. Zero when there is no edge or too few
+    #: trades to estimate one; never an order size on its own.
+    recommended_risk_per_trade: Decimal = Decimal(0)
 
     @property
     def evidence_ready(self) -> bool:
@@ -358,6 +363,7 @@ def run_research(
         if robustness and robustness.monte_carlo
         else Decimal("0.05")
     )
+    recommended_size, sizing_warnings = position_size_from_trades(result)
     qualification = qualify_strategy(
         oos_return=oos_return,
         max_drawdown=report.risk.max_drawdown,
@@ -372,6 +378,7 @@ def run_research(
     )
 
     warnings: list[str] = list(report.warnings)
+    warnings.extend(sizing_warnings)
     multiple = warn_multiple_testing(trials)
     if multiple:
         warnings.append(multiple)
@@ -443,4 +450,5 @@ def run_research(
         trials=trials,
         warnings=warnings,
         experiment=experiment,
+        recommended_risk_per_trade=recommended_size,
     )

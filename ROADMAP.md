@@ -4133,28 +4133,28 @@ Explain:
 
 The system must differentiate:
 
-- [ ] maximum historical drawdown;
-- [ ] expected drawdown;
-- [ ] probability of ruin;
-- [ ] capital depletion;
-- [ ] position sizing.
+- [x] maximum historical drawdown; (`RiskOfRuinReport.historical_max_drawdown`, `metrics.risk.max_drawdown`.)
+- [x] expected drawdown; (`RiskOfRuinReport.expected_max_drawdown`, the Monte Carlo p95.)
+- [x] probability of ruin; (`RiskOfRuinReport.probability_of_ruin`; `research.py` feeds `monte_carlo.risk_of_ruin` into qualification.)
+- [x] capital depletion; (Modelled as the `ruin_threshold_fraction` at which trading stops.)
+- [x] position sizing. (`robustness.position_size_from_trades()` → `ResearchRun.recommended_risk_per_trade`, Kelly scaled and capped.)
 
 ### 60.1 Definitions
 
-- [ ] **Maximum historical drawdown**: the largest peak-to-trough decline observed in the analyzed period.
-- [ ] **Expected drawdown**: an estimate of drawdown under stated assumptions.
-- [ ] **Probability of ruin**: an estimate of the probability that capital falls below a defined threshold.
-- [ ] **Capital depletion**: the point at which trading cannot continue because capital is exhausted or restricted.
-- [ ] **Position sizing**: the rule that determines how much capital a trade risks.
+- [x] **Maximum historical drawdown**: the largest peak-to-trough decline observed in the analyzed period.
+- [x] **Expected drawdown**: an estimate of drawdown under stated assumptions.
+- [x] **Probability of ruin**: an estimate of the probability that capital falls below a defined threshold.
+- [x] **Capital depletion**: the point at which trading cannot continue because capital is exhausted or restricted.
+- [x] **Position sizing**: the rule that determines how much capital a trade risks.
 
 ### 60.2 Estimation discipline
 
-- [ ] Never present a risk-of-ruin estimate as mathematical certainty if its assumptions are not valid.
-- [ ] Document all assumptions (distribution, independence, costs, sample size).
-- [ ] Prefer ranges or scenario distributions over single numbers.
-- [ ] Use Monte Carlo and bootstrap methods where appropriate (see Chapter 44).
-- [ ] Warn when estimates depend on unrealistically favorable assumptions.
-- [ ] Risk-of-ruin estimates are research/risk-analysis outputs; they must never be the only basis for an order.
+- [x] Never present a risk-of-ruin estimate as mathematical certainty if its assumptions are not valid. (Every report carries its `assumptions` and warnings.)
+- [x] Document all assumptions (distribution, independence, costs, sample size). (`RiskOfRuinReport.assumptions`; the sizing warning names the sample size.)
+- [ ] Prefer ranges or scenario distributions over single numbers. *(Monte Carlo already reports distributions for ruin and drawdown, but the position-size recommendation is still one point; a size-versus-ruin curve is pending.)*
+- [x] Use Monte Carlo and bootstrap methods where appropriate (see Chapter 44).
+- [x] Warn when estimates depend on unrealistically favorable assumptions. (Sizing warns on too few trades, no edge, and suspiciously large edges.)
+- [x] Risk-of-ruin estimates are research/risk-analysis outputs; they must never be the only basis for an order. (The sizing warning says "a research ceiling, not advice", and orders still pass the risk manager.)
 
 ---
 

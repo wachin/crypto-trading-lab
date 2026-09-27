@@ -62,6 +62,14 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   raises `EthicsError` on a violation (missing disclaimer, profit-guarantee
   language) and attaches warnings for omissions;
   `tests/reporting/test_report_ethics.py` adds 11 tests.
+- Chapter 60 position sizing is implemented and reachable:
+  `robustness.kelly_fraction()`, `optimal_bet_size()` (half-Kelly by
+  default, capped by `PositionSizingConfig`) and
+  `position_size_from_trades()`, which derives the edge from the backtest's
+  own trades and returns 0 **with a warning** when the sample is too small,
+  degenerate or edgeless. `RiskOfRuinReport` gained
+  `recommended_risk_per_trade` and `ResearchRun` carries it to the research
+  output. `tests/backtesting/test_risk_of_ruin.py` adds 15 tests.
 
 ### Fixed
 
@@ -181,4 +189,12 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   `WarningType` and `EthicalWarning` were dropped instead of carried over
   as dead weight; the evidence ladder already lives in
   `reporting/report.py` and `ui/research/validity.py`.
+- `risk_of_ruin.py` (chapter 60), after merging its Kelly sizing into
+  `backtesting/robustness.py`. Its closed-form ruin formulas
+  (`risk_of_ruin_binomial`, `risk_of_ruin_diffusion`),
+  `capital_depletion_path` and `sequential_risk_of_ruin` were **not**
+  ported: they mix units, multiply a per-trade expectancy by 100/50 and
+  present it as an "expected/median drawdown", or return 0/1 while claiming
+  to be a probability. The Monte-Carlo estimate that already exists is more
+  defensible.
 

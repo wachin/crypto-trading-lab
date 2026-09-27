@@ -51,6 +51,9 @@ __all__ = [
     "RiskOfRuinReport",
     "compute_risk_of_ruin",
     "PositionSizingConfig",
+    "kelly_fraction",
+    "optimal_bet_size",
+    "position_size_from_trades",
 ]
 
 #: Mandatory interpretation line (44.7).
@@ -497,6 +500,10 @@ class RiskOfRuinReport:
     scenarios: int
     assumptions: str
     warnings: tuple[str, ...]
+    #: Chapter 60's "position sizing": an advisory per-trade risk fraction
+    #: derived from the strategy's own estimated edge (Kelly, scaled and
+    #: capped). Zero when there is no edge or no sample to estimate it from.
+    recommended_risk_per_trade: Decimal = Decimal(0)
 
 
 def compute_risk_of_ruin(
@@ -520,6 +527,7 @@ def compute_risk_of_ruin(
             scenarios=0,
             assumptions="No trades to analyze.",
             warnings=("No trade data available for risk analysis.",),
+            recommended_risk_per_trade=Decimal(0),
         )
     
     # Compute historical max drawdown
@@ -555,7 +563,10 @@ def compute_risk_of_ruin(
         warnings.append(
             "Historical drawdown exceeds 20%. Consider reducing position sizes."
         )
-    
+
+    recommended_size, sizing_warnings = position_size_from_trades(result, config)
+    warnings.extend(sizing_warnings)
+
     return RiskOfRuinReport(
         probability_of_ruin=mc_report.risk_of_ruin,
         expected_max_drawdown=mc_report.max_drawdown_p95,
@@ -564,7 +575,131 @@ def compute_risk_of_ruin(
         scenarios=mc_report.scenario_count,
         assumptions=assumptions,
         warnings=tuple(warnings),
+        recommended_risk_per_trade=recommended_size,
     )
+
+
+def kelly_fraction(
+    win_probability: Decimal,
+    win_loss_ratio: Decimal,
+) -> Decimal:
+    """Kelly fraction for bet sizing (60).
+
+    ``f* = (p·b - q) / b`` with ``p`` the win probability, ``q = 1 - p`` and
+    ``b`` the win/loss ratio. A negative edge clamps to zero: Kelly never
+    recommends a position when there is no edge to bet on.
+    """
+    if not (Decimal(0) <= win_probability <= Decimal(1)):
+        raise ValueError("win_probability must be between 0 and 1")
+    if win_loss_ratio < 0:
+        raise ValueError("win_loss_ratio must be non-negative")
+    if win_loss_ratio == 0:
+        return Decimal(0)
+    q = Decimal(1) - win_probability
+    return max(
+        Decimal(0), (win_probability * win_loss_ratio - q) / win_loss_ratio
+    )
+
+
+def optimal_bet_size(
+    win_probability: Decimal,
+    win_loss_ratio: Decimal,
+    max_risk: Decimal = Decimal("0.02"),
+    *,
+    kelly_scale: Decimal = Decimal("0.5"),
+) -> Decimal:
+    """Kelly-based bet size, scaled down and capped (60.4).
+
+    Full Kelly is optimal only when the edge is known exactly; here it is
+    estimated from a finite sample, so the default is **half Kelly**, further
+    capped by ``max_risk``. The result is an advisory ceiling for research,
+    never an order size on its own (60.2).
+    """
+    if not (Decimal(0) < kelly_scale <= Decimal(1)):
+        raise ValueError("kelly_scale must be between 0 and 1")
+    if max_risk <= 0:
+        raise ValueError("max_risk must be positive")
+    scaled = kelly_fraction(win_probability, win_loss_ratio) * kelly_scale
+    return min(scaled, max_risk)
+
+
+def position_size_from_trades(
+    result: BacktestResult,
+    config: PositionSizingConfig | None = None,
+    *,
+    kelly_scale: Decimal = Decimal("0.5"),
+    minimum_trades: int = 30,
+) -> tuple[Decimal, tuple[str, ...]]:
+    """Advisory per-trade risk fraction from the strategy's own edge (60).
+
+    Derives the win rate and the payoff ratio from the backtest's closed
+    trades and applies :func:`optimal_bet_size`. Returns
+    ``(fraction, warnings)``.
+
+    The fraction is ``0`` — with a warning saying why — when the sample is
+    too small, has only wins or only losses, or shows no positive edge:
+    guessing a size there would be worse than not trading. The result is a
+    research estimate under stated assumptions and must never be the only
+    basis for an order (60.2).
+    """
+    config = config or PositionSizingConfig()
+    warnings: list[str] = []
+    pnls = [trade.net_pnl for trade in result.trades]
+
+    if len(pnls) < minimum_trades:
+        warnings.append(
+            f"Only {len(pnls)} closed trades: too few to estimate a position "
+            f"size (at least {minimum_trades} are required)."
+        )
+        return Decimal(0), tuple(warnings)
+
+    wins = [pnl for pnl in pnls if pnl > 0]
+    losses = [pnl for pnl in pnls if pnl < 0]
+    if not wins or not losses:
+        warnings.append(
+            "The sample has no losing (or no winning) trades, so the payoff "
+            "ratio is undefined and no size can be recommended."
+        )
+        return Decimal(0), tuple(warnings)
+
+    win_probability = Decimal(len(wins)) / Decimal(len(pnls))
+    average_win = sum(wins) / Decimal(len(wins))
+    average_loss = abs(sum(losses) / Decimal(len(losses)))
+    payoff_ratio = average_win / average_loss
+
+    kelly = kelly_fraction(win_probability, payoff_ratio)
+    if kelly <= 0:
+        warnings.append(
+            "The backtest shows no positive edge (Kelly is zero), so the "
+            "honest position size is none."
+        )
+        return Decimal(0), tuple(warnings)
+
+    if win_probability >= Decimal("0.80") or payoff_ratio >= Decimal("5"):
+        warnings.append(
+            f"The estimated edge is unusually large (win rate "
+            f"{win_probability:.1%}, payoff ratio {payoff_ratio:.2f}). Edges "
+            "this good usually shrink out of sample: treat the size below as "
+            "an upper bound and re-check it on unseen data."
+        )
+
+    size = optimal_bet_size(
+        win_probability,
+        payoff_ratio,
+        config.max_risk_per_trade,
+        kelly_scale=kelly_scale,
+    )
+    if kelly * kelly_scale > config.max_risk_per_trade:
+        warnings.append(
+            f"Kelly suggests {kelly * kelly_scale:.2%} per trade; capped at "
+            f"the configured maximum of {config.max_risk_per_trade:.2%}."
+        )
+    warnings.append(
+        f"Position size from {len(pnls)} trades (win rate "
+        f"{win_probability:.1%}, payoff ratio {payoff_ratio:.2f}), "
+        f"{kelly_scale:.0%} of Kelly and capped: a research ceiling, not advice."
+    )
+    return size, tuple(warnings)
 
 
 

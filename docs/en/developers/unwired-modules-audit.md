@@ -53,9 +53,13 @@ wired afterwards.
   latent bugs were fixed: "out-of-sample" was not recognised, and
   `render_pdf()` had been broken since pypdf 5. 11 tests added; suite 683
   passed, 2 skipped.
-- **Still open:** `risk_of_ruin` (item 10), `coinbase` (item 12) and
-  `strategy_registry` (item 16). Each keeps its module until the
-  port/wiring lands.
+- **Batch B, item 10 — `risk_of_ruin` merged into `robustness`: executed
+  2026-09-27.** Kelly sizing is ported and reachable
+  (`ResearchRun.recommended_risk_per_trade` + warnings); the unsound
+  closed-form ruin formulas were deliberately not ported. 15 tests added;
+  suite 698 passed, 2 skipped.
+- **Still open:** `coinbase` (item 12) and `strategy_registry` (item 16).
+  Each keeps its module until the port/wiring lands.
 
 ## Summary
 
@@ -177,22 +181,33 @@ them cannot change the suite. All are recoverable from git history.
 
 ## Batch B — merge the unique part, then delete
 
-### 10. `risk_of_ruin.py` (chapter 60) → `backtesting/robustness.py`
+### 10. `risk_of_ruin.py` (chapter 60) → `backtesting/robustness.py` — DONE
 
-- The live path already owns chapter 60: `RiskOfRuinReport`,
-  `PositionSizingConfig`, `compute_risk_of_ruin`
-  (`robustness.py:483,491,502`), Monte-Carlo based, seeded, with explicit
-  assumptions and warnings, tested in
-  `tests/backtesting/test_risk_of_ruin.py` and surfaced by
-  `research.py:239,357`.
-- Unique in the dead module: the closed-form sizing math
-  `kelly_fraction` (`:36`) and `optimal_bet_size` (`:257`); also
-  `risk_of_ruin_binomial`/`_diffusion` and `capital_depletion_path`.
-- Action: port `kelly_fraction` + `optimal_bet_size` into
-  `robustness.py` as advisory sizing helpers with tests, then delete the
-  module and its duplicated `RiskOfRuinConfig`/`Result`/`WARNING`
-  scaffolding. Keep chapter 60 `[ ]` until the ported functions are
-  tested.
+- **Was:** unwired. The live path already owned the Monte-Carlo half of
+  chapter 60 (`RiskOfRuinReport`, `PositionSizingConfig`,
+  `compute_risk_of_ruin`, tested in `tests/backtesting/test_risk_of_ruin.py`).
+- **Ported:** `kelly_fraction()` and `optimal_bet_size()` (Kelly, scaled to
+  half by default and capped by `PositionSizingConfig.max_risk_per_trade`),
+  plus a new `position_size_from_trades()` that derives the win rate and
+  payoff ratio from the backtest's own closed trades. It returns 0 **with a
+  warning** when the sample is too small, has only wins or only losses, or
+  shows no edge, and warns when the estimated edge is suspiciously large.
+  `RiskOfRuinReport` gained `recommended_risk_per_trade`, and
+  `ResearchRun.recommended_risk_per_trade` carries it to the research
+  output, where `ui/research/validity.py` already renders `run.warnings`.
+- **Not ported, on purpose:** `risk_of_ruin_binomial()`,
+  `risk_of_ruin_diffusion()`, `capital_depletion_path()` and
+  `sequential_risk_of_ruin()`. The first two mix units and multiply a
+  per-trade expectancy by 100/50 and call it "expected drawdown" and
+  "median drawdown" — numbers that look precise and are not; the last
+  returns 0/1 while claiming to be a probability. Importing them into the
+  tested path would have damaged it. The Monte-Carlo estimate that already
+  exists is more defensible.
+- **Follow-up:** `compute_risk_of_ruin()`/`RiskOfRuinReport` are still only
+  reached by tests: `research.py` reads `monte_carlo.risk_of_ruin` and calls
+  `position_size_from_trades()` directly. Either fold the wrapper into
+  `compute_robustness_report()` or drop it — do not leave two ruin numbers
+  that disagree. Chapter 60 stays `[~]` for the size-versus-ruin curve.
 
 ### 11. `research_ethics.py` (chapter 72) → report generation — DONE
 
