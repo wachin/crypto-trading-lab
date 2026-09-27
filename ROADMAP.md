@@ -1852,8 +1852,11 @@ Include:
 one silently overrode the async one) and its REST path recorded
 circuit-breaker *successes before the request*, so the breaker could never
 open. Coinbase can be reached through the optional CCXT adapter, which is a
-PyPI-only dependency; that path is adapter-tested but is not exposed in the
-UI. See `docs/en/developers/unwired-modules-audit.md`. Preserve this
+PyPI-only dependency; on 2026-09-27 that path was verified live to return
+normalised (Decimal + UTC) Binance **and** Coinbase candles through
+`CcxtExchangeAdapter.fetch_candles()`, but it is not exposed in the UI. See
+`docs/en/developers/venv-setup.md` §7 and
+`docs/en/developers/unwired-modules-audit.md`. Preserve this
 warning for whenever it is rebuilt: the Coinbase sandbox may return static
 or predefined data and must not be treated as a realistic profitability
 simulation.

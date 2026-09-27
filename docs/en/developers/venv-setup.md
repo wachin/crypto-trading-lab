@@ -144,6 +144,8 @@ rm -rf .venv          # delete the environment entirely
 |---|---|
 | `No module named venv` / `ensurepip is not available` | Install `python3-venv` (`sudo apt install python3-venv`). |
 | `error: externally-managed-environment` | You ran `pip` *outside* the venv. Activate it first. Do **not** pass `--break-system-packages`: that defeats the Debian-first policy. |
+| `Not uninstalling X at /usr/lib/python3/dist-packages, outside environment .venv` | Normal with `--system-site-packages`. pip sees the Debian copy, correctly refuses to touch anything outside the venv, and installs its own copy inside `.venv` instead. Nothing is broken. |
+| `ERROR: pip's dependency resolver ... weasyprint ... requires html5lib` | A **system** package (Debian's `weasyprint`) whose dependency pip cannot see across the `--system-site-packages` boundary. This project does not use weasyprint, and the install still succeeded. pip prints `ERROR:` here but exits 0 — check for the final `Successfully installed …` line. `python -m pip check` reports venv-local conflicts only. |
 | `Could not load the Qt platform plugin "xcb"` | Headless machine. Use `QT_QPA_PLATFORM=offscreen`, and install `libgl1 libegl1 libxkbcommon-x11-0 libdbus-1-3` (the CI does exactly this). |
 | `pip install PyQt6` inside a `--system-site-packages` venv | The PyPI copy shadows the Debian one. Pick one route (A or B) and stay there. |
 | Tests pass on the system but not in the venv | Check `python -c "import sys; print(sys.prefix)"` points at `.venv`, and that you did not mix routes. |
@@ -183,3 +185,38 @@ adapter calls (`fetch_markets`, `fetch_ticker`, `fetch_ohlcv`,
 second exchange (Coinbase) or removes an adapter we maintain by hand. Keep
 the standard-library path if it only re-wraps Binance. A new dependency is a
 chapter-4 decision and always lands with the maintainer running the install.
+
+---
+
+## 7. What we measured (2026-09-27)
+
+Environment: Debian 13, Python 3.13.5, `python3 -m venv
+--system-site-packages .venv`, pip upgraded to 26.2.1, then
+`python -m pip install ccxt`.
+
+| Check | Result |
+|---|---|
+| `import ccxt` | **4.5.84** |
+| Exchanges covered | **104** |
+| Binance surface (`fetch_markets`/`fetch_ticker`/`fetch_ohlcv`/`fetch_balance`/`precisionMode`) | complete |
+| Coinbase surface | complete |
+| `CcxtExchangeAdapter` accepts a real client | yes |
+| `--network` probe | `BTC/USDT last=84411.09` |
+| Adapter `fetch_candles()` over Binance | normalised `Decimal` + UTC candles |
+| Adapter `fetch_candles()` over **Coinbase** | normalised `Decimal` + UTC candles |
+| Full test suite inside the venv | **698 passed, 2 skipped** (same as the system Python) |
+
+The decisive result is the Coinbase row: the standard-library downloader
+reaches Binance only, so `ccxt` is what makes chapter 26.3 possible at all.
+`fetch_candles()` returns the same normalised shape from both exchanges, so
+no domain code changes are needed to use it.
+
+**One finding worth keeping.** On Coinbase the liquid pair is **BTC/USD**
+(volume 52.75 in the sample) while **BTC/USDT** is thin (0.53); on Binance it
+is the opposite. Choose the trading pair deliberately per exchange rather
+than assuming `BTC/USDT` everywhere.
+
+**Verdict:** `ccxt` is worth adopting for chapter 26.3. The Debian-first
+default and the standard-library Binance downloader stay as they are; the
+dependency belongs to the optional CCXT path, which is still not exposed in
+the UI.

@@ -261,12 +261,21 @@ them cannot change the suite. All are recoverable from git history.
   would have recreated exactly the dead-code problem this audit exists to
   fix. The Coinbase sandbox warning it carried was preserved in
   `ROADMAP.md` §26.3.
-- **Not routed through CCXT:** `CcxtExchangeAdapter` takes an injected ccxt
-  **client instance**, not an `exchange_id`, and `ccxt` is an optional
-  PyPI-only dependency that is not installed. Adding a caller would have
-  been unverifiable here, so instead `ROADMAP.md` §26.3 and
+- **Not routed through CCXT at the time:** `CcxtExchangeAdapter` takes an
+  injected ccxt **client instance**, not an `exchange_id`, and `ccxt` is an
+  optional PyPI-only dependency that was not installed. Adding a caller
+  would have been unverifiable then, so `ROADMAP.md` §26.3 and
   `docs/en/developers/live-trading-roadmap.md` were corrected: Coinbase is
   **not implemented**, not "Implemented".
+- **Update (2026-09-27, after the maintainer created the venv):** the CCXT
+  path was verified live. ccxt 4.5.84 covers 104 exchanges, both Binance and
+  Coinbase expose the surface the adapter calls, and
+  `CcxtExchangeAdapter.fetch_candles()` returned normalised (Decimal + UTC)
+  candles from **both** exchanges. The measured evidence, including the fact
+  that Coinbase's liquid pair is BTC/USD while Binance's is BTC/USDT, is
+  recorded in `docs/en/developers/venv-setup.md` §7. Chapter 26.3's
+  *native* adapter stays deleted; the second exchange is now reachable
+  through the optional CCXT path (not exposed in the UI yet).
 - Rebuilding it later means a native adapter over the existing
   `ExchangeAdapter` port, or a documented CCXT path with the dependency
   decision of chapter 4.

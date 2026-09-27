@@ -78,10 +78,21 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   groups so `pip install -e ".[venv,dev,ccxt,pdf]"` fills a clean venv in
   one command, and `tools/evaluate_ccxt.py` is a read-only script that
   reports ccxt's coverage and whether the project's adapter accepts a real
-  client.
+  client. Section 7 of that guide records the **measured** evaluation: ccxt
+  4.5.84, 104 exchanges, Binance and Coinbase both exposing the required
+  surface, `fetch_candles()` returning normalised Decimal+UTC candles from
+  **both** exchanges over the network, and the suite passing inside the venv
+  (698 passed, 2 skipped). Verdict: ccxt is worth adopting for chapter 26.3
+  because it is the only path to a second exchange.
 
 ### Fixed
 
+- `venv-setup.md` now explains the two messages a `pip install` prints
+  inside a `--system-site-packages` venv: `Not uninstalling X … outside
+  environment` (pip correctly refusing to modify the Debian packages) and
+  `ERROR: pip's dependency resolver … weasyprint … html5lib` (a conflict in
+  a *system* package this project does not use; the install still succeeds
+  and pip exits 0).
 - The documented test baseline had been left at **683 passed, 2 skipped**
   in ten places (the README badge and body, `AGENTS.md`,
   `AGENT-HANDOFF.md`, `CONTRIBUTING.md`, `Makefile`, the pull-request
