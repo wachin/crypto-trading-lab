@@ -51,11 +51,17 @@ freshly migrated copy, then `GENESIS.md`, then `ROADMAP.md`.
 
 - Debian 13, Python 3.13.5, PyQt6 + pyqtgraph + SQLAlchemy +
   platformdirs from system packages (no venv)
-- Expected baseline: **229 passed, 2 skipped**
+- Expected baseline: **630 passed, 2 skipped**
 - GUI tests run offscreen (`QT_QPA_PLATFORM=offscreen`)
 
 ## Current position
 
-Phase 3 (backtesting). Engine and strategies are done; next is
-chapter 40 (performance metrics) then the Backtesting Lab UI. See
+The scientific core is implemented and tested: domain models, market
+data, indicators, the backtesting engine, performance metrics, the
+research workflow, robustness analysis and paper trading over replayed
+datasets. The immediate frontier is the **live-data path** — Binance
+WebSocket (ch. 26.2/27), testnet order placement (ch. 68) — plus
+packaging (ch. 15/16/18). Real trading stays disabled by default.
+
+`ROADMAP.md` is the per-chapter source of truth for what remains; see
 `AGENT-HANDOFF.md` §5 for the exact continuation point.

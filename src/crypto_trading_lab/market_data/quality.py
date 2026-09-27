@@ -295,6 +295,7 @@ class DataQualityValidator:
         version: int = 1,
         checksum: str = "",
         expected_end_time: Optional[datetime] = None,
+        invalid_count: int = 0,
     ) -> DataQualityReport:
         """Run every Chapter 29 check and return a report.
 
@@ -302,7 +303,9 @@ class DataQualityValidator:
         to store the dataset (see ``DataQualityReport.is_valid``).
         """
         materialized = list(candles)
-        mechanical = validate_candles(materialized, interval)
+        mechanical = validate_candles(
+            materialized, interval, invalid=invalid_count
+        )
 
         issues: list[QualityIssue] = []
         self._add_mechanical_issues(mechanical, issues)
@@ -406,7 +409,8 @@ class DataQualityValidator:
                 )
             )
         for message in validation.issues:
-            if "out of order" in message.lower():
+            lowered = message.lower()
+            if "out of order" in lowered:
                 issues.append(
                     QualityIssue(
                         severity=QualityIssueSeverity.ERROR,
@@ -414,7 +418,7 @@ class DataQualityValidator:
                         message=message,
                     )
                 )
-            else:
+            elif "not aligned with the timeframe grid" in lowered:
                 issues.append(
                     QualityIssue(
                         severity=QualityIssueSeverity.WARNING,
@@ -422,6 +426,8 @@ class DataQualityValidator:
                         message=message,
                     )
                 )
+            # Counts (missing / duplicates / invalid) are already reported
+            # above with their own codes; do not relabel them here.
 
     def _add_stale_issues(
         self,
@@ -559,6 +565,7 @@ def validate_dataset_quality(
     version: int = 1,
     checksum: str = "",
     expected_end_time: Optional[datetime] = None,
+    invalid_count: int = 0,
 ) -> DataQualityReport:
     """One-shot wrapper around :class:`DataQualityValidator.validate`."""
     return DataQualityValidator().validate(
@@ -570,6 +577,7 @@ def validate_dataset_quality(
         version=version,
         checksum=checksum,
         expected_end_time=expected_end_time,
+        invalid_count=invalid_count,
     )
 
 
@@ -582,6 +590,7 @@ def create_quality_report(
     symbol: str,
     exchange: str,
     interval: str,
+    invalid_count: int = 0,
 ) -> DataQualityReport:
     """Thin alias kept for backward compatibility with earlier callers."""
     return validate_dataset_quality(
@@ -592,4 +601,5 @@ def create_quality_report(
         dataset_id=dataset_id,
         version=version,
         checksum=checksum,
+        invalid_count=invalid_count,
     )

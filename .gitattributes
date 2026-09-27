@@ -1,0 +1,20 @@
+# Normalize line endings in the repository; never commit CRLF.
+* text=auto eol=lf
+
+# Binary assets must not be converted or diffed as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.qm binary
+*.woff binary
+*.woff2 binary
+
+# Qt translation sources and figures are text and stay readable.
+*.ts text eol=lf
+*.svg text eol=lf
+
+# Generated or vendored paths are not part of the project's own code.
+/assets/*.svg linguist-generated

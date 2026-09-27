@@ -11,7 +11,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Tests: 611 passed, 2 skipped](https://img.shields.io/badge/tests-611%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Tests: 630 passed, 2 skipped](https://img.shields.io/badge/tests-630%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
 [![CI](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml)
 [![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
 [![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
@@ -35,7 +35,7 @@ a codebase catching up to it*. `ROADMAP.md` holds 80 chapters of
 requirements, roughly half still open, each one small enough to land in a
 focused pull request. That makes it an unusually good place for an AI
 agent to do real, verifiable work: the task is already written down, the
-test suite runs offline in ~30 seconds, and honesty is a hard rule rather
+test suite runs offline in ~45 seconds, and honesty is a hard rule rather
 than a slogan.
 
 You bring the agent (or your own two hands). We bring the specification,
@@ -52,7 +52,7 @@ ideas, research results and show-and-tell →
 ```bash
 git clone https://github.com/wachin/crypto-trading-lab   # submodules optional, see below
 cd crypto-trading-lab
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q    # → 522 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q    # → 630 passed, 2 skipped
 PYTHONPATH=src python3 -m crypto_trading_lab             # launch the app
 ```
 
@@ -82,7 +82,7 @@ cryptocurrency research laboratory. Follow these rules exactly.
    say so explicitly instead of guessing.
 3. Make small changes. After every change run:
        QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-    and keep the suite green (baseline: 611 passed, 2 skipped). If the
+    and keep the suite green (baseline: 630 passed, 2 skipped). If the
     count changes, report it.
 4. Do NOT install dependencies. If one is genuinely needed, STOP and
    report: package name, source (Debian or PyPI), reason, and the exact
@@ -196,7 +196,7 @@ cd crypto-trading-lab
 # 3. Verify the environment, then the baseline
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 611 passed, 2 skipped
+# → 630 passed, 2 skipped
 
 # 4. Run it
 PYTHONPATH=src python3 -m crypto_trading_lab
@@ -345,7 +345,7 @@ disabled — is written down in
 
 ## Current state of the build
 
-✅ Implemented and tested (599 passing):
+✅ Implemented and tested:
 
 - Domain models, exchange adapters (Mock + CCXT read-only), credential
   store, logging with secret redaction, SQLite persistence;
@@ -514,11 +514,14 @@ profit.
 | `AGENT-HANDOFF.md` | Current state + exact continuation point |
 | `AGENTS.md` | Non-negotiable ground rules for AI contributors |
 | `CONTRIBUTING.md` | How to contribute (with or without an AI agent) |
+| `CODE_OF_CONDUCT.md` | How we treat each other while we do it |
+| `CHANGELOG.md` | Notable changes, newest first |
+| `SECURITY.md` | Security posture and private vulnerability reporting |
 | `GENESIS.md` | The original first-session instruction |
 | `docs/en/beginners/` | Plain-language guides (start here, glossary, indicators, metrics, paper trading) |
 | `docs/en/developers/` | ADRs, AFML technique specifications, threat model, live-trading roadmap |
 | `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, research, reporting, i18n, UI |
-| `tests/` | 53 test modules — engine arithmetic is hand-verified |
+| `tests/` | 64 test modules — engine arithmetic is hand-verified |
 | `tools/` | Asset generators (e.g. the contributor banner GIF) |
 | `Makefile` | `make test`, `make run`, `make banner`, `make translations` |
 | `.github/` | CI workflow, pull-request and issue templates |
@@ -531,7 +534,7 @@ profit.
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 522 passed, 2 skipped
+# → 630 passed, 2 skipped
 ```
 
 The two skipped tests are in `tests/exchanges/contract.py:145` — they

@@ -46,9 +46,22 @@ class AccessibilityHelper(QObject):
 
     @staticmethod
     def set_tab_order(widgets: list[QWidget]) -> None:
-        """Set logical tab order for keyboard navigation across a sequence of widgets."""
-        for i in range(len(widgets) - 1):
-            QWidget.setTabOrder(widgets[i], widgets[i + 1])
+        """Set logical tab order for keyboard navigation.
+
+        Qt can only reorder widgets that share a top-level window. Calling
+        ``QWidget.setTabOrder`` across two different windows prints a
+        warning and silently leaves the tab order untouched, so this
+        helper refuses to pretend: it raises ``ValueError`` instead. Call
+        it *after* the widgets have been added to their window, not while
+        they are still unparented.
+        """
+        if len({widget.window() for widget in widgets}) > 1:
+            raise ValueError(
+                "set_tab_order requires every widget to share one "
+                "top-level window; add the widgets to their layout first"
+            )
+        for first, second in zip(widgets, widgets[1:]):
+            QWidget.setTabOrder(first, second)
 
     @staticmethod
     def format_status_text(state_name: str, is_positive: bool | None = None) -> str:

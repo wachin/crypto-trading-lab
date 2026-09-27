@@ -1,7 +1,8 @@
 """Tests for accessibility helpers (ROADMAP.md chapter 21.3)."""
 
+import pytest
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import QPushButton, QWidget
+from PyQt6.QtWidgets import QPushButton, QVBoxLayout, QWidget
 
 from crypto_trading_lab.ui.accessibility import AccessibilityHelper
 from crypto_trading_lab.ui.main_window.window import MainWindow
@@ -35,15 +36,29 @@ def test_accessibility_helper_setup_accessibility(qtbot):
 
 
 def test_accessibility_helper_set_tab_order(qtbot):
-    b1 = QPushButton("1")
-    b2 = QPushButton("2")
-    b3 = QPushButton("3")
-    for b in (b1, b2, b3):
-        qtbot.addWidget(b)
+    parent = QWidget()
+    qtbot.addWidget(parent)
+    layout = QVBoxLayout(parent)
+    buttons = [QPushButton(str(index)) for index in range(3)]
+    for button in buttons:
+        layout.addWidget(button)
 
-    AccessibilityHelper.set_tab_order([b1, b2, b3])
-    # Verify widgets can receive focus and tab order was processed
-    assert b1 is not None and b2 is not None and b3 is not None
+    AccessibilityHelper.set_tab_order(buttons)
+
+    # The tab order must actually be applied, not silently dropped.
+    assert buttons[0].nextInFocusChain() is buttons[1]
+    assert buttons[1].nextInFocusChain() is buttons[2]
+
+
+def test_accessibility_helper_set_tab_order_across_windows_is_an_error(qtbot):
+    first = QPushButton("1")
+    second = QPushButton("2")
+    qtbot.addWidget(first)
+    qtbot.addWidget(second)
+
+    # Qt would only print a warning and leave the order untouched.
+    with pytest.raises(ValueError):
+        AccessibilityHelper.set_tab_order([first, second])
 
 
 def test_accessibility_format_status_text():

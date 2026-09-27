@@ -1,18 +1,22 @@
 """Machine learning strategies (ROADMAP.md chapter 48).
 
-Implements ML-based strategy generation and evaluation using numpy/scipy.
-Integrates with existing backtesting engine, walk-forward validation,
-and statistical analysis infrastructure.
+Research draft for ML-based strategy generation and evaluation on top of
+the existing backtesting, walk-forward and statistical-analysis
+infrastructure.
+
+Chapter 48 is **not closed**: none of this is wired into the UI or the
+research workflow yet, and there is no test module for it. numpy is used
+here; it arrives as a dependency of pyqtgraph. Treat these classes as
+experiments, not as a supported feature.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Protocol, Sequence, Optional
+from typing import Sequence, Optional
 
 import numpy as np
-from scipy import stats
 
 from crypto_trading_lab.backtesting.engine import Strategy, Candle, OrderSide
 from crypto_trading_lab.backtesting.metrics import compute_performance
@@ -372,10 +376,14 @@ ML_STRATEGY_WARNING = (
 __all__ = [
     "MLConfig",
     "LinearRegressionStrategy",
-    "MeanReversionStrategy", 
+    "MeanReversionStrategy",
     "TrendFollowingMLStrategy",
     "evaluate_ml_strategy",
+    "EnsembleStrategy",
+    "EqualWeightEnsemble",
+    "evaluate_ensemble",
     "ML_STRATEGY_WARNING",
+    "ML_ENSEMBLE_WARNING",
 ]
 
 #: Ensemble strategies (Chapter 50).
@@ -462,10 +470,9 @@ def evaluate_ensemble(ensembles, candles, backtest_config=None):
             "strategy_name": strategy.name,
             "return_fraction": result.return_fraction,
             "num_trades": len(result.trades),
-            "sharpe_ratio": report.risk.sharpe_ratio if report.risk.sharpe_ratio else None,
-            "max_drawdown": report.risk.max_drawdown,
-        }
-    )
+            "sharpe_ratio": performance.risk.sharpe_ratio if performance.risk.sharpe_ratio else None,
+            "max_drawdown": performance.risk.max_drawdown,
+        })
     return results
 
 ML_ENSEMBLE_WARNING = """
@@ -474,12 +481,5 @@ They must be validated with walk-forward testing (Chapter 45)
 and statistical analysis (Chapter 43) before any real trading decision.
 Ensemble methods diversify risk but do not guarantee future performance.
 """
-
-__all__ = [
-    "EnsembleStrategy",
-    "EqualWeightEnsemble",
-    "evaluate_ensemble",
-    "ML_STRATEGY_WARNING",
-]
 
 

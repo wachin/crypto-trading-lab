@@ -1,29 +1,26 @@
-# ROADMAP — audited status
+# ROADMAP — the specification
 
-> **Document corrected based on the actual state represented in the provided repository.**
-> This version does not declare an item complete simply because the original header contained `[x]`.
+Crypto Trading Lab is built specification-first: this file is the
+contract every contribution is measured against. It is organised as 80
+chapters grouped into 16 parts. Read the chapter that owns your task
+before writing code, and tick a checkbox only when the requirement is
+**implemented and tested**.
+
+> **Status legend**
+> - `[x]` — implemented and tested; the chapter has no open subtask and no explicit "pending" note.
+> - `[~]` — partially implemented, or a `[ ]` subtask remains, or the chapter carries an explicit "pending" note.
+> - `[ ]` — not implemented.
 >
-> **Status rules**
-> - `[x]` = no open subtasks detected in this chapter, and the ROADMAP itself contains no explicit "pending" note.
-> - `[~]` = partially implemented, or `[ ]` subtasks exist, or the chapter contains an explicit "pending" note.
-> - `[ ]` = no evidence of completed implementation within the chapter itself.
->
-> **Important:** `[~]` does not mean everything is wrong. It means the chapter still requires work before it can be considered closed.
->
-> **Document audit performed on:** `crypto-trading-lab-main_src.txt`, representing the provided repository.
->
-> **Confirmed findings:**
-> - The original `ROADMAP.md` has **5,138 lines**.
-> - It contains **80 chapters**.
-> - Chapter headers were mostly marked `[x]`, even though many contained `[ ]` subtasks.
-> - `docs/en/beginners/` contains 9 files in the represented repository; of the mandatory series of 53 guides from section 19.2, only `00-start-here.md` and `glossary.md` are present.
-> - `docs/en/user-guide/` does not contain the 22 manuals required by section 19.3.
-> - The Spanish documentation required by sections 19.4/20.3 has not been created in the represented structure either.
-> - There are highly advanced functional chapters and several subsequent chapters fully marked `[x]`; For this reason, this document **does not interpret the project as needing to be redone from scratch**.
->
-> ## Resumen de auditoría por capítulo
->
-| Cap. | Estado | `[x]` internos | `[ ]` internos | Pendientes explícitos | Tema |
+> `[~]` does **not** mean the chapter is wrong; it means it is not closed
+> yet. See `CONTRIBUTING.md` §4 for the ground rules.
+
+> **Honesty rule:** a chapter is never marked `[x]` because a header once
+> said so — the checkbox tracks evidence, not intention. When a
+> requirement is ambiguous, stop and say so instead of guessing.
+
+## Status overview by chapter
+
+| Ch. | Status | `[x]` inside | `[ ]` inside | Explicit pending note | Topic |
 |---:|:---:|---:|---:|:---:|---|
 | 1 | [ ] | 0 | 33 | No | Project purpose and scientific principles |
 | 2 | [ ] | 0 | 26 | No | Terminology and conventions |

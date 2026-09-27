@@ -42,5 +42,13 @@ Run date: 2026-09-26
 
 ## Files
 
-- `numba-vs-decimal-2026-09-26.py` - This benchmark script
-- Original location: `benchmarks/numba_vs_decimal.py`
+The original measurement script was archived when the Numba acceleration
+framework was removed (`git log -- src/crypto_trading_lab/performance/`).
+It imported `crypto_trading_lab.performance.numba_accel`, a module that
+no longer exists, so it cannot run against the current tree. This
+document stays as the decision record; the numbers above are the
+evidence for keeping the pure-`Decimal` path.
+
+The general-purpose benchmark runner that still works is
+[`benchmarks/run_benchmarks.py`](../../../../benchmarks/run_benchmarks.py)
+(ROADMAP chapter 13).

@@ -13,7 +13,7 @@ help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
-test: ## Run the full offline test suite (baseline: 522 passed, 2 skipped)
+test: ## Run the full offline test suite (baseline: 630 passed, 2 skipped)
 	QT_QPA_PLATFORM=offscreen $(PYTHON) -m pytest tests/ -q
 
 run: ## Launch the application

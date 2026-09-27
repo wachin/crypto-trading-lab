@@ -11,7 +11,14 @@ import numpy as np
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-ASSETS_DIR = Path("/home/wachin/Dev3/crypto-trading-lab/src/crypto_trading_lab/education/assets/tutorial")
+ASSETS_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "crypto_trading_lab"
+    / "education"
+    / "assets"
+    / "tutorial"
+)
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 
 

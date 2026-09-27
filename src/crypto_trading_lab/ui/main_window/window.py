@@ -376,19 +376,6 @@ class MainWindow(QMainWindow):
             )
             layout.addWidget(button)
 
-        # Set logical tab order for keyboard navigation
-        tab_order: list[QWidget] = [
-            self.historical_data_button,
-            self.csv_button,
-            self.chart_button,
-            self.learning_center_button,
-            self.backtesting_button,
-            self.wizard_button,
-            self.paper_button,
-            self.testnet_button,
-        ]
-        AccessibilityHelper.set_tab_order(tab_order)
-
         # Add keyboard shortcuts
         self.historical_data_button.setShortcut(QKeySequence("Ctrl+D"))
         self.csv_button.setShortcut(QKeySequence("Ctrl+L"))
@@ -404,6 +391,21 @@ class MainWindow(QMainWindow):
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+        # Logical tab order for keyboard navigation. This must run *after*
+        # the buttons share a top-level window (setCentralWidget above):
+        # QWidget.setTabOrder is a silent no-op across windows.
+        AccessibilityHelper.set_tab_order([
+            self.historical_data_button,
+            self.csv_button,
+            self.chart_button,
+            self.learning_center_button,
+            self.backtesting_button,
+            self.wizard_button,
+            self.paper_button,
+            self.testnet_button,
+        ])
+
         self.statusBar().showMessage(AccessibilityHelper.format_status_text(
             self.tr("Disconnected"), is_positive=None
         ))

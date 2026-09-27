@@ -40,7 +40,8 @@ src/crypto_trading_lab/education/assets/tutorial/   ← output (inside project)
 ## Usage
 
 ```bash
-python3 /home/wachin/Dev3/crypto-trading-lab/media-generation/generate_tutorial_images.py
+# From the repository root:
+python3 media-generation/generate_tutorial_images.py
 ```
 
 The script regenerates all PNG and SVG files in

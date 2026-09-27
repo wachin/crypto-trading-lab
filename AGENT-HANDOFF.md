@@ -1,33 +1,35 @@
 # AGENT-HANDOFF.md — Continuation Guide
 
 **Purpose:** everything a new AI Agent needs to continue this project from
-its current state. The migration notes that follow (§3–§6) are preserved
-for a fresh start.
+its current state: what exists, what is verified, and where development
+left off. The historical migration notes are kept in §3–§4 because they
+still explain *why* the working rules exist.
 
 A new AI Agent must read this file **before** doing anything else, then
 `AGENTS.md`, then `ROADMAP.md`.
 
 ---
 
-## 1. Project state (last updated 2026-09-19)
+## 1. Project state (last updated 2026-09-27)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 522 passed, 2 skipped —
+- **Tests:** 630 passed, 2 skipped —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
-- **Source:** 99 Python files under `src/crypto_trading_lab/`
-- **Tests:** 53 test modules under `tests/`
+- **Source:** 115 Python files under `src/crypto_trading_lab/`
+- **Tests:** 64 test modules under `tests/`
 - **Documentation:** `docs/en/beginners/` and
-  `docs/en/developers/` (see §1.1)
-- **Specification:** `ROADMAP.md` — 72 chapters, plus Part XVI
-  (chapters 73–79) added for the research-workflow improvements
-- **Git submodules:** 8 reference projects under `external/`; a fresh clone
-  needs `git submodule update --init --recursive`
-- **Current phase:** the scientific engine is mature; work is now focused
-  on turning it into a usable research workflow (Fase A–C of
-  `8vo/08-mejoras-para-crypto-trading-lab.md`). Real trading remains
-  disabled.
+  `docs/en/developers/`
+- **Specification:** `ROADMAP.md` — 80 chapters in 16 parts
+- **Git submodules:** 8 *optional* reference projects under `external/`;
+  the application builds and tests without them. Clone them with
+  `git submodule update --init --recursive` only when the task is about
+  those references.
+- **Current phase:** the scientific engine is mature. Work is focused on
+  the live-data path (Binance WebSocket, chapters 26.2/27), testnet order
+  placement (chapter 68) and packaging (chapters 15/16/18). Real trading
+  remains disabled by default.
 
 ### What changed on 2026-09-19 (direction correction + Fase A/B)
 
@@ -217,17 +219,16 @@ repository's Agent must:
 6. Never copy book text or code into the repository and never commit the
    book (printed text or exhibit compilation).
 
-## 3. AGENTS.md in the new repo
+## 3. AGENTS.md at the repository root
 
-The new repository carries an `AGENTS.md` at its root so any
+The repository carries an `AGENTS.md` at its root so any
 AI Agent (opencode, Codex, etc.) automatically loads the ground
-rules. It was created in the first commit of this repository; keep it
-in sync with §4 of this file (the working rules) and with the AFML book
-rule (§1).
+rules. Keep it in sync with §4 of this file (the working rules) and with
+the AFML book rule (§1).
 
-## 4. Working rules that must survive the migration
+## 4. Working rules (canonical)
 
-These rules are canonical. The new Agent inherits them verbatim:
+These rules are canonical. Every Agent working here inherits them:
 
 1. **Read `ROADMAP.md` first**; treat it as the specification. Never
    silently simplify or omit its requirements.
@@ -262,7 +263,7 @@ Per `ROADMAP.md` and the last iteration report:
 2.  ~~Backtesting Lab UI~~ — done on 2026-09-14 (§37.9–37.10;
     `ui/backtesting/lab.py`, main-window button enabled, strategy/dataset
     reproducibility records added to the engine, Spanish translations
-    compiled; 248 tests passing).
+    compiled).
 3.  ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-09-14
     (`reporting/report.py`, HTML/CSV/JSON/PDF export from the Backtesting Lab,
     evidence-level labels and disclaimers). Still open by
@@ -271,8 +272,8 @@ Per `ROADMAP.md` and the last iteration report:
     `compare_reports()` (relative return/volatility/drawdown/Sharpe/
     Sortino differences, gross vs net excess, cost drag), benchmark
     selector in the Backtesting Lab (buy-and-hold default, null, none)
-    with an identical-strategy warning, and the plain-language verdict;
-    257 tests passing. Still open: graphical equity/drawdown comparison
+    with an identical-strategy warning, and the plain-language verdict.
+    Still open: graphical equity/drawdown comparison
     views, and feeding qualification (ch. 66).
 5.  ~~Statistical edge (Chapter 43)~~ — complete
 6.  ~~Robustness (Chapter 44)~~ — complete (consolidated report)
@@ -341,24 +342,25 @@ a requirement until it is implemented **and tested**.
 ## 6. Quick-start for the new Agent
 
 ```bash
-# 1. Clone with the reference submodules (or, if already cloned):
+# 1. (Optional) the 8 reference projects under external/ — not needed to
+#    build, run or test the application:
 git submodule update --init --recursive
 
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
-python3 -c "import pyqtgraph, sqlalchemy, platformdirs, pypdf; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 415 passed expected
+python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 630 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
 #    2. AGENTS.md — the non-negotiable rules
-#    3. ROADMAP.md — the specification (start with §37.9, the next task)
-#    4. docs/en/developers/afml-techniques.md (when AFML is needed)
-#    5. docs/en/developers/reference-projects.md (reference-project studies)
+#    3. ROADMAP.md — the specification (find the chapter that owns your task)
+#    4. CONTRIBUTING.md — workflow and definition of done
+#    5. docs/en/developers/afml-techniques.md (when AFML is needed)
 ```
 
 If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-09-14. All 276 tests passing at time of writing.*
+*Handoff updated 2026-09-27. Baseline: 630 passed, 2 skipped.*
