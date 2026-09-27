@@ -31,6 +31,9 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   Without them `setuptools.find_packages()` omitted those packages from
   a built distribution (27 → 30 packages discovered).
 - The `integration` pytest marker is declared in `pyproject.toml`.
+- `docs/en/developers/unwired-modules-audit.md`: a per-module audit of the
+  16 modules that no product path imports, with an explicit
+  delete / merge / wire disposition for each.
 
 ### Fixed
 
@@ -45,10 +48,9 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   ignores. The call now runs after `setCentralWidget()`, and
   `AccessibilityHelper.set_tab_order()` raises `ValueError` instead of
   pretending when widgets live in different windows.
-- `machine_learning/strategies.py`: removed an unused `scipy` import
-  (`scipy` is not a declared dependency), fixed a `NameError` in
-  `evaluate_ensemble()` (`report` → `performance`) and merged the two
-  `__all__` definitions that silently hid half the public names.
+- `machine_learning/strategies.py` was deleted (see Removed); earlier in
+  this batch it had an unused `scipy` import, a `NameError` in
+  `evaluate_ensemble()` (`report` → `performance`) and duplicate `__all__`.
 - `features.py` no longer declares `compute_asset_correlations()` with a
   bare `except:` next to an `import scipy.stats` the project does not
   ship (see Removed).
@@ -83,4 +85,16 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   unused warning constants). It duplicated the tested `portfolio.py`,
   was imported nowhere, and its correlation function needed `scipy` plus
   a bare `except:`.
+- Nine unwired modules that no product path and no test imported
+  (2,317 lines). Each was either a duplicate of a tested module, a
+  re-statement of a markdown document, or non-functional; every decision
+  and its evidence is recorded in
+  `docs/en/developers/unwired-modules-audit.md`:
+  `benchmarking.py` (42), `live_monitoring.py` (62, non-functional),
+  `research_notebooks.py` (54), `capital_protection.py` (61),
+  `working_method.py` (70), `development_phases.py` (69, raised
+  `KeyError`), `infrastructure/performance.py` (13),
+  `ui/charts/qt_websocket_client.py` (4.2) and
+  `machine_learning/strategies.py` (48).
+  `ROADMAP.md` §4.4 item 3 was corrected accordingly.
 

@@ -363,7 +363,7 @@ Analyze whether the application should use:
 
 - [ ] 1. `aiohttp` for REST and WebSocket communication;
 - [ ] 2. `websockets` for WebSocket connections;
-- [x] 3. `QNetworkAccessManager` and `QWebSocket` for Qt-native networking. (Implemented in `ui/charts/qt_websocket_client.py`)
+- [ ] 3. `QNetworkAccessManager` and `QWebSocket` for Qt-native networking. (An unwired attempt lived in `ui/charts/qt_websocket_client.py`; it duplicated the tested `exchanges/binance/websocket_client.py` and was removed on 2026-09-27 — see `docs/en/developers/unwired-modules-audit.md`.)
 
 - [ ] Create interfaces that remain independent of the specific transport implementation.
 - [ ] Never block the Qt main thread.
