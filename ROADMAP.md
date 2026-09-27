@@ -3740,7 +3740,7 @@ The AI research assistant must:
 
 ---
 
-## [x] 56. Execution realism
+## [~] 56. Execution realism
 
 Execution realism models how orders behave in real markets. It must remain separate from strategy logic and from the risk manager.
 
@@ -3780,7 +3780,7 @@ Execution realism models how orders behave in real markets. It must remain separ
 
 - [x] Reports must state which execution model was used.
 - [x] Reports must quantify the impact of execution assumptions on results where practical.
-- [x] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results.
+- [~] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results. *(Paper trading wired 2026-09-27: `paper_session.py` calls `simulate_market_order`; the backtest engine and robustness still use the simple cost model. See `docs/en/developers/unwired-modules-audit.md`.)*
 
 ---
 

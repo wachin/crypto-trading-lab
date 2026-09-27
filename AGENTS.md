@@ -51,7 +51,7 @@ freshly migrated copy, then `GENESIS.md`, then `ROADMAP.md`.
 
 - Debian 13, Python 3.13.5, PyQt6 + pyqtgraph + SQLAlchemy +
   platformdirs from system packages (no venv)
-- Expected baseline: **630 passed, 2 skipped**
+- Expected baseline: **645 passed, 2 skipped**
 - GUI tests run offscreen (`QT_QPA_PLATFORM=offscreen`)
 
 ## Current position

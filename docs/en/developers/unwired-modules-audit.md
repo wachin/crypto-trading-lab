@@ -25,8 +25,16 @@ wired afterwards.
 
 - **Batch A — delete (9 modules): executed 2026-09-27.** Suite unchanged
   at 630 passed, 2 skipped. `ROADMAP.md` §4.4 item 3 corrected.
-- **Batch B — merge, and Batch C — wire: open.** No code has been removed
-  for these; each keeps its module until the port/wiring lands.
+- **Batch C, item 13 — `execution_realism` wired: executed 2026-09-27.**
+  `paper_session` now calls `simulate_market_order` for entries and exits,
+  in both the replay and the live path, with a seeded `random.Random`
+  (`PaperSessionConfig.seed`). The model also had two defects fixed on the
+  way: slippage could be *favourable* and `simulate_execution` discarded
+  its own slippage calculation. 15 tests added; suite 645 passed,
+  2 skipped. Backtest/robustness wiring (56.5) remains open, so chapter 56
+  is `[~]`, not `[x]`.
+- **Batch B and the rest of Batch C: open.** No code has been removed for
+  these; each keeps its module until the port/wiring lands.
 
 ## Summary
 
@@ -196,22 +204,28 @@ them cannot change the suite. All are recoverable from git history.
 
 ## Batch C — wire (unique value, spec-relevant)
 
-### 13. `execution_realism.py` (chapter 56) → `paper_session.py`
+### 13. `execution_realism.py` (chapter 56) → `paper_session.py` — DONE
 
-- **The import is decorative (verified):** `paper_session.py:27` imports
-  `ExecutionConfig` and `simulate_execution`, but `simulate_execution` is
-  never called anywhere in the repo. `paper_session` reads only
-  `impact_factor` (`:452`) and fakes a partial fill with an **unseeded**
-  `random.random() < 0.1` (`:464-465`), which makes paper-trading results
+- **Was:** `paper_session.py` imported `ExecutionConfig` and
+  `simulate_execution`, but never called `simulate_execution`; it read only
+  `impact_factor` and faked a partial fill with an **unseeded**
+  `random.random() < 0.1`, which made paper-trading results
   non-reproducible.
-- Chapter 56 is marked `[x]`, and item 56.5 requires execution realism to
-  feed backtest and paper trading. Today it does not.
-- Action: in `run_paper_session` replace the inline blocks
-  (`:458-475` entry, `:494-502` exit) with one `simulate_execution(...)`
-  call each using a synthetic `OrderBookSnapshot` and the configured
-  `adv`; mirror it in `run_paper_session_live` (`:696-751`); seed
-  determinism from the session seed. Add tests. Then chapter 56's `[x]`
-  becomes true instead of aspirational.
+- **Now (2026-09-27):** `run_paper_session` and `run_paper_session_live`
+  call `simulate_market_order` for entries and exits. A synthetic,
+  documented order book (`synthetic_order_book`) provides depth, so an
+  order larger than the modelled liquidity is partially filled or
+  rejected instead of being assumed away. `PaperSessionConfig` and
+  `LivePaperConfig` gained a `seed`, and every draw now comes from one
+  seeded `random.Random`, so a session is reproducible.
+- Two defects in the model were fixed on the way: slippage could come out
+  **favourable** (a buy below mid) because the random term could push the
+  total negative, and `simulate_execution` computed its slippage price and
+  then discarded it, returning the raw book-ladder average and reporting
+  market impact as if it were slippage.
+- Still open: item **56.5** also requires the backtest engine (chapter 37)
+  and robustness (chapter 44) to use the model. They still use the simple
+  `CostModel`. Chapter 56 is therefore `[~]`.
 
 ### 14. `reproducibility.py` (chapter 53) → `ExperimentManager`
 

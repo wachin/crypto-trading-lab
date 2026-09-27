@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import random
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
@@ -24,8 +25,11 @@ from typing import Sequence
 
 from crypto_trading_lab.backtesting.engine import CostModel
 from crypto_trading_lab.domain.models import Candle, OrderSide, Symbol
-from crypto_trading_lab.execution_realism import ExecutionConfig, simulate_execution
-from crypto_trading_lab.market_data.historical import DatasetVersion
+from crypto_trading_lab.execution_realism import (
+    ExecutionConfig,
+    simulate_market_order,
+)
+from crypto_trading_lab.market_data.historical import TIMEFRAMES, DatasetVersion
 from crypto_trading_lab.risk_manager import (
     LossLimits,
     OperationalLimits,
@@ -262,6 +266,10 @@ class PaperSessionConfig:
     position_fraction: Decimal = Decimal("0.5")
     interval: str = "1h"
     execution_config: ExecutionConfig | None = None
+    #: Seed for the chapter-56 execution model. With an ``execution_config``
+    #: set, the same seed must reproduce the same fills; without it the
+    #: session is fully deterministic anyway.
+    seed: int = 42
 
     def costs(self) -> CostModel:
         return CostModel(
@@ -279,6 +287,7 @@ class PaperSessionConfig:
             "position_fraction": str(self.position_fraction),
             "interval": self.interval,
             "execution_config": self.execution_config.__dict__ if self.execution_config else None,
+            "seed": self.seed,
         }
 
 
@@ -359,6 +368,67 @@ def _step_down(quantity: Decimal, step: Decimal = Decimal("0.000001")) -> Decima
     return (quantity / step).to_integral_value(rounding="ROUND_DOWN") * step
 
 
+def _adv_at(
+    candles: Sequence[Candle],
+    index: int,
+    interval: str,
+    window: int,
+) -> Decimal:
+    """Average daily volume proxy from the candles known at ``index``.
+
+    The mean volume of the last ``window`` candles is scaled to a full day.
+    It only looks backwards, so it cannot leak the fill candle's volume into
+    the decision.
+    """
+    step = TIMEFRAMES.get(interval)
+    if not step or window < 1:
+        return ZERO
+    start = max(0, index + 1 - window)
+    sample = candles[start:index + 1]
+    if not sample:
+        return ZERO
+    mean = sum((candle.volume for candle in sample), ZERO) / Decimal(len(sample))
+    return mean * Decimal(86400) / Decimal(step)
+
+
+def _reference_fill(
+    config: PaperSessionConfig | LivePaperConfig,
+    side: str,
+    quantity: Decimal,
+    reference: Decimal,
+    adv: Decimal,
+    rng: random.Random,
+) -> tuple[Decimal, Decimal]:
+    """Return ``(fill_price, filled_quantity)`` for one order.
+
+    Without an ``execution_config`` this is the original chapter-57 model: a
+    full fill at the next open, moved by the configured slippage and spread.
+    With one, chapter 56 takes over — a synthetic order book, depth-based
+    partial fills and a slippage model — driven by ``rng`` so the same
+    session seed reproduces the same fills.
+    """
+    adjustment = config.slippage_fraction + config.spread_fraction
+    if config.execution_config is None:
+        if side == "buy":
+            return reference * (Decimal(1) + adjustment), quantity
+        return reference * (Decimal(1) - adjustment), quantity
+
+    execution = simulate_market_order(
+        reference,
+        side,
+        quantity,
+        config.execution_config,
+        adv=adv,
+        spread_fraction=config.spread_fraction,
+        rng=rng,
+    )
+    return execution.average_price, execution.filled_quantity
+
+
+def _adv_window(config: PaperSessionConfig | LivePaperConfig) -> int:
+    return config.execution_config.adv_window if config.execution_config else 20
+
+
 def run_paper_session(
     candles: Sequence[Candle],
     strategy,
@@ -381,6 +451,9 @@ def run_paper_session(
     manager = risk_manager or default_risk_manager()
     market_symbol = symbol or str(candles[0].symbol)
     dataset_id = dataset.dataset_id if dataset else "unversioned"
+    # Chapter 56's model draws latency and slippage; a seeded generator keeps
+    # a session reproducible instead of depending on the global RNG.
+    rng = random.Random(config.seed)
 
     cash = config.initial_capital
     position = ZERO
@@ -445,34 +518,10 @@ def run_paper_session(
                 reason="entry",
             )
             if decision.decision is RiskDecision.APPROVE and quantity > 0:
-                # Use realistic execution model if configured
-                if config.execution_config:
-                    # Simple market impact model: price moves against order
-                    # Impact is proportional to order size relative to ADV
-                    impact_factor = config.execution_config.impact_factor
-                    # Approximate ADV from recent volume (simple proxy)
-                    avg_volume = Decimal("1000000")  # placeholder
-                    impact_pct = (quantity / avg_volume) * impact_factor
-                    price_impact = next_candle.open * impact_pct
-                    
-                    fill_price = (
-                        next_candle.open
-                        * (Decimal(1) + config.slippage_fraction + config.spread_fraction)
-                        + price_impact
-                    )
-                    # Partial fill simulation: up to 10% chance of partial fill
-                    import random
-                    if random.random() < 0.1:
-                        filled_quantity = quantity * Decimal("0.8")  # 80% filled
-                    else:
-                        filled_quantity = quantity
-                else:
-                    # Basic execution model (backward compatible)
-                    fill_price = (
-                        next_candle.open
-                        * (Decimal(1) + config.slippage_fraction + config.spread_fraction)
-                    )
-                    filled_quantity = quantity
+                adv = _adv_at(candles, index, config.interval, _adv_window(config))
+                fill_price, filled_quantity = _reference_fill(
+                    config, "buy", quantity, next_candle.open, adv, rng
+                )
                 
                 if filled_quantity > 0:
                     order_value = filled_quantity * fill_price
@@ -491,28 +540,39 @@ def run_paper_session(
             journal.add(entry)
 
         elif signal is OrderSide.SELL and position > 0 and open_entry is not None:
-            fill_price = (
-                next_candle.open
-                * (Decimal(1) - config.slippage_fraction - config.spread_fraction)
+            adv = _adv_at(candles, index, config.interval, _adv_window(config))
+            fill_price, filled_quantity = _reference_fill(
+                config, "sell", position, next_candle.open, adv, rng
             )
-            order_value = position * fill_price
-            fee = order_value * config.taker_fee
-            cash += order_value - fee
-            fees += fee
-            slippage_total += position * (next_candle.open - fill_price)
-            pnl = order_value - entry_cost - fee - entry_fee
-            realized += pnl
-            daily_pnl += pnl
-            if pnl < 0:
-                consecutive_losses += 1
-            else:
-                consecutive_losses = 0
-            position = ZERO
-            open_entry.exit_time = next_candle.open_time.isoformat()
-            open_entry.exit_price = fill_price
-            open_entry.pnl = pnl
-            open_entry.reason = "exit on strategy signal"
-            open_entry = None
+            filled_quantity = min(filled_quantity, position)
+            if filled_quantity > 0:
+                order_value = filled_quantity * fill_price
+                fee = order_value * config.taker_fee
+                cash += order_value - fee
+                fees += fee
+                slippage_total += filled_quantity * (next_candle.open - fill_price)
+                # P/L is recognised only for the closed portion, so a partial
+                # exit does not book the whole trade at once. On a full fill
+                # ``share`` is exactly 1 and the arithmetic is unchanged.
+                share = filled_quantity / position
+                closed_cost = entry_cost * share
+                closed_fee = entry_fee * share
+                pnl = order_value - closed_cost - fee - closed_fee
+                realized += pnl
+                daily_pnl += pnl
+                if pnl < 0:
+                    consecutive_losses += 1
+                else:
+                    consecutive_losses = 0
+                entry_cost -= closed_cost
+                entry_fee -= closed_fee
+                position -= filled_quantity
+                if position == 0:
+                    open_entry.exit_time = next_candle.open_time.isoformat()
+                    open_entry.exit_price = fill_price
+                    open_entry.pnl = pnl
+                    open_entry.reason = "exit on strategy signal"
+                    open_entry = None
 
         equity = mark_equity(candles[index + 1].close)
         peak = max(peak, equity)
@@ -561,6 +621,9 @@ class LivePaperConfig:
     slippage_fraction: Decimal = Decimal("0.0005")
     spread_fraction: Decimal = Decimal("0.0002")
     position_fraction: Decimal = Decimal("0.5")
+    #: Same chapter-56 execution model and seed as the replay session.
+    execution_config: ExecutionConfig | None = None
+    seed: int = 42
 
 
 async def run_paper_session_live(
@@ -601,6 +664,7 @@ async def run_paper_session_live(
     manager = risk_manager or default_risk_manager()
     market_symbol = config.symbol
     dataset_id = f"live_{config.symbol}_{config.interval}"
+    rng = random.Random(config.seed)
 
     cash = config.initial_capital if hasattr(config, 'initial_capital') else Decimal("10000")
     position = ZERO
@@ -693,20 +757,29 @@ async def run_paper_session_live(
                 reason="entry",
             )
             if decision.decision is RiskDecision.APPROVE and quantity > 0:
-                fill_price = price * (Decimal(1) + config.slippage_fraction + config.spread_fraction) if hasattr(config, 'slippage_fraction') else price
-                order_value = quantity * fill_price
-                fee = order_value * config.taker_fee if hasattr(config, 'taker_fee') else ZERO
-                cash -= order_value + fee
-                position += quantity
-                fees += fee
-                slippage_total += quantity * (fill_price - price)
-                entry_cost = order_value
-                entry_fee = fee
-                entry.fill_time = candle.close_time.isoformat()
-                entry.fill_price = fill_price
-                entry.fee = fee
-                entry.slippage = quantity * (fill_price - price)
-                open_entry = entry
+                adv = _adv_at(
+                    completed_candles,
+                    len(completed_candles) - 1,
+                    config.interval,
+                    _adv_window(config),
+                )
+                fill_price, filled_quantity = _reference_fill(
+                    config, "buy", quantity, reference, adv, rng
+                )
+                if filled_quantity > 0:
+                    order_value = filled_quantity * fill_price
+                    fee = order_value * config.taker_fee
+                    cash -= order_value + fee
+                    position += filled_quantity
+                    fees += fee
+                    slippage_total += filled_quantity * (fill_price - reference)
+                    entry_cost = order_value
+                    entry_fee = fee
+                    entry.fill_time = candle.close_time.isoformat()
+                    entry.fill_price = fill_price
+                    entry.fee = fee
+                    entry.slippage = filled_quantity * (fill_price - reference)
+                    open_entry = entry
             journal.add(entry)
 
         elif signal is OrderSide.SELL and position > 0 and open_entry is not None:
@@ -741,28 +814,44 @@ async def run_paper_session_live(
                 reason="exit",
             )
             if decision.decision is RiskDecision.APPROVE:
-                fill_price = price * (Decimal(1) - config.slippage_fraction - config.spread_fraction) if hasattr(config, 'slippage_fraction') else price
-                order_value = position * fill_price
-                fee = order_value * config.taker_fee if hasattr(config, 'taker_fee') else ZERO
-                pnl = order_value - entry_cost - entry_fee - fee
-                realized += pnl
-                cash += order_value - fee
-                fees += fee
-                slippage_total += position * (fill_price - price)
-                position = ZERO
-                daily_pnl += pnl
-                if pnl < 0:
-                    consecutive_losses += 1
-                else:
-                    consecutive_losses = 0
-                open_entry.exit_time = candle.close_time.isoformat()
-                open_entry.exit_price = fill_price
-                open_entry.pnl = pnl
-                entry.fill_time = candle.close_time.isoformat()
-                entry.fill_price = fill_price
-                entry.fee = fee
-                entry.slippage = position * (fill_price - price)
-                open_entry = None
+                adv = _adv_at(
+                    completed_candles,
+                    len(completed_candles) - 1,
+                    config.interval,
+                    _adv_window(config),
+                )
+                fill_price, filled_quantity = _reference_fill(
+                    config, "sell", position, reference, adv, rng
+                )
+                filled_quantity = min(filled_quantity, position)
+                if filled_quantity > 0:
+                    order_value = filled_quantity * fill_price
+                    fee = order_value * config.taker_fee
+                    share = filled_quantity / position
+                    closed_cost = entry_cost * share
+                    closed_fee = entry_fee * share
+                    pnl = order_value - closed_cost - fee - closed_fee
+                    realized += pnl
+                    cash += order_value - fee
+                    fees += fee
+                    slippage_total += filled_quantity * (fill_price - reference)
+                    daily_pnl += pnl
+                    if pnl < 0:
+                        consecutive_losses += 1
+                    else:
+                        consecutive_losses = 0
+                    entry_cost -= closed_cost
+                    entry_fee -= closed_fee
+                    position -= filled_quantity
+                    entry.fill_time = candle.close_time.isoformat()
+                    entry.fill_price = fill_price
+                    entry.fee = fee
+                    entry.slippage = filled_quantity * (fill_price - reference)
+                    if position == 0:
+                        open_entry.exit_time = candle.close_time.isoformat()
+                        open_entry.exit_price = fill_price
+                        open_entry.pnl = pnl
+                        open_entry = None
             journal.add(entry)
 
         # Save journal periodically

@@ -34,8 +34,32 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 - `docs/en/developers/unwired-modules-audit.md`: a per-module audit of the
   16 modules that no product path imports, with an explicit
   delete / merge / wire disposition for each.
+- The chapter-56 execution model is now wired into paper trading:
+  `paper_session.run_paper_session` and `run_paper_session_live` call
+  `simulate_market_order` for entries and exits. `PaperSessionConfig` and
+  `LivePaperConfig` gained a `seed`, `execution_realism` gained
+  `synthetic_order_book()` / `simulate_market_order()` and an injectable
+  `random.Random`, and `tests/test_execution_realism.py` adds 15 tests.
 
 ### Fixed
+
+- Chapter 56's model was inert: `paper_session` imported
+  `simulate_execution` and never called it, so an `execution_config` only
+  changed one `impact_factor` term and partial fills came from an
+  **unseeded** `random.random()`, making paper-trading runs
+  non-reproducible. Seeds now make a session reproducible, and an order
+  larger than the modelled liquidity is partially filled or rejected
+  instead of being assumed away.
+- `simulate_execution` computed its slippage price and then discarded it,
+  returning the raw book-ladder average and reporting market impact in the
+  `slippage_bps` field. The slippage model now sets the price and the
+  reported slippage.
+- `calculate_slippage` could return **favourable** slippage — the random
+  term could push the total negative, so a buy filled below mid. Slippage
+  is now clamped to be adverse, as slippage is by definition.
+- `run_paper_session_live` divided the P/L of a partial exit incorrectly
+  and always recorded `entry.slippage = 0` because it read `position`
+  after zeroing it.
 
 - `create_quality_report()` raised `TypeError` because it indexed the
   `DataQualityReport` returned by `validate_dataset_quality()`
@@ -62,7 +86,7 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   tutorial figures, so an installed copy can display them.
 - `media-generation/README.md` and `generate_tutorial_images.py` no
   longer hard-code the maintainer's `/home/wachin/...` path.
-- Documented test baseline corrected to **630 passed, 2 skipped**
+- Documented test baseline corrected to **645 passed, 2 skipped**
   across `README.md`, `AGENTS.md`, `AGENT-HANDOFF.md`,
   `CONTRIBUTING.md`, `Makefile`, the pull-request template and the
   developer docs. It had drifted between 229, 415, 522, 599 and 611.
