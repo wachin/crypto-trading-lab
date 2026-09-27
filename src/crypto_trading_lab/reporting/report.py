@@ -15,17 +15,26 @@ from __future__ import annotations
 import hashlib
 import html
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 
 from crypto_trading_lab import __version__
 from crypto_trading_lab.backtesting.engine import BacktestResult
 from crypto_trading_lab.backtesting.metrics import DISCLAIMER, PerformanceReport
+from crypto_trading_lab.reporting.ethics import (
+    ETHICS_WARNING,
+    STANDARD_DISCLAIMERS,
+    EthicalCheckResult,
+    EthicsChecker,
+    EthicsError,
+)
 
 __all__ = [
     "EVIDENCE_LEVEL",
     "BacktestReportData",
     "build_backtest_report",
+    "audit_report_ethics",
+    "EthicsError",
     "render_json",
     "render_csv",
     "render_html",
@@ -77,6 +86,12 @@ class BacktestReportData:
     generation_date: str
     evidence_level: str
     beginner_summary: str
+    # -- chapter 72: honest reporting ------------------------------------
+    disclaimers: list[str]
+    assumptions: str
+    limitations: str
+    ethics_violations: list[str]
+    ethics_warnings: list[str]
 
 
 def build_backtest_report(
@@ -143,7 +158,28 @@ def build_backtest_report(
         "money in the future."
     )
 
-    return BacktestReportData(
+    assumptions = (
+        "Assumptions: signals are decided at a candle's close and filled at "
+        "the next candle's open; costs are the taker fee, spread and slippage "
+        "recorded above under the "
+        f"{result.config_metadata.get('execution_model', 'next-open')} "
+        "execution model. No market impact, partial fill, latency or exchange "
+        "rejection is modelled."
+    )
+    limitations = (
+        "Limitations: this is a single in-sample run. No out-of-sample "
+        "validation, walk-forward test or market-regime analysis was "
+        "performed, and no market-impact model exists, so the result is an "
+        "observed result and never statistical evidence."
+    )
+    disclaimers = [
+        disclaimer.text
+        for disclaimer in EthicsChecker().generate_required_disclaimers(
+            "backtest_report"
+        )
+    ] + [STANDARD_DISCLAIMERS["general"].text]
+
+    data = BacktestReportData(
         strategy=result.strategy_name,
         strategy_version=result.strategy_version,
         parameters=dict(result.config_metadata),
@@ -181,6 +217,58 @@ def build_backtest_report(
         ).isoformat(),
         evidence_level=EVIDENCE_LEVEL,
         beginner_summary=beginner_summary,
+        disclaimers=disclaimers,
+        assumptions=assumptions,
+        limitations=limitations,
+        ethics_violations=[],
+        ethics_warnings=[],
+    )
+
+    # Chapter 72: no report leaves the application without passing the
+    # honesty audit. A violation (missing disclaimer, profit guarantee)
+    # raises; the warnings are attached so the report can show what it did
+    # not discuss.
+    audit = audit_report_ethics(data)
+    return replace(
+        data,
+        ethics_violations=list(audit.violations),
+        ethics_warnings=list(audit.warnings),
+    )
+
+
+def audit_report_ethics(
+    data: BacktestReportData, *, raise_on_violation: bool = True
+) -> EthicalCheckResult:
+    """Run the chapter-72 checks over every rendered report format.
+
+    Raises :class:`EthicsError` on a violation unless
+    ``raise_on_violation`` is false. Warnings are returned so the caller can
+    surface them instead of hiding them.
+    """
+    checker = EthicsChecker()
+    violations: list[str] = []
+    warnings: list[str] = []
+    for content in (render_html(data), render_csv(data), render_json(data)):
+        result = checker.check_report(
+            "backtest_report", content, {"evidence_level": data.evidence_level}
+        )
+        for violation in result.violations:
+            if violation not in violations:
+                violations.append(violation)
+        for warning in result.warnings:
+            if warning not in warnings:
+                warnings.append(warning)
+
+    if violations and raise_on_violation:
+        raise EthicsError("; ".join(violations))
+
+    return EthicalCheckResult(
+        compliant=not violations,
+        violations=violations,
+        warnings=warnings,
+        required_disclaimers=checker.generate_required_disclaimers(
+            "backtest_report"
+        ),
     )
 
 
@@ -205,6 +293,8 @@ def render_csv(data: BacktestReportData) -> str:
         "execution_model", "app_version", "generation_date",
     ):
         lines.append(f"metadata,{key},{getattr(data, key)}")
+    lines.append(f'metadata,assumptions,"{data.assumptions}"')
+    lines.append(f'metadata,limitations,"{data.limitations}"')
     for key, value in data.parameters.items():
         lines.append(f"parameter,{key},{value}")
     for key, value in data.metrics.items():
@@ -213,6 +303,13 @@ def render_csv(data: BacktestReportData) -> str:
         lines.append(f"benchmark,{key},{value}")
     for warning in data.warnings:
         lines.append(f"warning,,\"{warning}\"")
+    for text in data.disclaimers:
+        lines.append(f'disclaimer,,"{text}"')
+    for warning in data.ethics_warnings:
+        lines.append(f'ethics_warning,,"{warning}"')
+    for violation in data.ethics_violations:
+        lines.append(f'ethics_violation,,"{violation}"')
+    lines.append(f'ethics,,"{ETHICS_WARNING}"')
     for i, trade in enumerate(data.trades):
         for key, value in trade.items():
             lines.append(f"trade[{i}],{key},{value}")
@@ -240,6 +337,8 @@ def render_html(data: BacktestReportData) -> str:
         f"<p><strong>Evidence level:</strong> {esc(data.evidence_level)}"
         "</p>",
         f"<h2>Summary</h2><p>{esc(data.beginner_summary)}</p>",
+        f"<h2>Assumptions</h2><p>{esc(data.assumptions)}</p>",
+        f"<h2>Limitations</h2><p>{esc(data.limitations)}</p>",
         "<h2>Setup</h2><table>",
     ]
     for key in (
@@ -269,48 +368,66 @@ def render_html(data: BacktestReportData) -> str:
             parts.append(f"<tr>{cells}</tr>")
     else:
         parts.append("<tr><td>No trades.</td></tr>")
-    parts.append("</table></body></html>")
+    parts.append("</table><h2>Disclaimers</h2><ul>")
+    for text in data.disclaimers:
+        parts.append(f"<li>{esc(text)}</li>")
+    parts.append("</ul>")
+    if data.ethics_violations or data.ethics_warnings:
+        parts.append("<h2>Ethics check</h2><ul>")
+        for violation in data.ethics_violations:
+            parts.append(
+                f"<li><strong>violation:</strong> {esc(violation)}</li>"
+            )
+        for warning in data.ethics_warnings:
+            parts.append(f"<li>warning: {esc(warning)}</li>")
+        parts.append("</ul>")
+    parts.append(f"<p><em>{esc(ETHICS_WARNING)}</em></p>")
+    parts.append("</body></html>")
     return "\n".join(parts) + "\n"
 
 
-def render_pdf(data: BacktestReportData) -> str:
-    """Serialize the report as a PDF document (chapter 41)."""
+def render_pdf(data: BacktestReportData) -> bytes:
+    """Serialize the report as a one-page PDF summary (chapter 41).
+
+    Returns the raw PDF bytes. The structured formats (HTML, JSON, CSV)
+    carry the full disclaimer set; this summary repeats the assumptions, the
+    limitations and the ethics warning. Requires the optional ``pypdf``
+    package.
+
+    Regression: this used ``PdfWriter._addObject`` / ``_writeObject`` /
+    ``.stream`` — private names that pypdf 5 removed — so PDF export raised
+    ``AttributeError`` instead of returning a document.
+    """
+    from io import BytesIO
+
     from pypdf import PdfWriter
-    from pypdf.generic import (
-        ArrayObject,
-        DictionaryObject,
-        NameObject,
-        NumberObject,
-        TextStringObject,
-    )
+    from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
-    pdf = PdfWriter()
-    page = DictionaryObject()
-    page[NameObject("/Type")] = NameObject("/Page")
-    page[NameObject("/MediaBox")] = ArrayObject(
-        [NumberObject(0), NumberObject(0), NumberObject(612), NumberObject(792)]
-    )
+    writer = PdfWriter()
+    page = writer.add_blank_page(width=612, height=792)
 
-    resources = DictionaryObject()
-    fonts = DictionaryObject()
     font = DictionaryObject()
     font[NameObject("/Type")] = NameObject("/Font")
     font[NameObject("/Subtype")] = NameObject("/Type1")
     font[NameObject("/BaseFont")] = NameObject("/Helvetica")
+    fonts = DictionaryObject()
     fonts[NameObject("/F1")] = font
+    resources = DictionaryObject()
     resources[NameObject("/Font")] = fonts
-
     page[NameObject("/Resources")] = resources
 
-    lines = []
+    commands: list[str] = []
+
+    def add_line(text: str, y_pos: float, font_size: int = 12) -> None:
+        # Escape the PDF string delimiters: a ')' in a strategy name would
+        # otherwise close the text object early.
+        safe = (
+            text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        )
+        commands.append(f"BT /F1 {font_size} Tf 72 {y_pos} Td ({safe}) Tj ET")
+
     y = 750
-
-    def add_line(text, y_pos, font_size=12):
-        nonlocal y
-        y = y_pos
-        lines.append(f"BT /F1 {font_size} Tf {y} {100 * font_size / 12} Td ({text}) Tj ET")
-
-    add_line(f"Backtest report — {data.strategy}", 770, 16)
+    add_line(f"Backtest report - {data.strategy}", 770, 16)
     y -= 30
     add_line(f"Strategy: {data.strategy} (v{data.strategy_version})", y)
     y -= 15
@@ -329,28 +446,18 @@ def render_pdf(data: BacktestReportData) -> str:
     y -= 15
     add_line(f"Sharpe ratio: {data.metrics.get('sharpe_ratio', 'N/A')}", y)
     y -= 25
-    add_line(f"Evidence level: {data.evidence_level}", y)
+    add_line(f"Evidence level: {data.evidence_level}", y, 8)
+    y -= 12
+    add_line(f"Assumptions: {data.assumptions[:110]}", y, 8)
+    y -= 12
+    add_line(f"Limitations: {data.limitations[:110]}", y, 8)
+    y -= 12
+    add_line(ETHICS_WARNING[:110], y, 8)
 
-    content = DictionaryObject()
-    content[NameObject("/Length")] = NumberObject(len("\n".join(lines).encode()))
-    content_stream = "\n".join(lines)
-    content[NameObject("/Contents")] = pdf._addObject(content)
+    stream = DecodedStreamObject()
+    stream.set_data("\n".join(commands).encode("latin-1", "replace"))
+    page[NameObject("/Contents")] = writer._add_object(stream)
 
-    page[NameObject("/Contents")] = pdf._addObject(content)
-    pdf._addObject(page)
-
-    catalog = DictionaryObject()
-    catalog[NameObject("/Type")] = NameObject("/Catalog")
-    pages = DictionaryObject()
-    pages[NameObject("/Type")] = NameObject("/Pages")
-    pages[NameObject("/Kids")] = ArrayObject([NameObject("/Page1")])
-    pages[NameObject("/Count")] = NumberObject(1)
-    pdf._addObject(pages)
-    catalog[NameObject("/Pages")] = NameObject("/Pages")
-    pdf._addObject(catalog)
-
-    pdf.stream = b""
-    for obj in pdf._objects:
-        pdf.stream += pdf._write_object(obj)
-
-    return pdf.stream.decode("latin-1")
+    buffer = BytesIO()
+    writer.write(buffer)
+    return buffer.getvalue()

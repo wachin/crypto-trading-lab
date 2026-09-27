@@ -46,8 +46,16 @@ wired afterwards.
   shows the drift against the same strategy's backtest. `BacktestConfig`
   gained `position_fraction` so the comparison cannot mistake sizing for
   drift. 15 tests added; suite 672 passed, 2 skipped.
-- **Batch B and `strategy_registry` (item 16): open.** No code has been
-  removed for these; each keeps its module until the port/wiring lands.
+- **Batch B, item 11 — `research_ethics` merged into reports: executed
+  2026-09-27.** The checker now guards every generated report (it raises on
+  a missing disclaimer or profit-guarantee language), the mandatory
+  disclaimers, assumptions and limitations ship in all formats, and two
+  latent bugs were fixed: "out-of-sample" was not recognised, and
+  `render_pdf()` had been broken since pypdf 5. 11 tests added; suite 683
+  passed, 2 skipped.
+- **Still open:** `risk_of_ruin` (item 10), `coinbase` (item 12) and
+  `strategy_registry` (item 16). Each keeps its module until the
+  port/wiring lands.
 
 ## Summary
 
@@ -186,19 +194,32 @@ them cannot change the suite. All are recoverable from git history.
   scaffolding. Keep chapter 60 `[ ]` until the ported functions are
   tested.
 
-### 11. `research_ethics.py` (chapter 72) → report generation
+### 11. `research_ethics.py` (chapter 72) → report generation — DONE
 
-- Duplicate part: `EvidenceLevel`/`format_evidence_label` duplicate
-  `ui/research/validity.py:70` and `reporting/report.py:36`; the
-  six-category disclaimer catalog overlaps `metrics.DISCLAIMER`
-  (`metrics.py:36`).
-- Unique part: `EthicsChecker.check_report()` — an automated scan for
-  missing disclaimers, profit-guarantee language, cherry-picking and
-  missing out-of-sample discussion. Nothing in the product does this.
-- The prose already lives in `docs/en/developers/research-ethics.md`.
-- Action: call `EthicsChecker.check_report()` from report generation as a
-  chapter-72 assertion (report must fail or warn loudly), then delete the
-  module.
+- **Was:** unwired. `EvidenceLevel`/`format_evidence_label` duplicated
+  `ui/research/validity.py` and `reporting/report.py`; the disclaimer
+  catalog existed but no report ever carried it.
+- **Now (2026-09-27):** the used part moved to `reporting/ethics.py`
+  (`EthicsChecker`, `STANDARD_DISCLAIMERS`, `EthicalCheckResult`,
+  `EthicsError`, `ETHICS_WARNING`); the unused `EvidenceLevel`,
+  `EvidenceLabel`, `generate_evidence_label`, `format_evidence_label` and
+  `WarningType`/`EthicalWarning` were dropped rather than carried over as
+  dead weight. `reporting/report.py` now:
+  - embeds the five mandatory disclaimers (performance, risk, statistical,
+    overfitting, general) in HTML, CSV, JSON and PDF;
+  - adds explicit **Assumptions** and **Limitations** sections;
+  - runs `audit_report_ethics()` over every rendered format and **raises
+    `EthicsError`** on a violation (missing disclaimer, profit-guarantee
+    language), while attaching warnings instead of raising for omissions.
+- Two bugs were fixed while merging: the out-of-sample check only matched
+  the underscore spelling, so the normal English "out-of-sample" was
+  reported as missing; and `render_pdf()` called
+  `PdfWriter._addObject`/`_writeObject`/`.stream`, private names that pypdf
+  5 removed, so **PDF export raised `AttributeError`**. `render_pdf()` now
+  builds the document with the current API and returns bytes; a test reads
+  the result back with `PdfReader`.
+- `research_ethics.py` was deleted. Still open: 72.1's remaining items,
+  and all of 72.3/72.4. Chapter 72 stays `[~]`.
 
 ### 12. `exchanges/coinbase/adapter.py` (chapter 26.3) → CCXT
 

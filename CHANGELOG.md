@@ -55,9 +55,24 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   `position_fraction` (default `1`, so existing backtests are unchanged);
   it is recorded in `metadata()` and `tests/test_live_vs_backtest.py` adds
   10 tests.
+- Chapter 72 ethics now guards report generation: `reporting/ethics.py`
+  holds `EthicsChecker` + `STANDARD_DISCLAIMERS`, and every HTML/CSV/JSON
+  report carries the five mandatory disclaimers plus explicit
+  **Assumptions** and **Limitations** sections. `audit_report_ethics()`
+  raises `EthicsError` on a violation (missing disclaimer, profit-guarantee
+  language) and attaches warnings for omissions;
+  `tests/reporting/test_report_ethics.py` adds 11 tests.
 
 ### Fixed
 
+- `render_pdf()` was broken: it called `PdfWriter._addObject` /
+  `_writeObject` / `.stream`, private names that pypdf 5 removed, so every
+  PDF export raised `AttributeError`. It now builds the document with the
+  current API, escapes PDF string delimiters that a strategy name could
+  inject, and returns bytes.
+- The ethics checker only matched the underscore spelling of
+  "out_of_sample", so the normal English "out-of-sample" was reported as
+  missing.
 - `live_vs_backtest.calculate_regime_drift()` put the **live** return into
   the backtest bucket, so per-regime drift was always exactly zero. It also
   silently truncated mismatched inputs; it now raises.
@@ -125,7 +140,7 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   tutorial figures, so an installed copy can display them.
 - `media-generation/README.md` and `generate_tutorial_images.py` no
   longer hard-code the maintainer's `/home/wachin/...` path.
-- Documented test baseline corrected to **672 passed, 2 skipped**
+- Documented test baseline corrected to **683 passed, 2 skipped**
   across `README.md`, `AGENTS.md`, `AGENT-HANDOFF.md`,
   `CONTRIBUTING.md`, `Makefile`, the pull-request template and the
   developer docs. It had drifted between 229, 415, 522, 599 and 611.
@@ -160,4 +175,10 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   `ui/charts/qt_websocket_client.py` (4.2) and
   `machine_learning/strategies.py` (48).
   `ROADMAP.md` §4.4 item 3 was corrected accordingly.
+- `research_ethics.py` (chapter 72), after merging its checker into
+  `reporting/ethics.py`. The unused `EvidenceLevel`, `EvidenceLabel`,
+  `generate_evidence_label`, `format_evidence_label`,
+  `WarningType` and `EthicalWarning` were dropped instead of carried over
+  as dead weight; the evidence ladder already lives in
+  `reporting/report.py` and `ui/research/validity.py`.
 

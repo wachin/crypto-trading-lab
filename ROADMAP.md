@@ -4879,21 +4879,21 @@ The project must maintain scientific and professional honesty at every stage.
 
 ### 72.1 Honest evidence
 
-- [ ] Never present a backtest as proof of future profitability.
+- [x] Never present a backtest as proof of future profitability. (Every report carries the chapter-72 disclaimers and `EVIDENCE_LEVEL`, and `audit_report_ethics()` refuses to emit a report that lacks them.)
 - [ ] Never present Monte Carlo, bootstrap, or statistical results as predictions of the future.
-- [ ] Never hide assumptions behind results.
+- [x] Never hide assumptions behind results. (Every report has an explicit assumptions section; the ethics checker warns when none is documented.)
 - [ ] Never cherry-pick time periods, parameters, or datasets to make a result look better.
-- [ ] Always label evidence level: observed result, statistical evidence, research hypothesis, validated evidence (see Chapter 43).
+- [x] Always label evidence level: observed result, statistical evidence, research hypothesis, validated evidence (see Chapter 43). (`EVIDENCE_LEVEL` in reports; `ui/research/validity.py` for research runs.)
 - [ ] Report failed experiments as faithfully as successful ones.
 
 ### 72.2 Warnings and disclaimers
 
 - [ ] All warnings must be understandable to a complete beginner.
-- [ ] The application must explain the risks of cryptocurrency trading.
-- [ ] The application must explain that users can lose part or all of their capital.
-- [ ] The application must explain that most retail traders lose money and that trading is not a reliable income source.
+- [x] The application must explain the risks of cryptocurrency trading. (The mandatory `risk` disclaimer is embedded in every generated report.)
+- [x] The application must explain that users can lose part or all of their capital. (Same `risk` disclaimer.)
+- [x] The application must explain that most retail traders lose money and that trading is not a reliable income source. (Same `risk` disclaimer.)
 - [ ] The application must not present itself as a solution to financial hardship.
-- [ ] The application must not provide financial advice.
+- [x] The application must not provide financial advice. (The `general` disclaimer is embedded in every generated report; the ethics checker flags its absence.)
 
 ### 72.3 Scientific discipline
 
