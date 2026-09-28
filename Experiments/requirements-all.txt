@@ -1,0 +1,29 @@
+# Everything needed to run and verify Crypto Trading Lab on a machine that
+# does not use Debian packages (Windows, macOS) or in an isolated virtualenv.
+#
+# Install from the repository root, inside the activated virtualenv:
+#
+#     python -m pip install -r Experiments/requirements-all.txt
+#     python -m pip install -e .
+#
+# The second command installs this project itself (and its four runtime
+# dependencies, which are repeated here so a single file is enough).
+
+# --- Runtime ---------------------------------------------------------------
+PyQt6>=6.6
+pyqtgraph>=0.13
+SQLAlchemy>=2.0
+platformdirs>=4.0
+
+# --- Test suite ------------------------------------------------------------
+pytest>=8.0
+pytest-qt>=4.4
+hypothesis>=6.130
+typeguard>=4.4
+
+# --- Optional extras used by the verification kit --------------------------
+ccxt>=4.0
+pypdf>=4.0
+keyring>=24.0
+aiohttp>=3.9
+websockets>=12.0

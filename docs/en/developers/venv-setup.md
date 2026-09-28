@@ -8,12 +8,19 @@ Debian system package, and that is the supported configuration (see
 You need a virtualenv when:
 
 - you want a **PyPI-only** package that has no Debian equivalent — today that
-  is `ccxt` (the read-only CCXT adapter) and `pypdf` for PDF reports;
+  is `ccxt` (the read-only CCXT adapter), `pypdf` for PDF reports and
+  `keyring` for credential storage;
 - you want a throwaway environment to try something without touching the
   system Python;
-- you are on a machine where you cannot install Debian packages.
+- you are on **Windows or macOS**, where there are no Debian packages at all.
 
 You do **not** need one to run the application or the test suite on Debian.
+
+The [README](../../../README.md#install-with-pip--linux-macos-and-windows)
+carries the short per-platform tutorials (Linux, macOS, Windows), including
+the PowerShell execution-policy error and its safe fix. This document is the
+long form: the full dependency tables, both venv routes, troubleshooting,
+and the measured `ccxt` evaluation.
 
 > **Dependency stop rule (`AGENTS.md` rule 2).** The maintainer — not the AI
 > agent — creates the virtualenv and runs every `apt`/`pip` command below.
@@ -21,6 +28,18 @@ You do **not** need one to run the application or the test suite on Debian.
 > into one.
 
 `.venv/` is already in [`.gitignore`](../../../.gitignore); never commit it.
+
+> **Verified today:** Debian 13 (system packages) — 698 passed, 2 skipped.
+> Windows and macOS are **not verified**: the commands follow from those
+> platforms but no such machine has run them. The manual
+> [`cross-platform` workflow](../../../.github/workflows/cross-platform.yml)
+> exists to measure exactly that.
+
+For a machine with no Debian packages at all, [`Experiments/`](../../../Experiments/README.md)
+is a self-contained kit: `requirements-all.txt` (every dependency, including
+`ccxt`), a one-click `setup_windows.bat`, a `verify.py` that runs the checks
+and writes a report, a filled-in-able `CHECKLIST.md`, and a 400-candle sample
+dataset so the whole pipeline can be exercised offline.
 
 ---
 
@@ -48,6 +67,7 @@ Optional extras:
 
 | What it is for | Debian package | PyPI name |
 |---|---|---|
+| Credential storage in the system keyring (chapter 9) | `python3-keyring` | `keyring` |
 | PDF report export (chapter 41) | `python3-pypdf` | `pypdf` |
 | Read-only CCXT adapter (multi-exchange) | **none — PyPI only** | `ccxt` |
 | Live WebSocket feed (chapter 27) | **none — PyPI only** | `aiohttp`, `websockets` |
@@ -55,6 +75,11 @@ Optional extras:
 
 `numpy` is not installed directly: it arrives with `pyqtgraph` (or with the
 Debian `python3-pyqtgraph` package).
+
+The four runtime packages are declared in `[project.dependencies]`, so a
+plain `pip install .` works on any platform — which is what Windows and
+macOS need. On Debian the system packages satisfy those specifiers, so pip
+inside a `--system-site-packages` venv installs no PyPI copies of them.
 
 The same lists live in `pyproject.toml` as the `venv`, `dev`, `pdf`, `ccxt`,
 `aiohttp` and `websockets` optional-dependency groups, so a virtualenv can be
@@ -111,10 +136,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 
-# Installs the project in editable mode plus every group declared in
-# pyproject.toml: PyQt6, pyqtgraph, SQLAlchemy, platformdirs, the test
-# tools, ccxt and pypdf.
-python -m pip install -e ".[venv,dev,ccxt,pdf]"
+# Installs the package in editable mode (PyQt6, pyqtgraph, SQLAlchemy and
+# platformdirs come from [project.dependencies]) plus the test tools, ccxt,
+# pypdf and keyring.
+python -m pip install -e ".[dev,ccxt,pdf,credentials]"
 ```
 
 The editable install adds the `crypto-trading-lab` command and makes

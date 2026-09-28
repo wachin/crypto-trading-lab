@@ -58,3 +58,8 @@ Book/
 
 # Personal working documents (private notes, analyses)
 8vo/
+
+# ---------------------------------------------------------------------------
+# Verification kit output — regenerated on every machine, never committed
+# ---------------------------------------------------------------------------
+Experiments/verify-report.md

@@ -30,10 +30,18 @@ classifiers = [
     "Topic :: Education",
     "Topic :: Office/Business :: Financial :: Investment",
 ]
-# Runtime dependencies are Debian system packages, deliberately not PyPI
-# requirements: python3-pyqt6, python3-pyqtgraph, python3-sqlalchemy and
-# python3-platformdirs. See docs/en/developers/debian-dependencies.md.
-dependencies = []
+# Declared so that a plain `pip install .` works on any platform, which is
+# what Windows and macOS need. On Debian the supported path is still the
+# system packages (python3-pyqt6, python3-pyqtgraph, python3-sqlalchemy,
+# python3-platformdirs): inside a `--system-site-packages` venv pip sees
+# those distributions and does not fetch PyPI copies.
+# See docs/en/developers/venv-setup.md.
+dependencies = [
+    "PyQt6>=6.6",
+    "pyqtgraph>=0.13",
+    "SQLAlchemy>=2.0",
+    "platformdirs>=4.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/wachin/crypto-trading-lab"
@@ -42,16 +50,10 @@ Issues = "https://github.com/wachin/crypto-trading-lab/issues"
 Changelog = "https://github.com/wachin/crypto-trading-lab/blob/main/AGENT-HANDOFF.md"
 
 [project.optional-dependencies]
-# Runtime dependencies for contributors who knowingly choose a virtualenv
-# instead of the Debian system packages. The supported default stays
-# Debian-first, so `dependencies` above stays empty on purpose; see
-# docs/en/developers/venv-setup.md.
-venv = [
-    "PyQt6>=6.6",
-    "pyqtgraph>=0.13",
-    "SQLAlchemy>=2.0",
-    "platformdirs>=4.0",
-]
+# Credential storage (chapter 9). Imported lazily: without it the application
+# runs and the in-memory store is used, and KeyringCredentialStore raises a
+# message naming this extra.
+credentials = ["keyring>=24.0"]
 # PDF report export (chapter 41) is PyPI-only here.
 pdf = ["pypdf>=4.0"]
 # CCXT integration is optional until the chapter 4 packaging evaluation

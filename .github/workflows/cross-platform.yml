@@ -1,0 +1,85 @@
+# Manual, cross-platform verification.
+#
+# The default CI (tests.yml) runs the supported Debian/Ubuntu stack. This
+# workflow exists to turn the README's "should work on macOS and Windows"
+# into a measurement: it installs the project with pip into a virtualenv and
+# runs the full suite on all three systems.
+#
+# It is `workflow_dispatch` on purpose: it never runs on push or pull
+# request, so it cannot make the default CI red while the tutorial is still
+# being proven by hand. Run it from the Actions tab:
+#
+#     Actions -> cross-platform -> Run workflow
+#
+# Expect the first run to fail on a platform-specific assumption; that
+# failure is the finding, and the fix belongs in the code or the tutorial.
+
+name: cross-platform
+
+on:
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: Python version to test
+        required: false
+        default: "3.13"
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    name: pytest on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      # A failure on one platform must not hide the others.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The external/ reference projects are not needed to test.
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install the Qt runtime libraries (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libegl1 libxkbcommon-x11-0 libdbus-1-3 libxcb-cursor0
+
+      # bash on every runner (Git Bash is present on the Windows images) so
+      # the tutorial's venv steps are exercised identically everywhere.
+      - name: Create the virtualenv and install with pip
+        shell: bash
+        run: |
+          python -m venv .venv
+          if [ -x .venv/bin/python ]; then
+            echo "VENV_PY=$PWD/.venv/bin/python" >> "$GITHUB_ENV"
+          else
+            echo "VENV_PY=$PWD/.venv/Scripts/python.exe" >> "$GITHUB_ENV"
+          fi
+          "$VENV_PY" -m pip install --upgrade pip
+          "$VENV_PY" -m pip install -e ".[dev]"
+          "$VENV_PY" -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
+
+      - name: Show versions
+        shell: bash
+        run: |
+          "$VENV_PY" --version
+          "$VENV_PY" -c "import platform; print(platform.platform())"
+
+      - name: Run the test suite
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          "$VENV_PY" -m pytest tests/ -q

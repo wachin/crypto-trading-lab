@@ -74,9 +74,8 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   every dependency under its Debian **and** PyPI name, both venv routes
   (`--system-site-packages` over the Debian Qt stack, or fully isolated),
   run/test commands, troubleshooting, and how to decide whether `ccxt` is
-  worth adopting. `pyproject.toml` gained the `venv` and `pdf` dependency
-  groups so `pip install -e ".[venv,dev,ccxt,pdf]"` fills a clean venv in
-  one command, and `tools/evaluate_ccxt.py` is a read-only script that
+  worth adopting. `pyproject.toml` gained the `pdf` extra, and
+  `tools/evaluate_ccxt.py` is a read-only script that
   reports ccxt's coverage and whether the project's adapter accepts a real
   client. Section 7 of that guide records the **measured** evaluation: ccxt
   4.5.84, 104 exchanges, Binance and Coinbase both exposing the required
@@ -84,6 +83,25 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   **both** exchanges over the network, and the suite passing inside the venv
   (698 passed, 2 skipped). Verdict: ccxt is worth adopting for chapter 26.3
   because it is the only path to a second exchange.
+- Cross-platform pip installation: the four runtime packages are now
+  declared in `[project.dependencies]`, so a plain `pip install .` works on
+  Linux, macOS and Windows instead of installing nothing; `keyring` moved to
+  a `credentials` extra. The README gained per-platform tutorials (Linux,
+  macOS, Windows) covering the PowerShell execution-policy error and its
+  safe per-session fix, and clearly marking Windows/macOS as **not yet
+  verified**. `.github/workflows/cross-platform.yml` runs the suite on
+  Ubuntu, macOS and Windows — `workflow_dispatch` only, so it can never
+  redden the default CI.
+- `Experiments/`: a self-contained verification kit for machines without
+  Debian packages. `requirements-all.txt` lists every dependency (including
+  `ccxt`), `setup_windows.bat` and `run_verify.cmd` do the setup in `cmd.exe`
+  so PowerShell's execution policy is never involved, `verify.py` runs twelve
+  checks (imports, CSV import, backtest, paper trading, the offscreen Qt
+  window, the ccxt adapter) with optional `--tests`, `--gui` and `--network`
+  stages and writes `verify-report.md`, and `CHECKLIST.md` is a tick-box
+  manual to fill in and return. A 400-candle sample dataset lets the whole
+  pipeline be exercised with no network. The generated report is
+  git-ignored.
 
 ### Fixed
 
