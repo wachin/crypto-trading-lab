@@ -10,26 +10,37 @@ A new AI Agent must read this file **before** doing anything else, then
 
 ---
 
-## 1. Project state (last updated 2026-09-27)
+## 1. Project state (last updated 2026-10-01)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 702 passed, 2 skipped —
+- **Tests:** 702 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
+  (The exit code matters: the suite used to segfault while the interpreter
+  shut down, so it printed "passed" and still failed the build. See §5.)
+- **Verified platforms:** Debian 13 (system packages, Python 3.13.5) and
+  **Windows 10** (pip/PyPI, Python 3.14.7, 2026-10-01 — clean install, the
+  window opens, identical numbers, `ccxt` reaches the network). **macOS is
+  not verified.**
 - **Source:** 115 Python files under `src/crypto_trading_lab/`
 - **Tests:** 64 test modules under `tests/`
 - **Documentation:** `docs/en/beginners/` and
-  `docs/en/developers/`
+  `docs/en/developers/` (virtualenv guide in `venv-setup.md`, audit in
+  `unwired-modules-audit.md`)
+- **Verification kit:** `Experiments/` runs twelve checks on a fresh machine
+  and writes a report; `setup_windows.bat` is one-click.
 - **Specification:** `ROADMAP.md` — 80 chapters in 16 parts
 - **Git submodules:** 8 *optional* reference projects under `external/`;
   the application builds and tests without them. Clone them with
   `git submodule update --init --recursive` only when the task is about
   those references.
-- **Current phase:** the scientific engine is mature. Work is focused on
-  the live-data path (Binance WebSocket, chapters 26.2/27), testnet order
-  placement (chapter 68) and packaging (chapters 15/16/18). Real trading
-  remains disabled by default.
+- **Current phase:** the scientific engine is mature. The 2026-09/10 review
+  fixed the documentation-vs-code drift and cleared 15 of the 16 unwired
+  modules found in the audit; the only one left is `strategy_registry`.
+  The frontier after that is the live-data path (Binance WebSocket,
+  chapters 26.2/27), testnet order placement (chapter 68) and packaging
+  (chapters 15/16/18). **Real trading remains disabled by default.**
 
 ### What changed on 2026-09-19 (direction correction + Fase A/B)
 
@@ -253,91 +264,66 @@ These rules are canonical. Every Agent working here inherits them:
    keep it platform-neutral by construction, but Debian is the only
    officially supported target for now.
 
-## 5. Immediate next steps (where development left off)
+## 5. Where the project stands, and how to pick up work
 
-Per `ROADMAP.md` and the last iteration report:
+### 5.1 The 2026-09/10 review (what changed, and why)
 
-**Completed chapters** (implementation + tests + docs):
+A repository review fixed one systematic problem: the documentation claimed
+features the code did not ship. Concretely:
 
-1.  ~~Performance metrics (Chapter 40)~~ — complete
-2.  ~~Backtesting Lab UI~~ — done on 2026-09-14 (§37.9–37.10;
-    `ui/backtesting/lab.py`, main-window button enabled, strategy/dataset
-    reproducibility records added to the engine, Spanish translations
-    compiled).
-3.  ~~Reports (chapter 41)~~ — backtest reports done on 2026-09-09-14
-    (`reporting/report.py`, HTML/CSV/JSON/PDF export from the Backtesting Lab,
-    evidence-level labels and disclaimers). Still open by
-    design: research/qualification reports (need the chapter 52 experiment manager).
-4.  ~~Benchmarking (chapter 42)~~ — core done on 2026-09-14:
-    `compare_reports()` (relative return/volatility/drawdown/Sharpe/
-    Sortino differences, gross vs net excess, cost drag), benchmark
-    selector in the Backtesting Lab (buy-and-hold default, null, none)
-    with an identical-strategy warning, and the plain-language verdict.
-    Still open: graphical equity/drawdown comparison
-    views, and feeding qualification (ch. 66).
-5.  ~~Statistical edge (Chapter 43)~~ — complete
-6.  ~~Robustness (Chapter 44)~~ — complete (consolidated report)
-7.  ~~Regime analysis (Chapter 46)~~ — complete
-8.  ~~Feature engineering (Chapter 47)~~ — complete
-9.  ~~AFML techniques (Chapter 49)~~ — partial (triple-barrier labeling, purged CV, sample uniqueness)
-10. ~~Ensembles (Chapter 50)~~ — complete
-11. ~~Portfolio (Chapter 51)~~ — partial (correlation, portfolio returns, portfolio metrics)
-12. ~~Experiment manager (Chapter 52)~~ — complete
-13. ~~Paper trading (Chapter 57)~~ — partial (account simulation, order simulation)
-14. ~~Risk manager (Chapter 58)~~ — complete
-15. ~~Kill switch (Chapter 59)~~ — complete
-16. ~~Risk of ruin (Chapter 60)~~ — complete
-17. ~~Capital protection (Chapter 61)~~ — documented
-18. ~~Live monitoring (Chapter 62)~~ — documented
-19. ~~Live vs backtest drift (Chapter 63)~~ — documented
-20. ~~Strategy failure detection (Chapter 64)~~ — complete
-21. ~~Strategy qualification (Chapter 66)~~ — complete
-22. ~~Safety gates (Chapter 67)~~ — complete
-23. ~~Working method (Chapter 70)~~ — documented
-24. ~~Configuration (Chapter 71)~~ — documented
-25. ~~Research ethics (Chapter 72)~~ — documented
-26. ~~Strategy promotion pipeline (Chapter 65)~~ — documented
-27. ~~Architecture proposal (Chapter 71)~~ — documented
-28. ~~Threat model (Chapter 71)~~ — documented
-29. ~~Live vs backtest drift (Chapter 63)~~ — documented
-30. ~~ADRs 0002-0007~~ — documented
+- **15 unwired modules were audited one by one.** The decisions and their
+  evidence are in `docs/en/developers/unwired-modules-audit.md`: nine were
+  deleted (dead, duplicated or non-functional), five were merged or wired,
+  and **one remains — `strategy_registry.py`**.
+- **The documented test baseline was wrong in twelve places** and had
+  drifted between 229 and 698. It is `702 passed, 2 skipped`, and the suite
+  **exits 0**.
+- **The suite used to segfault while the interpreter shut down** (chapter 68
+  imported Qt and re-initialised a `QObject`), so `make test` and CI failed
+  while printing "passed". Fixed, with a regression test that forbids Qt in
+  that module.
+- **Chapter 56 execution realism is wired into paper trading**; chapter 63
+  drift is shown in the Paper Trading screen; chapter 53 reproducibility now
+  records the environment and the code hash; chapter 72 ethics guards report
+  generation and the PDF export works; chapter 60 gained Kelly position
+  sizing.
+- **The CI was red for a real reason**: `ubuntu-24.04` ships SQLAlchemy 1.4
+  and the code needs 2.0. `tests.yml` now installs with pip, and the manual
+  `cross-platform` workflow runs Ubuntu, macOS and Windows.
+- **Windows 10 is verified** (`Experiments/`); macOS is not.
 
-**Done on 2026-09-19 (round 1)**: Learning Center levels 1–3 with a
-working quiz and persisted progress (ch. 80); executable rule strategies
-from the builder into the engine (ch. 77); paper trading over a replayed
-dataset with a mandatory risk gate and a trading journal (ch. 79); the
-Spanish `.ts`/`.qm` regenerated.
+### 5.2 The backlog, in the order that makes sense
 
-**Next tasks** (2026-09-19 update; see `ROADMAP.md` Part XVI for the
-canonical requirements):
+1. **`strategy_registry.py`** — the last unwired module (audit item 16):
+   wire its `list_strategies`/`search` into the Backtesting Lab combo, which
+   today hard-codes its strategies, or delete it.
+2. **Chapter 56.5** — feed the execution model into the **backtest engine**
+   and robustness, not only paper trading.
+3. **Chapter 63.2** — drift over time, likely causes, and marking a strategy
+   as degraded.
+4. **Chapters 26.2/27** — a continuous Binance WebSocket feed (paper trading
+   still replays a dataset). `ccxt` is verified to reach **Binance and
+   Coinbase**; chapter 26.3's native Coinbase adapter was deleted as dead.
+5. **Chapters 15/16/18** — packaging. The Debian packaging is stale:
+   `debian/rules` calls `setup.py install` and `debian/control` does not list
+   pyqtgraph or platformdirs.
+6. **Chapter 48** — machine learning is deliberately unbuilt; it needs a
+   dependency decision first (chapter 4) before any code.
+7. **Translations** — the Spanish `.ts` still has untranslated strings that
+   fall back to English.
 
-1. Binance WebSocket / reconnection / rate limiting / stale-data
-   detection — chapters 26.2, 27 (plan:
-   `docs/en/developers/live-trading-roadmap.md`).
-2. Parameter sweep launched from the Strategy Builder itself
-   (ch. 77), and realistic execution from chapter 56 in the paper
-   pipeline (ch. 79).
-3. Lesson-to-screen links, quizzes UI polish, screenshots (ch. 80).
-4. Translate the 191 new `.ts` strings into Spanish (they currently
-   fall back to English).
-5. Spot testnet (ch. 68) — and only then consider real money.
+Anything in `ROADMAP.md` marked `[ ]` or `[~]` is fair game. The roadmap is
+the specification; this list is only the recommended order.
 
-**Older tasks** (per ROADMAP order):
+### 5.3 How to work here
 
-- Chapter 68 (Real trading) — requires explicit activation flow, API credential handling, strategy restrictions, testing restrictions, monitoring, failure handling, beginner protection
-- Chapter 69 (Development phases) — check remaining items like Debian package
-- Glossary remaining terms (drawdown, liquidity, latency, fill, backtesting bias)
-- Spanish translations
-- AppImage packaging
-- Performance optimization
-- Accessibility improvements
-- Learning Center quizzes and screenshots
-
-Note: §37.8 determinism checkboxes are still open; much of it is already
-engine-tested, reconciling them is a cheap documentation task.
-
-Do not start a task before reading the chapter that owns it, and do not tick
-a requirement until it is implemented **and tested**.
+- Read the chapter that owns the task before writing code.
+- Run `make test` (or `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`)
+  and check the **exit code**, not only the printed count.
+- One requirement per change; tick a ROADMAP box only when it is implemented
+  **and** tested; update the documentation in the same change.
+- Never install a dependency: stop and report it (see `AGENTS.md` rule 2).
+- Real trading stays disabled. That rule has no exceptions.
 
 ## 6. Quick-start for the new Agent
 

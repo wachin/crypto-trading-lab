@@ -115,6 +115,16 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   remains unverified.
 
 ### Fixed
+- **The CI had never been able to pass.** `tests.yml` ran on
+  `ubuntu-24.04`, whose `python3-sqlalchemy` is **1.4**, while the code
+  needs 2.0 (`DeclarativeBase`): every build died with an `ImportError`
+  during collection. The workflow now installs with pip in a venv, the
+  path the README documents, and `cross-platform.yml` additionally runs
+  Ubuntu, macOS and Windows manually.
+- The manual `cross-platform` workflow itself failed on all three
+  systems on its first run because it wrote `VENV_PY` to `$GITHUB_ENV`
+  and then used `$VENV_PY` **in the same step** (GITHUB_ENV only applies
+  to later steps), so the command expanded to nothing and exited 127.
 
 - **The test suite segfaulted when the interpreter exited.** Every test
   passed (`698 passed, 2 skipped`) and then the process died with SIGSEGV,

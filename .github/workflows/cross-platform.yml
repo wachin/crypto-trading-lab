@@ -63,10 +63,14 @@ jobs:
         run: |
           python -m venv .venv
           if [ -x .venv/bin/python ]; then
-            echo "VENV_PY=$PWD/.venv/bin/python" >> "$GITHUB_ENV"
+            VENV_PY="$PWD/.venv/bin/python"
           else
-            echo "VENV_PY=$PWD/.venv/Scripts/python.exe" >> "$GITHUB_ENV"
+            VENV_PY="$PWD/.venv/Scripts/python.exe"
           fi
+          # A shell variable for this step, and GITHUB_ENV for the next ones:
+          # writing to GITHUB_ENV does NOT define the variable in the current
+          # step, which is what made this step fail with exit code 127.
+          echo "VENV_PY=$VENV_PY" >> "$GITHUB_ENV"
           "$VENV_PY" -m pip install --upgrade pip
           "$VENV_PY" -m pip install -e ".[dev]"
           "$VENV_PY" -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"

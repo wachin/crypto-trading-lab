@@ -83,8 +83,9 @@ cryptocurrency research laboratory. Follow these rules exactly.
    say so explicitly instead of guessing.
 3. Make small changes. After every change run:
        QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-    and keep the suite green (baseline: 702 passed, 2 skipped). If the
-    count changes, report it.
+    and check the command's EXIT CODE is 0, not only the printed count
+    (baseline: 702 passed, 2 skipped). If either changes, report it: a
+    suite that prints "passed" and exits non-zero is a bug, not a detail.
 4. Do NOT install dependencies. If one is genuinely needed, STOP and
    report: package name, source (Debian or PyPI), reason, and the exact
    command the human must run. Never run apt or pip yourself.
@@ -118,16 +119,26 @@ cryptocurrency research laboratory. Follow these rules exactly.
   translated documentation.
 - **Honest bug reports** — a failing command plus its real output is worth
   more than a paragraph of description.
+- **Pick up a known gap** —
+  [`docs/en/developers/unwired-modules-audit.md`](docs/en/developers/unwired-modules-audit.md)
+  records every module that was found unwired, with a decision and its
+  evidence; `strategy_registry.py` is the only one left.
+- **Verify another platform** — [`Experiments/`](Experiments/README.md) is a
+  self-contained kit (dependencies, sample data, twelve checks, a tick-box
+  manual). Windows 10 is done; **macOS is not**.
 
 ### Good first contributions
 
 | Task | Where |
 |---|---|
+| Wire (or delete) the last unwired module: the strategy registry | `strategy_registry.py`, chapters 36/77 |
+| Verify the application and the suite on **macOS** | `Experiments/`, manual `cross-platform` workflow |
+| Feed the chapter-56 execution model into the backtest engine too | `backtesting/engine.py`, chapter 56.5 |
+| Finish the Debian packaging (stale `debian/rules`, missing dependencies) | `debian/`, chapter 16 |
 | Add the missing glossary terms (asset, blockchain, wallet, spread, liquidity, out-of-sample, walk-forward, robustness…) | `docs/en/beginners/glossary.md`, chapter 24 |
 | Translate the new UI strings into Spanish | `.ts` via Qt Linguist |
 | Lesson → screen links in the Learning Center | `ui/education/`, chapter 80 |
 | Parameter sweep launched from the Strategy Builder | `ui/strategy_builder.py`, chapter 77 |
-| Feed the chapter-56 execution model into the backtest engine too | `backtesting/engine.py`, chapter 56.5 |
 | Beginner chart tutorials | `docs/en/beginners/`, chapter 19.2 |
 
 ### The rules that keep this repository honest
@@ -667,7 +678,7 @@ profit.
 | `SECURITY.md` | Security posture and private vulnerability reporting |
 | `GENESIS.md` | The original first-session instruction |
 | `docs/en/beginners/` | Plain-language guides (start here, glossary, indicators, metrics, paper trading) |
-| `docs/en/developers/` | ADRs, AFML technique specifications, threat model, live-trading roadmap |
+| `docs/en/developers/` | Indexed developer docs — ADRs, AFML specifications, threat model, live-trading roadmap ([start here](docs/en/developers/README.md)) |
 | `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, research, reporting, i18n, UI |
 | `tests/` | 64 test modules — engine arithmetic is hand-verified |
 | `tools/` | Asset generators (the contributor banner GIF) and the ccxt evaluation script |
@@ -684,7 +695,12 @@ profit.
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
 # → 702 passed, 2 skipped
+# → and it must exit 0
 ```
+
+Do not read only the count: check the **exit code**. The suite once printed
+`698 passed` and then died with a segmentation fault while the interpreter
+shut down, so `make test` and CI failed while looking green.
 
 The two skipped tests are in `tests/exchanges/contract.py:145` — they
 verify the CCXT adapter contract when real trading is enabled. They are

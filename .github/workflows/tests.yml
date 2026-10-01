@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   pytest:
-    name: pytest (offscreen, Debian packages)
+    name: pytest (offscreen, pip install)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -21,20 +21,36 @@ jobs:
           # The external/ reference projects are not needed to test.
           submodules: false
 
-      - name: Install system packages
+      # The Qt runtime libraries the offscreen platform plugin needs.
+      - name: Install the Qt runtime libraries
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            python3 python3-pyqt6 python3-pyqtgraph python3-sqlalchemy \
-            python3-platformdirs python3-pytest qt6-l10n-tools \
-            libgl1 libegl1 libxkbcommon-x11-0 libdbus-1-3
+            python3 python3-venv \
+            libgl1 libegl1 libxkbcommon-x11-0 libdbus-1-3 libxcb-cursor0
+
+      # Why pip and not the Debian packages here: ubuntu-24.04 ships
+      # SQLAlchemy 1.4, and this project needs 2.0 (`DeclarativeBase`), so the
+      # apt route can never pass on this runner — it was failing every build
+      # with "cannot import name 'DeclarativeBase'". The supported Debian 13
+      # configuration is verified with `make test` on Debian itself (and
+      # documented in AGENTS.md); this job verifies the pip path that the
+      # README documents for macOS, Windows and isolated environments.
+      # `.github/workflows/cross-platform.yml` runs the same path on all
+      # three operating systems, manually.
+      - name: Create the virtualenv and install with pip
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -e ".[dev]"
 
       - name: Show versions
         run: |
-          python3 --version
-          python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
+          .venv/bin/python --version
+          .venv/bin/python -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
+          .venv/bin/python -c "import sqlalchemy; print('SQLAlchemy', sqlalchemy.__version__)"
 
       - name: Run the test suite
         env:
           QT_QPA_PLATFORM: offscreen
-        run: python3 -m pytest tests/ -q
+        run: .venv/bin/python -m pytest tests/ -q
