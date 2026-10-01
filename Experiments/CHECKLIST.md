@@ -37,7 +37,7 @@ with `Experiments/verify-report.md`.
 Paste the suite's last line here:
 
 ```text
-(example: 698 passed, 2 skipped in 50.12s)
+(example: 702 passed, 2 skipped in 50.12s)
 ```
 
 Paste the `verify.py` summary here:

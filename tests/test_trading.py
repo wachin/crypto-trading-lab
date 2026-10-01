@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
 
 from crypto_trading_lab.trading import (
+    RealTradingConfig,
     RealTradingManager,
     RealTradingState,
     TradingMode,
@@ -318,3 +322,79 @@ def test_activation_requirements_tracking():
     assert summary["requirements_met"]["risk_warning"] is True
     assert summary["requirements_met"]["written_confirmation"] is False  # Not set yet
     assert summary["requirements_met"]["api_key_no_withdrawal"] is False  # Not set yet
+
+# -- regressions (chapter 6.1 separation and the 2026-10-01 SIGSEGV) ---------
+
+
+def test_the_module_does_not_import_qt():
+    """Chapter 68 is safety logic, not UI: importing it must not need Qt.
+
+    Regression: ``trading.py`` imported ``PyQt6.QtCore`` and re-initialised a
+    ``QObject`` in ``deactivate()``. That is undefined behaviour with sip and
+    made the *interpreter* die with SIGSEGV at exit — on Linux and on Windows
+    — so the whole suite reported failure even though every test passed.
+    """
+    code = (
+        "import sys; import crypto_trading_lab.trading; "
+        "qt = [m for m in sys.modules if m.startswith('PyQt6')]; "
+        "assert not qt, f'importing trading pulled in {qt}'; print('ok')"
+    )
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(
+        [os.path.join(os.path.dirname(__file__), "..", "src"), env.get("PYTHONPATH", "")]
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=60,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "ok" in proc.stdout
+
+
+def test_deactivate_resets_and_the_manager_can_be_reused():
+    manager = RealTradingManager()
+    manager.request_activation()
+    manager.activate_advanced_option()
+    manager.acknowledge_risk_warning()
+    manager.provide_written_confirmation()
+    assert manager.config.advanced_option_enabled is True
+
+    manager.deactivate()
+
+    assert manager.state == RealTradingState.DISABLED
+    assert manager.is_active() is False
+    # The configuration is fresh again, not a half-reset object.
+    assert manager.config == RealTradingConfig()
+    assert manager.activation_timestamp is None
+    # And the manager is still usable: activation can start over.
+    assert manager.request_activation() is True
+
+
+def test_observers_are_notified_with_state_and_message():
+    seen: list[tuple[RealTradingState, str]] = []
+    manager = RealTradingManager()
+    manager.add_observer(lambda state, message: seen.append((state, message)))
+
+    manager.request_activation()
+    manager.deactivate()
+
+    assert [state for state, _ in seen] == [
+        RealTradingState.PENDING_ACTIVATION,
+        RealTradingState.DISABLED,
+    ]
+    assert all(message for _, message in seen)
+
+
+def test_an_observer_can_be_removed():
+    calls = []
+    manager = RealTradingManager()
+    callback = lambda state, message: calls.append(state)  # noqa: E731
+    manager.add_observer(callback)
+    manager.remove_observer(callback)
+
+    manager.request_activation()
+
+    assert calls == []

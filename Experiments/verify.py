@@ -251,10 +251,32 @@ def run_test_suite() -> str:
         cwd=ROOT,
         timeout=1800,
     )
-    tail = [line for line in proc.stdout.strip().splitlines() if line.strip()]
-    summary = tail[-1] if tail else "(no output)"
-    status = "PASS" if proc.returncode == 0 else "FAIL"
-    record("full test suite", status, summary)
+    lines = [line for line in proc.stdout.strip().splitlines() if line.strip()]
+    summary = lines[-1] if lines else "(no output)"
+    stderr_tail = " | ".join(proc.stderr.strip().splitlines()[-8:])
+
+    if proc.returncode == 0:
+        record("full test suite", "PASS", summary)
+    elif not any(word in summary.lower() for word in ("failed", "error")):
+        # The suite said everything passed, yet the process exited non-zero.
+        # On Windows that is usually a crash while the interpreter shuts down
+        # (Qt objects outliving the application); pytest prints the "Windows
+        # fatal exception" traceback to stderr, which used to be discarded.
+        record(
+            "full test suite",
+            "FAIL",
+            (
+                f"the suite reported success but the process exited "
+                f"{proc.returncode} — likely a crash during interpreter "
+                f"shutdown; stderr tail: {stderr_tail[:500] or '(empty)'}"
+            ),
+        )
+    else:
+        record(
+            "full test suite",
+            "FAIL",
+            f"exit {proc.returncode}: {summary} | stderr: {stderr_tail[:400]}",
+        )
     return summary
 
 

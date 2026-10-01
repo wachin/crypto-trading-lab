@@ -102,9 +102,37 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   manual to fill in and return. A 400-candle sample dataset lets the whole
   pipeline be exercised with no network. The generated report is
   git-ignored.
+- **Windows 10 verified (2026-10-01).** The kit was taken to a real
+  Windows 10 machine (10.0.19045, AMD64) with Python **3.14.7** and
+  every package installed from PyPI: the virtualenv and `pip install`
+  worked, the PowerShell activation error appeared and the documented
+  `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` cleared
+  it, the application window opened, CSV import / backtest / paper
+  trading produced numbers *identical* to Debian, and `ccxt` reached
+  the network. The raw PowerShell transcript is kept in
+  `Experiments/20261001-resultado-de-la-instalacion-en-Windows-10.txt`.
+  The run also exposed the segmentation fault fixed below. macOS
+  remains unverified.
 
 ### Fixed
 
+- **The test suite segfaulted when the interpreter exited.** Every test
+  passed (`698 passed, 2 skipped`) and then the process died with SIGSEGV,
+  so the exit code was non-zero and `make test`/CI reported failure. Found by
+  the Windows 10 verification run and reproduced on Linux; the cause was
+  `trading.py`: chapter 68's safety logic imported `PyQt6.QtCore`, and
+  `RealTradingManager.deactivate()` called `self.__init__()` on a `QObject`,
+  which is undefined behaviour with sip. The suite now exits `0`
+  (702 passed, 2 skipped).
+- `trading.py` no longer depends on Qt at all: `RealTradingManager` is a
+  plain class, the UI subscribes through the existing `add_observer` API,
+  and a regression test asserts that importing the module pulls in no
+  `PyQt6`. That keeps chapter 68 safety logic importable headless, as
+  chapter 6.1 requires.
+- State changes now actually notify: `set_state()` was never called by the
+  activation, suspension or deactivation paths, so the main window's
+  "REAL TRADING" indicator could never update. Those paths call
+  `set_state()` now, and observers receive `(state, message)`.
 - `venv-setup.md` now explains the two messages a `pip install` prints
   inside a `--system-site-packages` venv: `Not uninstalling X … outside
   environment` (pip correctly refusing to modify the Debian packages) and

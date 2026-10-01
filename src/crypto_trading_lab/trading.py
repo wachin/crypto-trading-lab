@@ -8,8 +8,6 @@ configuration was imported.
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QObject, pyqtSignal
-
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -63,41 +61,50 @@ class RealTradingConfig:
     real_trading_indicator_visible: bool = False
 
 
-class RealTradingManager(QObject):
-    state_changed = pyqtSignal(object, str)  # state, message
+class RealTradingManager:
     """Manages real trading activation and safety (68).
-    
+
     Implements multiple independent safety protections as required by
     Chapter 68. Real trading remains disabled by default and requires
     explicit multi-step activation.
+
+    Deliberately **not** a Qt object: chapter 68 is safety logic, not UI, so
+    it must stay importable without Qt (chapter 6.1). Observers are plain
+    callables ``(state, message)``; the main window subscribes with
+    :meth:`add_observer`.
     """
+
     def __init__(self) -> None:
-        super().__init__()
         self.state: RealTradingState = RealTradingState.DISABLED
         self.config: RealTradingConfig = RealTradingConfig()
         self.activation_timestamp: Optional[datetime] = None
-        self._observers: list[Callable[[RealTradingState], None]] = []
-    
-    def add_observer(self, callback: Callable[[RealTradingState], None]) -> None:
+        self._observers: list[Callable[[RealTradingState, str], None]] = []
+
+    def add_observer(
+        self, callback: Callable[[RealTradingState, str], None]
+    ) -> None:
         """Register an observer to be notified of state changes."""
-        self._observers.append(callback)
-    
-    def remove_observer(self, callback: Callable[[RealTradingState], None]) -> None:
+        if callback not in self._observers:
+            self._observers.append(callback)
+
+    def remove_observer(
+        self, callback: Callable[[RealTradingState, str], None]
+    ) -> None:
         """Unregister an observer."""
         self._observers = [c for c in self._observers if c != callback]
-    
+
     def set_state(self, state: RealTradingState) -> None:
-        """Set the trading state and notify observers."""
+        """Set the trading state and notify the observers."""
         self.state = state
-        for callback in self._observers:
-            callback(self.state)
-        self.state_changed.emit(self.state, f"State changed to {state.value}")
+        message = f"State changed to {state.value}"
+        for callback in list(self._observers):
+            callback(self.state, message)
 
     def request_activation(self) -> bool:
         """User requests to activate real trading (68.1)."""
         if self.state != RealTradingState.DISABLED:
             return False
-        self.state = RealTradingState.PENDING_ACTIVATION
+        self.set_state(RealTradingState.PENDING_ACTIVATION)
         return True
     
     def activate_advanced_option(self) -> bool:
@@ -212,18 +219,17 @@ class RealTradingManager(QObject):
         )
         
         if all_requirements_met:
-            self.state = RealTradingState.ACTIVE
             self.config.real_trading_indicator_visible = True
             self.activation_timestamp = datetime.now(timezone.utc)
+            self.set_state(RealTradingState.ACTIVE)
             return True
-        else:
-            self.state = RealTradingState.FAILED
-            return False
+        self.set_state(RealTradingState.FAILED)
+        return False
     
     def suspend_trading(self) -> bool:
         """Suspend real trading due to safety condition (68.6)."""
         if self.state == RealTradingState.ACTIVE:
-            self.state = RealTradingState.SUSPENDED
+            self.set_state(RealTradingState.SUSPENDED)
             return True
         return False
     
@@ -231,15 +237,22 @@ class RealTradingManager(QObject):
         """Resume trading after suspension if conditions are met."""
         if self.state == RealTradingState.SUSPENDED:
             # In reality, would re-check all safety conditions
-            self.state = RealTradingState.ACTIVE
             self.config.real_trading_indicator_visible = True
+            self.set_state(RealTradingState.ACTIVE)
             return True
         return False
     
     def deactivate(self) -> None:
-        """Deactivate real trading and reset to disabled state."""
-        self.state = RealTradingState.DISABLED
-        self.__init__()  # Reset to initial state
+        """Deactivate real trading and reset to the initial state.
+
+        Regression: this used to call ``self.__init__()`` on a ``QObject``.
+        Re-initialising a Qt object with sip is undefined behaviour and made
+        the interpreter die with SIGSEGV when the process exited — the same
+        crash on Windows and on Linux.
+        """
+        self.config = RealTradingConfig()
+        self.activation_timestamp = None
+        self.set_state(RealTradingState.DISABLED)
     
     def is_active(self) -> bool:
         """Check if real trading is currently active."""

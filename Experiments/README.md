@@ -1,13 +1,40 @@
 # Experiments — verification kit
 
 This folder exists for one reason: the whole test suite is verified on
-**Debian 13 only** (`698 passed, 2 skipped`). Everything else — Windows,
-macOS, a different Linux, a plain `pip` install — is expected to work, but
-nobody has measured it yet. This kit turns that "should work" into a real
-result you can send back.
+**Debian 13** (`702 passed, 2 skipped`) and on **Windows 10** (see the result
+below). Everything else — macOS, a different Linux, another Python — is
+expected to work, but nobody has measured it yet. This kit turns that
+"should work" into a real result you can send back.
 
 It is safe: the application is research, backtesting and paper trading. It
 **never** trades real money, and it refuses to by default.
+
+## Result: Windows 10, 2026-10-01
+
+Measured, not assumed, on Windows 10 (10.0.19045, AMD64) with Python
+**3.14.7** and every package from PyPI:
+
+- the virtualenv and `pip install` worked;
+- the PowerShell activation error **did** appear, and
+  `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` fixed it;
+- **the application window opened and stayed open with no crash**;
+- CSV import, backtest and paper trading produced numbers *identical* to
+  Debian (return `44.3041 %`, 4 trades, equity `14430.412140744344810846567`,
+  paper `12055.252086818242739372290`);
+- `ccxt` 4.5.85 covered 104 exchanges and reached the network
+  (`BTC/USDT last=84266.19`);
+- the suite reported `698 passed, 2 skipped`.
+
+The raw PowerShell transcript is kept as
+[`20261001-resultado-de-la-instalacion-en-Windows-10.txt`](20261001-resultado-de-la-instalacion-en-Windows-10.txt).
+
+**And it found a real bug.** The same run appeared to *fail*: the suite said
+`698 passed` and then the process died with a segmentation fault, so the
+exit code was non-zero and `make test`/CI would have reported failure. The
+cause was chapter 68's safety module importing Qt and re-initialising a
+`QObject` inside `deactivate()`. Both are fixed, and a regression test now
+asserts that the module imports without Qt. A first run on a new platform
+earns its keep.
 
 ## What is in here
 
@@ -162,7 +189,7 @@ materially, that difference is the finding.
 | CSV importer | 400 rows, symbol `BTC/USDT`, interval `1h` |
 | Backtest (SMA 5×20) | total return ≈ **44.30 %**, **4 trades**, final equity ≈ **14430.41** |
 | Paper trading (same strategy) | final equity ≈ **12055.25**, **4 closed trades** |
-| Test suite | **698 passed, 2 skipped** |
+| Test suite | **702 passed, 2 skipped** |
 
 Qt may print harmless platform-plugin noise to the console (on Linux, the
 theme plugin; on Windows, usually nothing). Only a `Traceback` counts as an
@@ -185,11 +212,13 @@ it is what can actually be fixed.
 ## Honest limitations
 
 - This kit verifies; it cannot fix. The failures it finds are the useful part.
-- macOS and Windows are **not** yet verified by the maintainer — no such
-  machine has been available. That is precisely why this folder exists.
-- A preview of what could differ: `tools/make_banner_gif.py` (which only
-  regenerates the README banner, not the application) hardcodes Debian font
-  paths; `debian/` is Debian packaging and is irrelevant elsewhere;
+- Windows 10 is verified (2026-10-01, above). **macOS is not** — nobody has
+  run it. A preview of what could differ: `tools/make_banner_gif.py` (which
+  only regenerates the README banner, not the application) hardcodes Debian
+  font paths; `debian/` is Debian packaging and is irrelevant elsewhere;
   `keyring` is optional and the application says so if it is missing;
   `reproducibility` calls `git` and simply records no revision when git is
   not installed.
+- The `--tests` stage reports a failure if the process exits non-zero even
+  when pytest says everything passed. That is deliberate: on Windows 10 it
+  is exactly how the chapter-68 segmentation fault was found.

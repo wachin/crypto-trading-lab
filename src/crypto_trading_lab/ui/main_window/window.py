@@ -65,7 +65,9 @@ class MainWindow(QMainWindow):
         self._testnet_window = None
 
         self._trading_manager = RealTradingManager()
-        self._trading_manager.state_changed.connect(self._on_trading_state_changed)
+        # Plain observer, not a Qt signal: chapter 68 is safety logic and is
+        # deliberately Qt-free (see trading.py).
+        self._trading_manager.add_observer(self._on_trading_state_changed)
 
         self._build_menus()
         self._build_central()

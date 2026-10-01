@@ -11,7 +11,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Tests: 698 passed, 2 skipped](https://img.shields.io/badge/tests-698%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Tests: 702 passed, 2 skipped](https://img.shields.io/badge/tests-702%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
 [![CI](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml)
 [![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
 [![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
@@ -52,7 +52,7 @@ ideas, research results and show-and-tell →
 ```bash
 git clone https://github.com/wachin/crypto-trading-lab   # submodules optional, see below
 cd crypto-trading-lab
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q    # → 698 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q    # → 702 passed, 2 skipped
 PYTHONPATH=src python3 -m crypto_trading_lab             # launch the app
 ```
 
@@ -83,7 +83,7 @@ cryptocurrency research laboratory. Follow these rules exactly.
    say so explicitly instead of guessing.
 3. Make small changes. After every change run:
        QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-    and keep the suite green (baseline: 698 passed, 2 skipped). If the
+    and keep the suite green (baseline: 702 passed, 2 skipped). If the
     count changes, report it.
 4. Do NOT install dependencies. If one is genuinely needed, STOP and
    report: package name, source (Debian or PyPI), reason, and the exact
@@ -198,7 +198,7 @@ cd crypto-trading-lab
 # 3. Verify the environment, then the baseline
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 698 passed, 2 skipped
+# → 702 passed, 2 skipped
 
 # 4. Run it
 PYTHONPATH=src python3 -m crypto_trading_lab
@@ -234,7 +234,7 @@ Python package, which is what macOS and Windows need and what a Linux user
 may prefer for an isolated environment.
 
 > **What is verified.** Debian 13 with the system packages is the only stack
-> this repository actually runs: **698 passed, 2 skipped**. The macOS and
+> this repository actually runs: **702 passed, 2 skipped**. The macOS and
 > Windows commands below follow from those platforms (PyQt6, pyqtgraph,
 > SQLAlchemy and platformdirs all publish wheels for both) but have **not
 > been executed by the maintainer yet** — no macOS or Windows machine was
@@ -264,7 +264,7 @@ python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
-QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 698 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 702 passed, 2 skipped
 python -m crypto_trading_lab
 ```
 
@@ -343,26 +343,31 @@ directly (this is exactly what CI does):
 `cmd.exe` (`.venv\Scripts\activate.bat`) and Git Bash
 (`source .venv/Scripts/activate`) avoid the policy entirely too.
 
-### What is not verified
+### What is verified, and what is not
 
-- **Debian 13**: verified — `698 passed, 2 skipped`.
-- **macOS and Windows**: not run yet. What the first run should check:
-  - `tools/make_banner_gif.py` — it only regenerates the README banner, it
-    is not part of the application — hardcodes Debian font paths under
-    `/usr/share/fonts/`.
-  - `debian/` is Debian packaging; ignore it on other systems.
-  - `keyring` is optional: without it the application still runs, and
-    credential storage names the extra to install.
-  - `reproducibility.capture_environment()` calls `git` through
-    `subprocess`; with no git installed it records no revision instead of
-    failing.
-  - No POSIX-only path was found in `src/` by inspection, but only a real
-    run proves it.
+- **Debian 13** (Python 3.13.5, system packages): verified — `702 passed,
+  2 skipped`, and the process now exits `0`.
+- **Windows 10** (10.0.19045, AMD64, Python **3.14.7**, packages from PyPI):
+  **verified on 2026-10-01** — clean `pip` install, the window opens, the
+  CSV import / backtest / paper trading numbers are *identical* to Debian,
+  `ccxt` reaches the network, and the suite reports `698 passed, 2 skipped`.
+  The full PowerShell transcript is kept in
+  [`Experiments/20261001-resultado-de-la-instalacion-en-Windows-10.txt`](Experiments/20261001-resultado-de-la-instalacion-en-Windows-10.txt);
+  the run also exposed a real bug, now fixed — see below.
+- **macOS**: **not verified**. Not surprising if it works, not surprising if
+  it does not; nobody has run it.
+- **Windows note:** the activation error is real and the fix in the tutorial
+  (`Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`) is what the
+  Windows run used.
+- The first Windows run paid for itself: the suite said `698 passed` and
+  then the **process died with SIGSEGV**, so `make test` and CI would have
+  reported failure. The cause was `trading.py` (chapter 68 safety logic)
+  importing Qt and re-initialising a `QObject` inside `deactivate()`. Both
+  are fixed, and a test now asserts the module imports without Qt.
 - [`.github/workflows/cross-platform.yml`](.github/workflows/cross-platform.yml)
   is a **manual** workflow (`Actions → cross-platform → Run workflow`) that
-  runs the suite on Ubuntu, macOS and Windows, so the claim can become
-  measured instead of assumed. It never runs on push, so the default CI is
-  untouched.
+  runs the suite on Ubuntu, macOS and Windows. It never runs on push, so the
+  default CI is untouched.
 
 ---
 
@@ -678,7 +683,7 @@ profit.
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 698 passed, 2 skipped
+# → 702 passed, 2 skipped
 ```
 
 The two skipped tests are in `tests/exchanges/contract.py:145` — they
