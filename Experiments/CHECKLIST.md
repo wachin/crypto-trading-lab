@@ -6,24 +6,24 @@ with `Experiments/verify-report.md`.
 
 **Fill this in first**
 
-- Machine / owner: ______________________________
-- Operating system and version: ______________________________
-- Python version (`python --version`): ______________________________
+- Machine / owner: _______Dell Latitude_______________________
+- Operating system and version: __Windows 10____________________________
+- Python version (`python --version`): _3.14.7_____________________________
 - Repository commit (`git rev-parse --short HEAD`): ______________________
-- Date: ____________________
+- Date: ______20261001______________
 
 ---
 
 ## A. Preparation
 
-- [ ] Python 3.11 or newer is installed
-- [ ] The repository is on this machine (cloned or copied)
-- [ ] The virtualenv was created (`.venv`)
-- [ ] The virtualenv was activated
-- [ ] Dependencies installed: `python -m pip install -r Experiments/requirements-all.txt`
-- [ ] Project installed: `python -m pip install -e .`
-- [ ] `python -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs, ccxt; print('ok')"` printed `ok`
-- [ ] (Windows) The activation error appeared and was solved
+- [x ] Python 3.11 or newer is installed
+- [x ] The repository is on this machine (cloned or copied)
+- [x ] The virtualenv was created (`.venv`)
+- [x ] The virtualenv was activated
+- [x ] Dependencies installed: `python -m pip install -r Experiments/requirements-all.txt`
+- [x ] Project installed: `python -m pip install -e .`
+- [ x] `python -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs, ccxt; print('ok')"` printed `ok`
+- [x ] (Windows) The activation error appeared and was solved
       — how: [ ] `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
       — or: [ ] used `cmd.exe` / called `.venv\Scripts\python.exe` directly
 
