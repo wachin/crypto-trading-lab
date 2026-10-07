@@ -56,9 +56,11 @@ from crypto_trading_lab.rule_strategy import (
     RuleStrategySpec,
 )
 
-STRATEGY_SMA = "sma_crossover"
+from crypto_trading_lab.strategy_registry import StrategyRegistry
+
+STRATEGY_SMA = "ma_crossover"
 STRATEGY_BUY_HOLD = "buy_and_hold"
-STRATEGY_NULL = "null"
+STRATEGY_NULL = "null_strategy"
 STRATEGY_RULE = "custom_rule"
 
 
@@ -81,16 +83,11 @@ class BacktestingLabWidget(QWidget):
         layout = QVBoxLayout(self)
         form = QFormLayout()
 
+        self.registry = StrategyRegistry()
         self.strategy_combo = QComboBox()
-        self.strategy_combo.addItem(
-            self.tr("SMA crossover"), STRATEGY_SMA
-        )
-        self.strategy_combo.addItem(
-            self.tr("Buy and hold"), STRATEGY_BUY_HOLD
-        )
-        self.strategy_combo.addItem(
-            self.tr("Null (never trades)"), STRATEGY_NULL
-        )
+        for meta in self.registry.list_strategies():
+            self.strategy_combo.addItem(meta.name, meta.strategy_id)
+        self.strategy_combo.addItem(self.tr("Custom Rule"), STRATEGY_RULE)
         form.addRow(self.tr("Strategy:"), self.strategy_combo)
 
         parameters = QHBoxLayout()
@@ -175,19 +172,7 @@ class BacktestingLabWidget(QWidget):
             return message
 
         kind = self.strategy_combo.currentData()
-        if kind == STRATEGY_SMA:
-            fast, slow = self.fast_spin.value(), self.slow_spin.value()
-            if fast >= slow:
-                message = self.tr(
-                    "The fast SMA period must be smaller than the slow "
-                    "one (for example 10 and 30)."
-                )
-                self.results_view.setPlainText(message)
-                return message
-            strategy = MACrossoverStrategy(fast=fast, slow=slow)
-        elif kind == STRATEGY_BUY_HOLD:
-            strategy = BuyAndHoldStrategy()
-        elif kind == STRATEGY_RULE:
+        if kind == STRATEGY_RULE:
             if self._rule_spec is None:
                 message = self.tr(
                     "No custom rule loaded. Use “Load rule…” to open one "
@@ -197,7 +182,21 @@ class BacktestingLabWidget(QWidget):
                 return message
             strategy = RuleStrategy(self._rule_spec)
         else:
-            strategy = NullStrategy()
+            # Only pass parameters to SMA
+            if kind == STRATEGY_SMA:
+                fast, slow = self.fast_spin.value(), self.slow_spin.value()
+                if fast >= slow:
+                    message = self.tr(
+                        "The fast SMA period must be smaller than the slow "
+                        "one (for example 10 and 30)."
+                    )
+                    self.results_view.setPlainText(message)
+                    return message
+                strategy = self.registry.create_instance(kind, fast=fast, slow=slow)
+            else:
+                strategy = self.registry.create_instance(kind)
+
+
 
         config = BacktestConfig(initial_capital=capital)
         result = run_backtest(self._candles, strategy, config)

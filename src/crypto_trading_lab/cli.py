@@ -10,7 +10,18 @@ from crypto_trading_lab import __version__
 def doctor(args: Any) -> int:
     """Run system diagnostics."""
     print("Checking system configuration...")
-    # Add actual checks here later
+    
+    # Check if critical dependencies are importable
+    try:
+        import PyQt6
+        import pyqtgraph
+        import sqlalchemy
+        import platformdirs
+        print("PASS: Core dependencies (PyQt6, pyqtgraph, SQLAlchemy, platformdirs) are installed.")
+    except ImportError as e:
+        print(f"FAIL: Missing dependency: {e}")
+        return 1
+        
     print("All checks passed.")
     return 0
 
@@ -21,10 +32,15 @@ def database_check(args: Any) -> int:
     return 0
 
 
+from crypto_trading_lab.strategy_registry import StrategyRegistry
+
 def list_strategies(args: Any) -> int:
     """List available trading strategies."""
-    # Placeholder
-    print("Strategies: SMA crossover, Buy and hold, Null (never trades)")
+    registry = StrategyRegistry()
+    strategies = registry.list_strategies()
+    print("Available Strategies:")
+    for s in strategies:
+        print(f"- {s.name} (ID: {s.strategy_id}, Ver: {s.version})")
     return 0
 
 
