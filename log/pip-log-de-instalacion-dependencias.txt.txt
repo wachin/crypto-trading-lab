@@ -1,0 +1,125 @@
+PS D:\Dev\crypto-trading-lab> pip install -r requirements-all.txt
+Collecting PyQt6>=6.6 (from -r requirements-all.txt (line 13))
+  Using cached pyqt6-6.11.0-cp310-abi3-win_amd64.whl.metadata (2.2 kB)
+Collecting pyqtgraph>=0.13 (from -r requirements-all.txt (line 14))
+  Using cached pyqtgraph-0.14.0-py3-none-any.whl.metadata (1.5 kB)
+Collecting SQLAlchemy>=2.0 (from -r requirements-all.txt (line 15))
+  Downloading sqlalchemy-2.1.5-cp315-cp315-win_amd64.whl.metadata (9.9 kB)
+Collecting platformdirs>=4.0 (from -r requirements-all.txt (line 16))
+  Using cached platformdirs-4.13.3-py3-none-any.whl.metadata (5.5 kB)
+Collecting pytest>=8.0 (from -r requirements-all.txt (line 19))
+  Using cached pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting pytest-qt>=4.4 (from -r requirements-all.txt (line 20))
+  Using cached pytest_qt-4.5.0-py3-none-any.whl.metadata (7.9 kB)
+Collecting hypothesis>=6.130 (from -r requirements-all.txt (line 21))
+  Downloading hypothesis-6.170.1-cp315-abi3.abi3t-win_amd64.whl.metadata (5.6 kB)
+Collecting typeguard>=4.4 (from -r requirements-all.txt (line 22))
+  Downloading typeguard-4.6.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting ccxt>=4.0 (from -r requirements-all.txt (line 25))
+  Downloading ccxt-4.5.88-py3-none-any.whl.metadata (157 kB)
+Collecting pypdf>=4.0 (from -r requirements-all.txt (line 26))
+  Downloading pypdf-6.21.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting keyring>=24.0 (from -r requirements-all.txt (line 27))
+  Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+Collecting aiohttp>=3.9 (from -r requirements-all.txt (line 28))
+  Downloading aiohttp-3.14.5-cp315-cp315-win_amd64.whl.metadata (8.5 kB)
+Collecting websockets>=12.0 (from -r requirements-all.txt (line 29))
+  Downloading websockets-17.2-cp315-cp315-win_amd64.whl.metadata (6.5 kB)
+Collecting PyQt6-sip<14,>=13.8 (from PyQt6>=6.6->-r requirements-all.txt (line 13))
+  Using cached pyqt6_sip-13.13.0-cp315-cp315-win_amd64.whl.metadata (516 bytes)
+Collecting PyQt6-Qt6<6.12.0,>=6.11.0 (from PyQt6>=6.6->-r requirements-all.txt (line 13))
+  Using cached pyqt6_qt6-6.11.2-py3-none-win_amd64.whl.metadata (552 bytes)
+Collecting numpy>=1.25.0 (from pyqtgraph>=0.13->-r requirements-all.txt (line 14))
+  Using cached numpy-2.5.4-cp315-cp315-win_amd64.whl.metadata (6.6 kB)
+Collecting colorama (from pyqtgraph>=0.13->-r requirements-all.txt (line 14))
+  Using cached colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Collecting typing-extensions>=4.6.0 (from SQLAlchemy>=2.0->-r requirements-all.txt (line 15))
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting iniconfig>=1.0.1 (from pytest>=8.0->-r requirements-all.txt (line 19))
+  Using cached iniconfig-2.3.1-py3-none-any.whl.metadata (2.8 kB)
+Collecting packaging>=22 (from pytest>=8.0->-r requirements-all.txt (line 19))
+  Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pluggy<2,>=1.5 (from pytest>=8.0->-r requirements-all.txt (line 19))
+  Using cached pluggy-1.7.0-py3-none-any.whl.metadata (5.0 kB)
+Collecting pygments>=2.7.2 (from pytest>=8.0->-r requirements-all.txt (line 19))
+  Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting sortedcontainers<3.0.0,>=2.1.0 (from hypothesis>=6.130->-r requirements-all.txt (line 21))
+  Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+Collecting certifi>=2026.6.17 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting requests<3,>=2.32 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting cryptography<51,>=50 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading cryptography-50.0.2-cp315-abi3.abi3t-win_amd64.whl.metadata (4.4 kB)
+Collecting yarl<2,>=1.20 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading yarl-1.25.1-cp315-cp315-win_amd64.whl.metadata (115 kB)
+Collecting aiohttp-fast-zlib==0.3.0 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading aiohttp_fast_zlib-0.3.0-py3-none-any.whl.metadata (5.7 kB)
+Collecting zlib-ng==1.0.0 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading zlib_ng-1.0.0.tar.gz (5.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.8/5.8 MB 98.2 kB/s  0:00:47
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting aiohappyeyeballs==2.7.1 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal==1.4.0 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting attrs==26.1.0 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting frozenlist==1.8.0 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading frozenlist-1.8.0-py3-none-any.whl.metadata (20 kB)
+Collecting multidict==6.9.1 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading multidict-6.9.1-cp315-cp315-win_amd64.whl.metadata (5.4 kB)
+Collecting propcache==0.5.2 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading propcache-0.5.2-py3-none-any.whl.metadata (16 kB)
+Collecting cffi==2.0.0 (from ccxt>=4.0->-r requirements-all.txt (line 25))
+  Downloading cffi-2.0.0.tar.gz (523 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... error
+  error: subprocess-exited-with-error
+
+  × Getting requirements to build wheel did not run successfully.
+  │ exit code: 1
+  ╰─> [36 lines of output]
+      Traceback (most recent call last):
+        File "C:\Users\hi\AppData\Local\Programs\Python\Python315\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py", line 389, in <module>
+          main()
+          ~~~~^^
+        File "C:\Users\hi\AppData\Local\Programs\Python\Python315\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\hi\AppData\Local\Programs\Python\Python315\Lib\site-packages\pip\_vendor\pyproject_hooks\_in_process\_in_process.py", line 143, in get_requires_for_build_wheel
+          return hook(config_settings)
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\build_meta.py", line 333, in get_requires_for_build_wheel
+          return self._get_build_requires(config_settings, requirements=[])
+                 ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\build_meta.py", line 301, in _get_build_requires
+          self.run_setup()
+          ~~~~~~~~~~~~~~^^
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\build_meta.py", line 317, in run_setup
+          exec(code, locals())  # noqa: S102 # exec is intentional here
+          ~~~~^^^^^^^^^^^^^^^^
+        File "<string>", line 132, in <module>
+        File "<string>", line 111, in uses_msvc
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\_distutils\command\config.py", line 205, in try_compile
+          self._compile(body, headers, include_dirs, lang)
+          ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\_distutils\command\config.py", line 129, in _compile
+          self.compiler.compile([src], include_dirs=include_dirs)
+          ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\_distutils\compilers\C\msvc.py", line 444, in compile
+          self.initialize()
+          ~~~~~~~~~~~~~~~^^
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\_distutils\compilers\C\msvc.py", line 354, in initialize
+          vc_env = _get_vc_env(plat_spec)
+        File "C:\Users\hi\AppData\Local\Temp\pip-build-env-6oiw6wf0\overlay\Lib\site-packages\setuptools\_distutils\compilers\C\msvc.py", line 152, in _get_vc_env
+          raise PlatformError(
+          ...<3 lines>...
+          )
+      distutils.compilers.errors.PlatformError: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+      [end of output]
+
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+ERROR: Failed to build 'cffi' when getting requirements to build wheel
+PS D:\Dev\crypto-trading-lab>

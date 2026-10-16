@@ -392,13 +392,19 @@ python -m crypto_trading_lab
 
 ### Windows (PowerShell)
 
+You need python 3.12 only from: 
+
+[https://www.python.org/downloads/release/python-3120/](https://www.python.org/downloads/release/python-3120/)
+
+install and add to the PATH, then:
+
 ```powershell
-# Python 3.11+ from python.org (tick "Add python.exe to PATH") or the Store
 py -3 --version
 cd $HOME\Dev\crypto-trading-lab
 py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
+pip install -r requirements-all.txt
 python -m pip install -e ".[dev,ccxt,pdf,credentials]"
 $env:QT_QPA_PLATFORM = "offscreen"
 python -m pytest tests/ -q
@@ -442,11 +448,76 @@ directly (this is exactly what CI does):
 `cmd.exe` (`.venv\Scripts\activate.bat`) and Git Bash
 (`source .venv/Scripts/activate`) avoid the policy entirely too.
 
+
+#### Why Windows requires Python 3.12 specifically — not 3.13+, and never 3.15
+
+On Windows, use **Python 3.12.x** to install this project. It is the version
+the Windows install is measured against, and it is the one that makes the
+whole dependency set install without a C++ compiler.
+
+**Why not a newer Python (3.13, 3.14, 3.15)?**
+
+Newer Python releases are attractive, but on Windows they turn a simple
+`pip install` into a source-compilation exercise. The reason is wheels:
+`pip` installs a package from a *prebuilt binary* (a `.whl`) when one exists
+for your Python version, and falls back to downloading the *source tarball*
+(a `.tar.gz`) and compiling it when one does not. New Python versions ship
+before the ecosystem has caught up, so a large part of the dependency graph
+has no wheel yet — and every package without a wheel has to be compiled
+locally.
+
+That is exactly what happens on Python 3.15. During `pip install
+-r requirements-all.txt`, packages such as `cffi`, `cryptography`,
+`SQLAlchemy`, `aiohttp` and `zlib-ng` arrive as source tarballs instead of
+wheels. Compiling them requires **Microsoft Visual C++ Build Tools 14.0 or
+greater**, and without it the install stops with:
+
+```text
+distutils.compilers.errors.PlatformError:
+Microsoft Visual C++ 14.0 or greater is required.
+Get it with "Microsoft C++ Build Tools":
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
+ERROR: Failed to build 'cffi' when getting requirements to build wheel
+```
+
+Even after installing those Build Tools (several GB), the build remains
+slow, fragile and easy to break on unrelated issues. It is avoidable
+work.
+
+**What Python 3.12 changes.** For 3.12, every package this project needs
+publishes a wheel for Windows, so `pip` downloads binaries and never
+invokes a compiler. No Visual C++ Build Tools are required, the install
+finishes in seconds rather than minutes, and the failure modes above simply
+do not occur. This is why the Windows instructions pin `py -3.12` and why
+`requirements-all.txt` installs cleanly on a fresh Windows 10 or 11 machine.
+
+**In short:**
+
+| Python on Windows | Wheels for the full dependency set? | Needs C++ Build Tools? |
+|---|---|---|
+| **3.12.x** | ✅ Yes | ❌ No |
+| 3.13.x | Mostly, occasional gaps | Sometimes |
+| 3.14.x | Partial | Often |
+| 3.15.x | ❌ Largely missing → source builds | ✅ Yes, and still fragile |
+
+If you already have a newer Python installed, you do not have to remove
+it: create the project's virtual environment with 3.12 explicitly
+(`py -3.12 -m venv .venv`) and everything runs inside it. The Windows
+tutorial above does exactly that.
+
+> Note: Python 3.12 has entered its security-fixes-only stage, so the
+> python.org downloads page no longer offers an installer for the latest
+> 3.12 patch. Use **Python 3.12.10**, the last release of the 3.12 series
+> that ships a Windows installer. Later 3.12.x releases are source-only.
+
+---
+
+
 ### What is verified, and what is not
 
 - **Debian 13** (Python 3.13.5, system packages): verified — `707 passed,
   2 skipped`, and the process now exits `0`.
-- **Windows 10** (10.0.19045, AMD64, Python **3.14.7**, packages from PyPI):
+- **Windows 10/11** (10.0.19045, AMD64, Python **3.12**, packages from PyPI):
   **verified on 2026-10-01** — clean `pip` install, the window opens, the
   CSV import / backtest / paper trading numbers are *identical* to Debian,
   `ccxt` reaches the network, and the suite reports `698 passed, 2 skipped`.
