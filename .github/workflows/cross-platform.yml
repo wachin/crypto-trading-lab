@@ -81,7 +81,7 @@ jobs:
           "$VENV_PY" -m pip install --upgrade pip
           # `pdf` (pypdf) as well, so the chapter 41 export test runs instead
           # of being skipped and every platform reports the same baseline.
-          "$VENV_PY" -m pip install -e ".[dev,pdf]"
+          "$VENV_PY" -m pip install -e ".[dev,pdf,yaml]"
           "$VENV_PY" -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 
       - name: Show versions

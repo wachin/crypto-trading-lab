@@ -46,7 +46,7 @@ jobs:
           # here instead of being skipped: without it the run reports
           # "SKIPPED ... could not import 'pypdf'" and the CI baseline stops
           # matching the documented "755 passed, 2 skipped".
-          .venv/bin/python -m pip install -e ".[dev,pdf]"
+          .venv/bin/python -m pip install -e ".[dev,pdf,yaml]"
 
       - name: Show versions
         run: |
