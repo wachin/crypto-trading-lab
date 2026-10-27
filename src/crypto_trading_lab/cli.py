@@ -1,131 +1,352 @@
-"""CLI for Crypto Trading Lab (ROADMAP.md chapter 22)."""
+"""Command-line interface (ROADMAP.md chapter 22).
+
+Every subcommand calls the shared use cases in
+:mod:`crypto_trading_lab.application`, the same functions the GUI
+uses, so the CLI cannot drift from the desktop application. The CLI
+prints what it actually did and returns a non-zero status when it
+could not do it -- a silent success is worse than an honest failure.
+"""
+
+from __future__ import annotations
 
 import argparse
 import sys
-from typing import Any
+from decimal import Decimal
+from typing import Any, Sequence
 
 from crypto_trading_lab import __version__
+from crypto_trading_lab import application
+
+#: How each doctor status is shown.
+_STATUS_LABEL = {
+    "pass": "PASS",
+    "warn": "WARN",
+    "skip": "SKIP",
+    "fail": "FAIL",
+}
+
+
+def _percent(value: Decimal | None) -> str:
+    if value is None:
+        return "not meaningful"
+    return f"{value * Decimal(100):.2f}%"
+
+
+def _money(value: Decimal) -> str:
+    return f"{value:.2f}"
+
+
+def _ratio(value: Decimal | None) -> str:
+    if value is None:
+        return "not meaningful"
+    return f"{value:.3f}"
 
 
 def doctor(args: Any) -> int:
-    """Run system diagnostics."""
+    """Run the chapter 22 diagnostics (never prints a secret)."""
     print("Checking system configuration...")
-    
-    # Check if critical dependencies are importable
-    try:
-        import PyQt6
-        import pyqtgraph
-        import sqlalchemy
-        import platformdirs
-        print("PASS: Core dependencies (PyQt6, pyqtgraph, SQLAlchemy, platformdirs) are installed.")
-    except ImportError as e:
-        print(f"FAIL: Missing dependency: {e}")
-        return 1
-        
-    print("All checks passed.")
-    return 0
+    results = application.run_doctor(
+        paths=getattr(args, "paths", None),
+        network=getattr(args, "network", False),
+    )
+    for result in results:
+        label = _STATUS_LABEL.get(result.status, result.status.upper())
+        print(f"[{label}] {result.name}: {result.detail}")
+
+    counts = {
+        status: sum(1 for item in results if item.status == status)
+        for status in ("pass", "warn", "skip", "fail")
+    }
+    print(
+        "Doctor finished: "
+        f"{counts['pass']} passed, {counts['warn']} warning(s), "
+        f"{counts['skip']} skipped, {counts['fail']} failed."
+    )
+    return 1 if counts["fail"] else 0
 
 
 def database_check(args: Any) -> int:
-    """Check database integrity."""
+    """Open the SQLite file and run its own integrity check."""
+    report = application.check_database(paths=getattr(args, "paths", None))
+    if not report.exists:
+        print(
+            f"Database not found at {report.path}. Nothing was checked. "
+            "Import a CSV or open the application to create it.",
+            file=sys.stderr,
+        )
+        return 1
+    if report.error is not None:
+        print(f"Database check FAILED: {report.error}", file=sys.stderr)
+        return 1
+    print(f"Database: {report.path}")
+    print(f"Schema version: {report.schema_version}")
+    print(f"Integrity: {report.integrity}")
+    print("Tables:")
+    for name in sorted(report.tables):
+        print(f"  {name}: {report.tables[name]} row(s)")
+    if not report.ok:
+        print(
+            f"Database check FAILED: integrity is {report.integrity!r}.",
+            file=sys.stderr,
+        )
+        return 1
     print("Database check passed.")
     return 0
 
 
-from crypto_trading_lab.strategy_registry import StrategyRegistry
-
 def list_strategies(args: Any) -> int:
-    """List available trading strategies."""
-    registry = StrategyRegistry()
-    strategies = registry.list_strategies()
+    """List every registered strategy (chapter 36)."""
+    strategies = application.list_strategies(paths=getattr(args, "paths", None))
+    if not strategies:
+        print("No strategies are registered.", file=sys.stderr)
+        return 1
     print("Available Strategies:")
-    for s in strategies:
-        print(f"- {s.name} (ID: {s.strategy_id}, Ver: {s.version})")
+    for strategy in strategies:
+        print(
+            f"- {strategy.name} (ID: {strategy.strategy_id}, "
+            f"Ver: {strategy.version})"
+        )
     return 0
 
 
 def list_lessons(args: Any) -> int:
-    """List available lessons."""
-    print("Lessons: 48 lessons across 3 levels")
+    """List the curriculum (chapter 23)."""
+    level = getattr(args, "level", None)
+    lessons = application.list_lessons(level=level)
+    if not lessons:
+        print("No lessons found.", file=sys.stderr)
+        return 1
+    print("Lessons:")
+    for lesson in lessons:
+        print(f"  {lesson.number:>2}. [Level {lesson.level}] {lesson.title}")
+    print(f"Total: {len(lessons)} lesson(s).")
     return 0
 
 
 def glossary_search(args: Any) -> int:
-    """Search glossary."""
-    print(f"Glossary search for: {args.term}")
+    """Search the beginner glossary (chapter 24)."""
+    matches = application.search_glossary(args.term)
+    if not matches:
+        print(
+            f"No glossary entry matched {args.term!r}. "
+            "Try a shorter word, for example 'slip' or 'spread'.",
+            file=sys.stderr,
+        )
+        return 1
+    for index, entry in enumerate(matches):
+        if index:
+            print()
+        print(f"### {entry.term}")
+        print(entry.body)
+    print()
+    plural = "entry" if len(matches) == 1 else "entries"
+    print(f"{len(matches)} {plural} matched {args.term!r}.")
     return 0
 
 
 def import_csv_cmd(args: Any) -> int:
-    """Import CSV market data."""
-    print(f"Importing CSV from: {args.file}")
+    """Validate a CSV and store its candles (chapter 28)."""
+    print(f"Reading {args.file} ...")
+    outcome = application.import_csv_file(
+        args.file,
+        symbol=args.symbol,
+        interval=args.interval,
+        paths=getattr(args, "paths", None),
+    )
+    if not outcome.ok:
+        print(outcome.message, file=sys.stderr)
+        return 1
+    print(outcome.message)
     return 0
+
+
+def _print_backtest(run: application.BacktestRun) -> None:
+    result = run.result
+    report = run.report
+    print(f"Strategy: {run.strategy_name}")
+    if run.dataset is not None:
+        print(
+            f"Dataset: {run.dataset.dataset_id} "
+            f"({run.dataset.symbol} {run.dataset.interval})"
+        )
+    print(f"Candles: {run.candle_count}")
+    print(f"Initial capital: {_money(result.initial_capital)}")
+    print(f"Final equity: {_money(result.final_equity)}")
+    print(
+        f"Net profit: {_money(report.returns.net_profit)} "
+        f"({_percent(report.returns.total_return)})"
+    )
+    print(f"Max drawdown: {_percent(report.risk.max_drawdown)}")
+    trades = report.trades
+    print(
+        f"Trades: {trades.number_of_trades} "
+        f"({trades.winning_trades} winning / "
+        f"{trades.losing_trades} losing)"
+    )
+    print(f"Win rate: {_percent(trades.win_rate)}")
+    print(f"Profit factor: {_ratio(trades.profit_factor)}")
+    print(f"Sharpe ratio: {_ratio(report.risk.sharpe_ratio)}")
+    print(f"Total fees: {_money(report.activity.trading_fees)}")
+    print(f"Slippage cost: {_money(report.activity.slippage_cost)}")
+    print(f"Spread cost: {_money(report.activity.spread_cost)}")
+    if report.benchmark is not None:
+        print(
+            f"Benchmark ({report.benchmark.benchmark_name}): "
+            f"{_percent(report.benchmark.benchmark_return)}, "
+            f"excess {_percent(report.benchmark.excess_return)}"
+        )
+    for warning in report.warnings:
+        print(f"Warning: {warning}")
+    print()
+    print(report.disclaimer)
 
 
 def backtest_cmd(args: Any) -> int:
-    """Run backtest."""
-    print(f"Running backtest with strategy: {args.strategy}")
+    """Run the chapter 37 engine from a JSON/YAML configuration."""
+    try:
+        run = application.run_backtest_file(
+            args.strategy, paths=getattr(args, "paths", None)
+        )
+    except application.ApplicationError as error:
+        print(f"Backtest not run: {error}", file=sys.stderr)
+        return 1
+    _print_backtest(run)
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="crypto-trading-lab", description="CLI for Crypto Trading Lab")
-    parser.add_argument("--version", action="version", version=f"Crypto Trading Lab {__version__}")
-    
+def _add_paths_option(parser: argparse.ArgumentParser) -> None:
+    """Let tests and scripts point the CLI at an isolated data directory."""
+    parser.add_argument(
+        "--data-dir",
+        default=None,
+        help=(
+            "use this directory instead of the XDG data directory "
+            "(scripts and tests)"
+        ),
+    )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="crypto-trading-lab",
+        description="CLI for Crypto Trading Lab",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"Crypto Trading Lab {__version__}"
+    )
+
     subparsers = parser.add_subparsers(dest="command", required=False)
 
-    # doctor
-    subparsers.add_parser("doctor", help="Run system diagnostics")
+    doctor_parser = subparsers.add_parser(
+        "doctor", help="Run system diagnostics"
+    )
+    doctor_parser.add_argument(
+        "--network",
+        action="store_true",
+        help="also test public connectivity and measure clock drift",
+    )
+    _add_paths_option(doctor_parser)
 
-    # database check
-    db = subparsers.add_parser("database", help="Database operations")
-    db_sub = db.add_subparsers(dest="subcommand", required=True)
-    db_sub.add_parser("check", help="Check database integrity")
+    database = subparsers.add_parser("database", help="Database operations")
+    database_sub = database.add_subparsers(dest="subcommand", required=True)
+    database_check_parser = database_sub.add_parser(
+        "check", help="Check database integrity"
+    )
+    _add_paths_option(database_check_parser)
 
-    # import-csv
-    import_csv = subparsers.add_parser("import-csv", help="Import CSV market data")
+    import_csv = subparsers.add_parser(
+        "import-csv", help="Import CSV market data"
+    )
     import_csv.add_argument("file", help="CSV file path")
+    import_csv.add_argument(
+        "--symbol",
+        default="BTC/USDT",
+        help="trading pair for the file (default: BTC/USDT)",
+    )
+    import_csv.add_argument(
+        "--interval",
+        default="1m",
+        help="candle interval for the file (default: 1m)",
+    )
+    _add_paths_option(import_csv)
 
-    # backtest
-    backtest = subparsers.add_parser("backtest", help="Run backtest")
-    backtest.add_argument("strategy", help="Strategy config file")
+    backtest = subparsers.add_parser("backtest", help="Run a backtest")
+    backtest.add_argument(
+        "strategy", help="strategy configuration file (.json, .yaml, .yml)"
+    )
+    _add_paths_option(backtest)
 
-    # list
+    list_strategies_parser = subparsers.add_parser(
+        "list-strategies", help="List available strategies"
+    )
+    _add_paths_option(list_strategies_parser)
+
+    list_lessons_parser = subparsers.add_parser(
+        "list-lessons", help="List the lessons in the curriculum"
+    )
+    list_lessons_parser.add_argument(
+        "--level", type=int, choices=(1, 2, 3), default=None,
+        help="only lessons from this level",
+    )
+    _add_paths_option(list_lessons_parser)
+
+    # Chapter 22 spells the commands with hyphens; the older grouped
+    # form stays as an alias so existing notes keep working.
     list_cmd = subparsers.add_parser("list", help="List resources")
     list_sub = list_cmd.add_subparsers(dest="subcommand", required=True)
-    list_sub.add_parser("strategies", help="List strategies")
-    list_sub.add_parser("lessons", help="List lessons")
+    list_strategies_alias = list_sub.add_parser(
+        "strategies", help="List strategies"
+    )
+    _add_paths_option(list_strategies_alias)
+    list_lessons_alias = list_sub.add_parser("lessons", help="List lessons")
+    list_lessons_alias.add_argument(
+        "--level", type=int, choices=(1, 2, 3), default=None
+    )
+    _add_paths_option(list_lessons_alias)
 
-    # glossary
     glossary = subparsers.add_parser("glossary", help="Glossary operations")
     glossary_sub = glossary.add_subparsers(dest="subcommand", required=True)
-    glossary_search_parser = glossary_sub.add_parser("search", help="Search glossary")
+    glossary_search_parser = glossary_sub.add_parser(
+        "search", help="Search glossary"
+    )
     glossary_search_parser.add_argument("term", help="Term to search for")
 
-    args = parser.parse_args(argv)
+    return parser
 
-    if args.command == "doctor":
-        return doctor(args)
-    elif args.command == "database":
-        return database_check(args)
-    elif args.command == "list":
-        if args.subcommand == "strategies":
-            return list_strategies(args)
-        elif args.subcommand == "lessons":
-            return list_lessons(args)
-    elif args.command == "glossary":
-        if args.subcommand == "search":
-            return glossary_search(args)
-    elif args.command == "import-csv":
-        return import_csv_cmd(args)
-    elif args.command == "backtest":
-        return backtest_cmd(args)
-    
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if getattr(args, "data_dir", None):
+        from crypto_trading_lab.configuration.xdg import AppPaths
+
+        args.paths = AppPaths(data_dir=args.data_dir)
+    else:
+        args.paths = None
+
     if args.command is None:
         parser.print_help()
         return 0
+    if args.command == "doctor":
+        return doctor(args)
+    if args.command == "database":
+        return database_check(args)
+    if args.command == "list-strategies":
+        return list_strategies(args)
+    if args.command == "list-lessons":
+        return list_lessons(args)
+    if args.command == "list":
+        if args.subcommand == "strategies":
+            return list_strategies(args)
+        return list_lessons(args)
+    if args.command == "glossary":
+        return glossary_search(args)
+    if args.command == "import-csv":
+        return import_csv_cmd(args)
+    if args.command == "backtest":
+        return backtest_cmd(args)
 
-    print(f"Command not implemented: {args.command}")
+    print(f"Command not implemented: {args.command}", file=sys.stderr)
     return 1
 
 

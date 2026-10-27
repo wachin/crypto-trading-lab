@@ -11,7 +11,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Python 3.13](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyQt6](https://img.shields.io/badge/GUI-PyQt6-41CD52?logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Tests: 707 passed, 2 skipped](https://img.shields.io/badge/tests-707%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
+[![Tests: 755 passed, 2 skipped](https://img.shields.io/badge/tests-755%20passed%2C%202%20skipped-brightgreen)](#test-baseline)
 [![CI](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml/badge.svg)](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml)
 [![Platform: Debian 13](https://img.shields.io/badge/platform-Debian%2013-A81D33?logo=debian&logoColor=white)](#dependencies)
 [![Method: AFML](https://img.shields.io/badge/method-L%C3%B3pez%20de%20Prado%20(2018)-purple)](docs/en/developers/afml-techniques.md)
@@ -73,7 +73,7 @@ cryptocurrency research laboratory. Follow these rules exactly.
 3. Make small changes. After every change run:
        QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
     and check the command's EXIT CODE is 0, not only the printed count
-    (baseline: 707 passed, 2 skipped). If either changes, report it: a
+    (baseline: 755 passed, 2 skipped). If either changes, report it: a
     suite that prints "passed" and exits non-zero is a bug, not a detail.
 4. Do NOT install dependencies. If one is genuinely needed, STOP and
    report: package name, source (Debian or PyPI), reason, and the exact
@@ -99,8 +99,9 @@ cryptocurrency research laboratory. Follow these rules exactly.
 10. Measured, not assumed. Write "verified on <platform>" only for a
     platform someone actually ran. Debian 13 and Windows 10 are verified;
     macOS is deliberately postponed to the end of development (after Linux
-    and Windows), so do not treat it as the next task. The Experiments/ kit
-    is what turns a platform into a result when its turn comes.
+    and Windows), so do not treat it as the next task. The manual
+    `cross-platform` workflow is what turns a platform into a result when
+    its turn comes.
 ```
 
 > **Working with a smaller context window?** The project is measured for it:
@@ -130,12 +131,14 @@ cryptocurrency research laboratory. Follow these rules exactly.
 - **Pick up a known gap** —
   [`docs/en/developers/unwired-modules-audit.md`](docs/en/developers/unwired-modules-audit.md)
   records every module that was found unwired, with a decision and its
-  evidence. All 16 are resolved; the newest open item is the group of CLI
-  subcommands that still only print and return `0`.
-- **Verify another platform** — [`Experiments/`](Experiments/README.md) is a
-  self-contained kit (dependencies, sample data, its offline checks, a
-  tick-box manual). Windows 10 is done; **macOS is deliberately left for the
-  end of development**, once Linux and Windows are finished (see
+  evidence. All 16 are resolved, and the chapter 22 CLI now really runs
+  its commands; the newest open item is the execution model in the
+  backtest engine (chapter 56.5).
+- **Verify another platform** — run the manual
+  [`cross-platform` workflow](.github/workflows/cross-platform.yml) on
+  Ubuntu, macOS or Windows; it installs the package and runs the suite on
+  all three. Windows 10 is done; **macOS is deliberately left for the end
+  of development**, once Linux and Windows are finished (see
   [What is verified, and what is not](#what-is-verified-and-what-is-not)).
 
 ### What you get out of it
@@ -174,7 +177,6 @@ history and is recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 | Task | Where |
 |---|---|
-| Implement (or remove) the CLI subcommands that only print and return `0` | `cli.py`, chapter 22 |
 | Feed the chapter-56 execution model into the backtest engine too | `backtesting/engine.py`, chapter 56.5 |
 | Finish the Debian packaging (stale `debian/rules`, missing dependencies) | `debian/`, chapter 16 |
 | Add the missing glossary terms (asset, blockchain, wallet, spread, liquidity, out-of-sample, walk-forward, robustness…) | `docs/en/beginners/glossary.md`, chapter 24 |
@@ -262,7 +264,7 @@ cd crypto-trading-lab
 # 3. Verify the environment, then the baseline
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 707 passed, 2 skipped
+# → 755 passed, 2 skipped
 
 # 4. Run it
 PYTHONPATH=src python3 -m crypto_trading_lab
@@ -270,7 +272,7 @@ PYTHONPATH=src python3 -m crypto_trading_lab
 
 Run step 3 **before** you change anything. The suite is offline and takes well
 under a minute, so it is the cheapest way to know your setup is sound — if it
-prints anything other than `707 passed, 2 skipped`, the problem is the
+prints anything other than `755 passed, 2 skipped`, the problem is the
 environment, not your change, and it is worth fixing first. Two of those
 packages are easy to leave out and neither failure looks like a missing
 dependency:
@@ -327,7 +329,7 @@ Python package, which is what macOS and Windows need and what a Linux user
 may prefer for an isolated environment.
 
 > **What is verified.** Debian 13 with the system packages is the supported
-> stack: **707 passed, 2 skipped**. **Windows 10 is also verified** (Python
+> stack: **755 passed, 2 skipped**. **Windows 10 is also verified** (Python
 > 3.14.7, everything from PyPI, 2026-10-01 — clean install, the window opens,
 > identical numbers; see [What is verified, and what is not](#what-is-verified-and-what-is-not)).
 > **macOS is deliberately left for the end of development**: the commands
@@ -363,7 +365,7 @@ python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
-QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 707 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 755 passed, 2 skipped
 python -m crypto_trading_lab
 ```
 
@@ -515,15 +517,16 @@ tutorial above does exactly that.
 
 ### What is verified, and what is not
 
-- **Debian 13** (Python 3.13.5, system packages): verified — `707 passed,
+- **Debian 13** (Python 3.13.5, system packages): verified — `755 passed,
   2 skipped`, and the process now exits `0`.
 - **Windows 10/11** (10.0.19045, AMD64, Python **3.12**, packages from PyPI):
   **verified on 2026-10-01** — clean `pip` install, the window opens, the
   CSV import / backtest / paper trading numbers are *identical* to Debian,
-  `ccxt` reaches the network, and the suite reports `698 passed, 2 skipped`.
-  The full PowerShell transcript is kept in
-  [`Experiments/20261001-resultado-de-la-instalacion-en-Windows-10.txt`](Experiments/20261001-resultado-de-la-instalacion-en-Windows-10.txt);
-  the run also exposed a real bug, now fixed — see below.
+  `ccxt` reaches the network, and the suite reported `698 passed, 2 skipped`
+  at that date. The run also exposed a real bug, now fixed — see below. (The
+  PowerShell transcript was removed with the `Experiments/` kit on
+  2026-10-16; the measured numbers are recorded here and in
+  [`CHANGELOG.md`](CHANGELOG.md).)
 - **macOS**: **not verified, on purpose.** The maintainer's decision is to
   leave macOS until the end of development, once the program works on Linux
   and Windows. The tutorial below is written from the platform, not measured;
@@ -707,7 +710,12 @@ disabled — is written down in
 - Strategy Complexity control and an offline Research Assistant;
 - Backtesting Lab UI with beginner explanations + HTML/CSV/JSON reports;
 - Candlestick charts, a **three-level Learning Center** (48 lessons with
-  graded quizzes and persisted progress), bilingual UI (EN/ES).
+  graded quizzes and persisted progress), bilingual UI (EN/ES);
+- A **command-line interface** (chapter 22) that runs the same use cases
+  as the GUI: `doctor`, `database check`, `import-csv`, `backtest`,
+  `list-strategies`, `list-lessons` and `glossary search`, each doing real
+  work and failing honestly (see
+  [`docs/en/developers/cli.md`](docs/en/developers/cli.md)).
 
 🚧 Ahead: everything is listed, with an honest per-item status, in
 [The journey](#the-journey--from-learning-to-risking-money) below.
@@ -857,7 +865,7 @@ profit.
 | `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, research, reporting, i18n, UI |
 | `tests/` | 64 test modules — engine arithmetic is hand-verified |
 | `tools/` | Asset generators (the contributor banner GIF) and the ccxt evaluation script |
-| `Experiments/` | Self-contained kit to verify the programme on Windows/macOS: checklist, dependency list, sample data and `verify.py` |
+| `requirements-all.txt` | Every dependency for a machine without Debian packages (pip, virtualenv, Windows, macOS) |
 | `Makefile` | `make test`, `make run`, `make banner`, `make translations` |
 | `.github/` | CI workflow, pull-request and issue templates |
 | `external/` | 8 optional reference projects as git submodules |
@@ -869,7 +877,7 @@ profit.
 
 ```bash
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
-# → 707 passed, 2 skipped
+# → 755 passed, 2 skipped
 # → and it must exit 0
 ```
 
@@ -895,7 +903,9 @@ drifting baseline is a bug, not a detail.
 ## Dependencies
 
 Runtime: `python3-pyqt6`, `python3-pyqtgraph`, `python3-sqlalchemy`,
-`python3-platformdirs`. Development adds `python3-pytest` and the Qt
+`python3-platformdirs`. The Debian package also depends on
+`python3-yaml`, so YAML backtest configurations work without a virtualenv
+(JSON needs nothing extra). Development adds `python3-pytest` and the Qt
 Linguist tools (`qt6-l10n-tools`). Optional extras: `python3-pypdf` for
 PDF reports, `python3-keyring` for credential storage, and `ccxt`
 (PyPI-only) for the read-only CCXT adapter.
@@ -903,7 +913,7 @@ PDF reports, `python3-keyring` for credential storage, and `ccxt`
 `pyproject.toml` declares those four runtime packages in
 `[project.dependencies]`, so `pip install .` works on Linux, macOS and
 Windows alike, and exposes the `dev`, `credentials`, `pdf`, `ccxt`,
-`aiohttp` and `websockets` extras on top. On Debian the system packages
+`yaml`, `aiohttp` and `websockets` extras on top. On Debian the system packages
 already satisfy the declared specifiers, so pip in a
 `--system-site-packages` venv installs no PyPI copies of them.
 

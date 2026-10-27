@@ -10,12 +10,12 @@ A new AI Agent must read this file **before** doing anything else, then
 
 ---
 
-## 1. Project state (last updated 2026-10-15)
+## 1. Project state (last updated 2026-10-26)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 707 passed, 2 skipped, **exit code 0** —
+- **Tests:** 755 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
@@ -30,17 +30,16 @@ A new AI Agent must read this file **before** doing anything else, then
 - **macOS — deferred by the maintainer's decision, not a pending task.** It
   comes last, once the program works on Linux and Windows. Do not spend a
   session on it and do not treat a macOS failure as a blocker. The steps are
-  prepared in `README.md` and `Experiments/README.md`; the manual
-  `cross-platform` workflow can measure it when its turn arrives.
+  prepared in `README.md` and `docs/en/developers/venv-setup.md`; the
+  manual `cross-platform` workflow can measure it when its turn arrives.
 - **Source:** 115 Python files under `src/crypto_trading_lab/`
 - **Tests:** 64 test modules under `tests/`
 - **Documentation:** `docs/en/beginners/` and
   `docs/en/developers/` (virtualenv guide in `venv-setup.md`, audit in
   `unwired-modules-audit.md`)
-- **Verification kit:** `Experiments/` runs its offline checks on a fresh
-  machine and writes a report (11 passed, 1 skipped with the system Python,
-  which has no `ccxt`; 13 passed in the Windows venv. `--network`, `--gui`
-  and `--tests` add more). `setup_windows.bat` is one-click.
+- **Verification kit:** the `Experiments/` kit was deleted on 2026-10-16
+  (commit `b296785`); `requirements-all.txt` at the repository root and the
+  manual `cross-platform` workflow now carry what it did.
 - **Specification:** `ROADMAP.md` — 80 chapters in 16 parts
 - **Git submodules:** 8 *optional* reference projects under `external/`.
   **A fresh clone creates `external/` as eight empty placeholder directories
@@ -59,8 +58,10 @@ A new AI Agent must read this file **before** doing anything else, then
   Lab and the CLI on 2026-10-07 and then re-reviewed, which exposed three
   further defects in it (see `unwired-modules-audit.md` item 16). The
   frontier now is the live-data path (Binance WebSocket, chapters 26.2/27),
-  testnet order placement (chapter 68), packaging (chapters 15/16/18) and
-  the CLI subcommands that still only pretend to work (§5.2 item 1).
+  testnet order placement (chapter 68) and packaging (chapters 15/16/18).
+  Chapter 22 (the CLI) was completed on 2026-10-26: every subcommand now
+  calls the shared use-case layer in `application.py`, so the CLI and the
+  GUI cannot diverge (§5.2 item 1).
   **Real trading remains disabled by default.**
 
 ### What changed on 2026-09-19 (direction correction + Fase A/B)
@@ -190,6 +191,11 @@ agents:
   (system, installed via `python3-pyqtgraph`), SQLAlchemy 2.0.40,
   platformdirs 4.3.7, pytest 8.3.5, Qt tools `pylupdate6`/`lrelease`/
   `linguist` — **all from Debian packages, no venv needed**
+- **A local `.venv/` (gitignored) exists for the PyPI path.** It was built on
+  2026-10-26 from `requirements-all.txt` and measured in
+  `docs/en/developers/venv-setup.md` §8 (PyYAML 6.0.3, PyQt6 6.11.0,
+  pytest 9.1.1, same 755/2 result). The Debian packages stay the supported
+  default; use the venv only to reproduce the pip path.
 
 ### One reference you will not have
 
@@ -303,8 +309,9 @@ features the code did not ship. Concretely:
   construction, a `_load()` that was never called, and a rule-7 regression
   in the new combo labels), plus a `strategy=None` path in the Lab.
 - **The documented test baseline was wrong in twelve places** and had
-  drifted between 229 and 698. It is `707 passed, 2 skipped`, and the suite
-  **exits 0**.
+  drifted between 229 and 698. It was `707 passed, 2 skipped` after that
+  review, and the suite **exits 0**. The chapter 22 CLI work on 2026-10-26
+  added 44 tests, so the current baseline is `755 passed, 2 skipped`.
 - **The suite used to segfault while the interpreter shut down** (chapter 68
   imported Qt and re-initialised a `QObject`), so `make test` and CI failed
   while printing "passed". Fixed, with a regression test that forbids Qt in
@@ -330,18 +337,29 @@ features the code did not ship. Concretely:
   `@v4`/`@v5` on Node 24 and annotating the run about the deprecation; the
   bump was verified by run 38777456963, which reports no annotations. Do not
   pin them back down.
-- **Windows 10 is verified** (`Experiments/`). **macOS is deferred to the end
-  of development by the maintainer's decision** — see §1.
+- **Windows 10 is verified** (measured 2026-10-01; see README "What is
+  verified"). **macOS is deferred to the end of development by the
+  maintainer's decision** — see §1.
 
 ### 5.2 The backlog, in the order that makes sense
 
-1. **The CLI subcommands that only pretend to work** (verified 2026-10-07):
-   `database check`, `import-csv`, `backtest`, `glossary search` and
-   `list lessons` print one line and return `0` without doing anything
-   (`cli.py:36-68`). `database check` even claims "Database check passed."
-   with no database open. `doctor` and `list strategies` are real. Either
-   implement them against chapter 22 or remove them: a silent success is
-   worse than a command that is honestly absent.
+1. ~~**The CLI subcommands that only pretend to work.**~~ **DONE
+   2026-10-26.** Chapter 22 is `[x]`. Every subcommand now calls
+   `src/crypto_trading_lab/application.py` (the same use cases the GUI
+   uses): `database check` runs SQLite's `PRAGMA integrity_check` and
+   reports real row counts, `import-csv` validates before writing,
+   `backtest` runs the engine and metric catalogue from a JSON/YAML
+   configuration, `glossary search` parses the beginner glossary, and
+   `list-lessons` reads the curriculum. `doctor` now performs all twelve
+   chapter 22 checks (connectivity and clock drift behind `--network`).
+   A missing database is reported as missing, and no command returns `0`
+   for work it did not do. The installed console script also dispatches
+   correctly now: it used to point at the GUI function, so
+   `crypto-trading-lab doctor` opened a window and ignored its arguments.
+   Tests: `tests/test_cli.py`, `tests/test_application.py`;
+   documentation: `docs/en/developers/cli.md`. YAML configurations read
+   through PyYAML: `debian/control` depends on `python3-yaml`, and
+   `requirements-all.txt` plus the `yaml` extra cover pip installs.
 2. **Chapter 56.5** — feed the execution model into the **backtest engine**
    and robustness, not only paper trading.
 3. **Chapter 63.2** — drift over time, likely causes, and marking a strategy
@@ -389,7 +407,7 @@ git submodule update --init external/freqtrade
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 707 passed, 2 skipped expected
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 755 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
@@ -403,4 +421,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-10-15. Baseline: 707 passed, 2 skipped.*
+*Handoff updated 2026-10-26. Baseline: 755 passed, 2 skipped.*

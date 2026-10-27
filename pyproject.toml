@@ -56,6 +56,9 @@ Changelog = "https://github.com/wachin/crypto-trading-lab/blob/main/AGENT-HANDOF
 credentials = ["keyring>=24.0"]
 # PDF report export (chapter 41) is PyPI-only here.
 pdf = ["pypdf>=4.0"]
+# YAML backtest configurations (chapter 22). JSON needs nothing extra, so
+# this stays optional; the Debian package ships python3-yaml instead.
+yaml = ["PyYAML>=6.0"]
 # CCXT integration is optional until the chapter 4 packaging evaluation
 # concludes (no python3-ccxt Debian package exists; see the CCXT study
 # in docs/en/developers/reference-projects.md).
@@ -78,7 +81,7 @@ dev = [
 ]
 
 [project.scripts]
-crypto-trading-lab = "crypto_trading_lab.ui.main_window.window:run"
+crypto-trading-lab = "crypto_trading_lab.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -99,3 +102,10 @@ addopts = "-ra"
 markers = [
     "integration: end-to-end tests that wire several modules together (still fully offline)",
 ]
+# Keep /tmp clean. The default policy keeps a directory per test for every
+# run, so /tmp/pytest-of-<user>/ grows until someone deletes it by hand.
+# "failed" deletes the files of passing tests as soon as the test ends and
+# keeps only failing tests, for debugging; the count bounds the runs kept
+# even when they fail.
+tmp_path_retention_policy = "failed"
+tmp_path_retention_count = 3

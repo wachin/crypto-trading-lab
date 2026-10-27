@@ -17,8 +17,9 @@
 # **macOS is deliberately last.** The maintainer's decision is to leave macOS
 # until the end of development, once Linux and Windows work, so a red macOS
 # job here is expected and is not a blocker: read the other two rows first.
-# Windows 10 was verified by hand on 2026-10-01 (see Experiments/); the
-# `windows-latest` row keeps that measurement reproducible.
+# Windows 10 was verified by hand on 2026-10-01 (see the README section
+# "What is verified, and what is not"); the `windows-latest` row keeps that
+# measurement reproducible.
 
 name: cross-platform
 

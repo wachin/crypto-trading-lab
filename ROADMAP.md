@@ -48,7 +48,7 @@ before writing code, and tick a checkbox only when the requirement is
 | 19 | [~] | 15 | 137 | No | Documentation |
 | 20 | [~] | 20 | 38 | No | Multilingual support and Qt Linguist |
 | 21 | [~] | 2 | 70 | Sí | Main interface, themes, and accessibility |
-| 22 | [~] | 1 | 22 | No | Complementary CLI |
+| 22 | [x] | 23 | 0 | No | Complementary CLI |
 | 23 | [~] | 5 | 32 | No | Built-in Learning Center |
 | 24 | [~] | 54 | 0 | Sí | Glossary |
 | 25 | [x] | 13 | 0 | No | Reference projects |
@@ -1614,37 +1614,50 @@ Include:
 
 ---
 
-## [~] 22. Complementary CLI
+## [x] 22. Complementary CLI
 
-- [ ] Add a basic CLI without duplicating business logic:
+Implemented 2026-10-26. Every subcommand calls
+`src/crypto_trading_lab/application.py`, the same use-case layer the GUI
+uses; `tests/test_cli.py` and `tests/test_application.py` cover the real
+behaviour and the honest failures.
 
-- [ ] `crypto-trading-lab --version`
-- [ ] `crypto-trading-lab doctor`
-- [ ] `crypto-trading-lab database check`
-- [ ] `crypto-trading-lab import-csv file.csv`
-- [ ] `crypto-trading-lab backtest strategy.yaml`
-- [ ] `crypto-trading-lab list-strategies`
-- [ ] `crypto-trading-lab list-lessons`
-- [ ] `crypto-trading-lab glossary search "slippage"`
+- [x] Add a basic CLI without duplicating business logic:
 
-- [ ] The CLI must reuse the same use cases as the GUI.
+- [x] `crypto-trading-lab --version`
+- [x] `crypto-trading-lab doctor`
+- [x] `crypto-trading-lab database check`
+- [x] `crypto-trading-lab import-csv file.csv`
+- [x] `crypto-trading-lab backtest strategy.yaml` (YAML needs the optional
+  `python3-yaml` package; the same configuration as `.json` needs nothing
+  beyond the standard library)
+- [x] `crypto-trading-lab list-strategies`
+- [x] `crypto-trading-lab list-lessons`
+- [x] `crypto-trading-lab glossary search "slippage"`
+
+- [x] The CLI must reuse the same use cases as the GUI.
+  (`application.import_csv_file` is called by both `cli.py` and
+  `MainWindow.load_csv_file`; the backtest calls the same `run_backtest`
+  and `compute_performance` the Lab uses.)
 
 The `doctor` command must check:
 
-- [ ] Python version;
-- [ ] required modules;
-- [ ] database;
-- [ ] permissions;
-- [ ] keyring;
-- [ ] public connectivity;
-- [ ] system clock;
-- [ ] Qt resources;
-- [ ] translations;
-- [ ] XDG paths;
+- [x] Python version;
+- [x] required modules;
+- [x] database;
+- [x] permissions;
+- [x] keyring;
+- [x] public connectivity; (`doctor --network`; offline by default so the
+  command stays deterministic and the suite never touches the network)
+- [x] system clock; (`doctor --network` compares against a public clock)
+- [x] Qt resources;
+- [x] translations;
+- [x] XDG paths;
 - [x] English documentation. (`docs/en/developers/`)
-- [ ] Spanish translation availability.
+- [x] Spanish translation availability.
 
-- [ ] It must never display secrets.
+- [x] It must never display secrets. (No credential store is read; a test
+  monkeypatches `KeyringCredentialStore.load`/`list` to fail if doctor
+  ever calls them.)
 
 ---
 

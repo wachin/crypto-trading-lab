@@ -438,33 +438,12 @@ class MainWindow(QMainWindow):
         plain-language summary and confirms. Returns a status message
         for the UI/tests. ``paths`` is injectable for tests.
         """
-        from pathlib import Path
+        from crypto_trading_lab.application import import_csv_file
 
-        from crypto_trading_lab.market_data.importer import parse_csv
-        from crypto_trading_lab.persistence.candles import CandleRepository
-        from crypto_trading_lab.persistence.database import (
-            create_database,
-            database_engine,
-            make_session_factory,
-        )
-
-        summary = parse_csv(Path(path))
-        if not summary.ok:
-            return summary.beginner_explanation()
-
-        paths = paths or self._paths()
-        engine = database_engine(paths.database_file)
-        create_database(engine)
-        session = make_session_factory(engine)()
-        try:
-            saved = CandleRepository(session).save_candles(summary.candles)
-        finally:
-            session.close()
-            engine.dispose()
-        return (
-            f"Imported {saved} candles of {summary.symbol} "
-            f"({summary.interval})."
-        )
+        # The CLI calls the same function (chapter 22: one use case,
+        # two front ends), so validation and persistence cannot drift.
+        outcome = import_csv_file(path, paths=paths or self._paths())
+        return outcome.message
 
     def _open_csv_dialog(self) -> None:
         """File dialog + import flow for the Load CSV button."""

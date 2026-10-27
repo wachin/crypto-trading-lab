@@ -29,7 +29,7 @@ and the measured `ccxt` evaluation.
 
 `.venv/` is already in [`.gitignore`](../../../.gitignore); never commit it.
 
-> **Verified:** Debian 13 (system packages) — 707 passed, 2 skipped, exit 0.
+> **Verified:** Debian 13 (system packages) — 755 passed, 2 skipped, exit 0.
 > **Windows 10** — verified on 2026-10-01 with these exact steps: clean `pip`
 > install, the window opens, and the suite reports the same results on Python
 > 3.14.7.
@@ -39,11 +39,15 @@ and the measured `ccxt` evaluation.
 > [`cross-platform` workflow](../../../.github/workflows/cross-platform.yml)
 > exists to measure it when its turn comes.
 
-For a machine with no Debian packages at all, [`Experiments/`](../../../Experiments/README.md)
-is a self-contained kit: `requirements-all.txt` (every dependency, including
-`ccxt`), a one-click `setup_windows.bat`, a `verify.py` that runs the checks
-and writes a report, a filled-in-able `CHECKLIST.md`, and a 400-candle sample
-dataset so the whole pipeline can be exercised offline.
+For a machine with no Debian packages at all, the repository root carries
+[`requirements-all.txt`](../../../requirements-all.txt): every dependency in
+one file, including the optional `ccxt`, `pypdf`, `keyring` and `PyYAML`
+extras. Install it inside the activated virtualenv, then the project itself:
+
+```bash
+python -m pip install -r requirements-all.txt
+python -m pip install -e .
+```
 
 ---
 
@@ -86,6 +90,7 @@ Optional extras:
 |---|---|---|
 | Credential storage in the system keyring (chapter 9) | `python3-keyring` | `keyring` |
 | PDF report export (chapter 41) | `python3-pypdf` | `pypdf` |
+| YAML backtest configurations (chapter 22) | `python3-yaml` (shipped with the Debian package) | `PyYAML` |
 | Read-only CCXT adapter (multi-exchange) | **none — PyPI only** | `ccxt` |
 | Live WebSocket feed (chapter 27) | **none — PyPI only** | `aiohttp`, `websockets` |
 | Translation tooling | `qt6-l10n-tools` | (Qt SDK) |
@@ -98,7 +103,7 @@ plain `pip install .` works on any platform — which is what Windows and
 macOS need. On Debian the system packages satisfy those specifiers, so pip
 inside a `--system-site-packages` venv installs no PyPI copies of them.
 
-The same lists live in `pyproject.toml` as the `venv`, `dev`, `pdf`, `ccxt`,
+The same lists live in `pyproject.toml` as the `venv`, `dev`, `pdf`, `yaml`, `ccxt`,
 `aiohttp` and `websockets` optional-dependency groups, so a virtualenv can be
 filled with one command (path B below).
 
@@ -122,7 +127,7 @@ python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 
-# Only the PyPI-only extras:
+# Only the extras that have no Debian package:
 python -m pip install ccxt          # add pypdf for PDF reports
 ```
 
@@ -133,7 +138,7 @@ Verify:
 
 ```bash
 python -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 707 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 755 passed, 2 skipped
 PYTHONPATH=src python -m crypto_trading_lab            # launch the app
 ```
 
@@ -156,7 +161,7 @@ python -m pip install --upgrade pip
 # Installs the package in editable mode (PyQt6, pyqtgraph, SQLAlchemy and
 # platformdirs come from [project.dependencies]) plus the test tools, ccxt,
 # pypdf and keyring.
-python -m pip install -e ".[dev,ccxt,pdf,credentials]"
+python -m pip install -e ".[dev,ccxt,pdf,credentials,yaml]"
 ```
 
 The editable install adds the `crypto-trading-lab` command and makes
@@ -248,7 +253,7 @@ Environment: Debian 13, Python 3.13.5, `python3 -m venv
 | `--network` probe | `BTC/USDT last=84411.09` |
 | Adapter `fetch_candles()` over Binance | normalised `Decimal` + UTC candles |
 | Adapter `fetch_candles()` over **Coinbase** | normalised `Decimal` + UTC candles |
-| Full test suite inside the venv | **707 passed, 2 skipped** (same as the system Python) |
+| Full test suite inside the venv | **707 passed, 2 skipped** (at that date; same as the system Python) |
 
 The decisive result is the Coinbase row: the standard-library downloader
 reaches Binance only, so `ccxt` is what makes chapter 26.3 possible at all.
@@ -264,3 +269,38 @@ than assuming `BTC/USDT` everywhere.
 default and the standard-library Binance downloader stay as they are; the
 dependency belongs to the optional CCXT path, which is still not exposed in
 the UI.
+
+---
+
+## 8. The clean venv, measured again (2026-10-26)
+
+A fresh `.venv` built exactly as section 3 describes — no
+`--system-site-packages` — so the PyPI path is measured rather than assumed:
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r requirements-all.txt
+.venv/bin/python -m pip install -e .
+```
+
+| Check | Result |
+|---|---|
+| Python | 3.13.5 |
+| PyQt6 / Qt | 6.11.0 / 6.11.2 |
+| pyqtgraph / SQLAlchemy / platformdirs | 0.14.0 / 2.1.6 / 4.13.5 |
+| **PyYAML** | **6.0.3** |
+| ccxt / pypdf / keyring | 4.5.90 / 6.21.2 / 25.7.0 |
+| pytest / pytest-qt | 9.1.1 / 4.5.0 |
+| Full suite inside the venv | **755 passed, 2 skipped**, exit 0 |
+| `crypto-trading-lab backtest strategy.yaml` | ran and printed the metrics |
+| `crypto-trading-lab doctor` | 9 passed, 1 warning (no `docs/es` tree), 2 skipped, 0 failed |
+
+**A bug this measurement found.** `[project.scripts]` pointed at the GUI
+function, so the installed `crypto-trading-lab` ignored its arguments and
+opened a window: `crypto-trading-lab doctor` hung instead of running. The
+script now points at `crypto_trading_lab.__main__:main`, which dispatches to
+the CLI when there are arguments and to the GUI otherwise, and imports Qt
+only on the GUI path. Two tests in `tests/test_cli.py` cover it — one runs
+the entry point in a subprocess, one asserts that importing it does not
+import PyQt6.

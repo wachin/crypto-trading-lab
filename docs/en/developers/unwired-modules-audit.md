@@ -417,7 +417,9 @@ while auditing and they belong in the same conversation:
 - Every module in this audit was added in the 2026-09-18/19 burst and
   never touched again. The pattern — module first, integration never — is
   the root cause, not any single file.
-- **Most CLI subcommands are still placeholders (verified 2026-10-07).**
+- **Most CLI subcommands were placeholders (verified 2026-10-07; fixed
+  2026-10-26 — chapter 22 is now `[x]`, every subcommand calls
+  `application.py` and `tests/test_cli.py` proves it).**
   `crypto-trading-lab database check`, `import-csv`, `backtest`,
   `glossary search` and `list lessons` each print one line and return `0`
   without doing anything (`cli.py:36-68`): `database check` claims

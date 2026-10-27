@@ -71,7 +71,7 @@ task.
 
 - Debian 13, Python 3.13.5, PyQt6 + pyqtgraph + SQLAlchemy +
   platformdirs from system packages (no venv)
-- Expected baseline: **707 passed, 2 skipped**
+- Expected baseline: **755 passed, 2 skipped**
 - GUI tests run offscreen (`QT_QPA_PLATFORM=offscreen`)
 
 ## Current position
@@ -80,10 +80,11 @@ The scientific core is implemented and tested: domain models, market
 data, indicators, the backtesting engine, performance metrics, the
 research workflow, robustness analysis and paper trading over replayed
 datasets. All 16 unwired modules the 2026-09/10 audit found are now
-resolved. The immediate frontier is the CLI subcommands that still only
-print and return `0` (`database check`, `import-csv`, `backtest`,
-`glossary search`, `list lessons`), the **live-data path** — Binance
-WebSocket (ch. 26.2/27), testnet order placement (ch. 68) — and
+resolved, and chapter 22 (the CLI) is complete: every subcommand calls
+the shared use cases in `src/crypto_trading_lab/application.py`, the same
+functions the GUI uses. The immediate frontier is the **live-data path**
+— Binance WebSocket (ch. 26.2/27) — testnet order placement (ch. 68),
+feeding the execution model into the backtest engine (ch. 56.5), and
 packaging (ch. 15/16/18). Real trading stays disabled by default.
 
 `ROADMAP.md` is the per-chapter source of truth for what remains; see

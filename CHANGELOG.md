@@ -14,6 +14,54 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **A working command-line interface (chapter 22), and the shared use-case
+  layer behind it.** The five subcommands that printed one line and returned
+  `0` now do real work: `database check` runs SQLite's
+  `PRAGMA integrity_check` and prints the schema version plus every table's
+  row count (a missing database is reported as missing, not "passed");
+  `import-csv` validates the file with the chapter 28 parser and only then
+  creates the database; `backtest` loads stored candles and runs the
+  chapter 37 engine with the chapter 40 metrics from a JSON or YAML
+  configuration; `glossary search` parses the beginner glossary; and
+  `list-lessons` reads the curriculum. The new
+  `src/crypto_trading_lab/application.py` holds the use cases, and
+  `MainWindow.load_csv_file` now calls the same `import_csv_file` the CLI
+  does, so the two front ends cannot drift apart. `doctor` gained the
+  twelve checks chapter 22 lists — connectivity and clock drift behind
+  `--network`, so the suite stays offline — and never reads a credential
+  store. 47 new tests (`tests/test_cli.py`, `tests/test_application.py`);
+  baseline 707 → **755 passed, 2 skipped**. Documented in
+  `docs/en/developers/cli.md`. YAML configurations read through PyYAML:
+  the Debian package now depends on `python3-yaml`, pip users get it from
+  `requirements-all.txt` or the new `yaml` extra, and JSON needs nothing
+  extra.
+
+- **The console script actually dispatches now.** `[project.scripts]`
+  pointed at the GUI function, so an installed `crypto-trading-lab` ignored
+  every argument and opened a window — `crypto-trading-lab doctor` hung.
+  It points at `crypto_trading_lab.__main__:main`, which runs the CLI when
+  there are arguments, the GUI otherwise, and imports Qt only on the GUI
+  path. Found while measuring a clean virtualenv; two subprocess tests in
+  `tests/test_cli.py` keep it fixed.
+
+- **`PyYAML` in the Debian package and in `requirements-all.txt`.**
+  `debian/control` now depends on `python3-yaml` (runtime and build), and
+  `requirements-all.txt` lists `PyYAML>=6.0` so a machine without Debian
+  packages gets the YAML backtest path in one install. `pyproject.toml`
+  gained a `yaml` extra for the same reason.
+
+- **The dead `Experiments/` references are gone.** The kit was deleted on
+  2026-10-16 but the README, the handoff and the virtualenv guide still
+  linked to it, so `tools/check_doc_links.py` failed in CI. The three links
+  now point at `requirements-all.txt` and the manual `cross-platform`
+  workflow; the checker reports zero broken links.
+
+- **A clean virtualenv is measured, not assumed.** Section 8 of
+  `docs/en/developers/venv-setup.md` records a fresh
+  `python3 -m venv .venv` built from `requirements-all.txt`: PyYAML 6.0.3,
+  PyQt6 6.11.0, SQLAlchemy 2.1.6, pytest 9.1.1, **755 passed, 2 skipped**,
+  exit 0 — the same numbers as the system Python.
+
 - **`tools/check_doc_links.py`, and a CI step that runs it.** The test suite
   never reads the documentation, so nothing caught broken links: five had
   accumulated in the README, three pointing at an anchor that never existed

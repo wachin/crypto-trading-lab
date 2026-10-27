@@ -61,7 +61,7 @@ pointing every proxy at a dead port changes nothing:
 http_proxy=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 \
 ALL_PROXY=http://127.0.0.1:9 QT_QPA_PLATFORM=offscreen \
 python3 -m pytest tests/ -q
-# → 707 passed, 2 skipped, exit code 0
+# → 755 passed, 2 skipped, exit code 0
 ```
 
 The two skips are intentional guards in `tests/exchanges/contract.py`
@@ -89,9 +89,8 @@ hand back a bounded result rather than a broad refactor.
 
 ## A good first task for a smaller model
 
-`AGENT-HANDOFF.md` §5.2 item 1: the CLI subcommands in
-`src/crypto_trading_lab/cli.py` that print one line and return `0` without
-doing anything (`database check`, `import-csv`, `backtest`, `glossary search`,
-`list lessons`). It is bounded, entirely offline, described by ROADMAP
-chapter 22, and the existing test suite already covers the CLI surface — so
-"done" is easy to demonstrate and easy to check.
+`AGENT-HANDOFF.md` §5.2: the chapter 22 CLI is finished (2026-10-26),
+so start from the next item instead — the execution model in the backtest
+engine (chapter 56.5) or one Debian packaging task (chapter 16). Both are
+bounded and entirely offline. Pick a single command or a single table,
+and the existing test suite tells you whether it still works.
