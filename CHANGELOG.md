@@ -14,6 +14,17 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **A checker for the references written inside docstrings.** The suite
+  never reads prose and the Markdown link checker never opens a
+  docstring, so a rename could leave Sphinx roles (`:class:`, `:func:`)
+  and `docs/...md` paths pointing at nothing — the failure mode
+  `check_doc_links.py` exists for, one layer in.
+  `tools/check_docstring_refs.py`
+  resolves both against the AST (no imports, so no optional dependency is
+  needed), prints how many references it checked, and fails when it finds
+  none, because a scanner that matches nothing is also broken. All 33
+  roles and 71 Markdown paths in the package currently resolve. Wired
+  into CI next to the link check.
 - **Monthly candles can be downloaded and validated.** `1M` joins the
   downloader's vocabulary, and `validate_candles` checks it by calendar
   month instead of by a fixed step: February is 28 days and August is 31,

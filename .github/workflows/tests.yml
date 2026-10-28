@@ -60,6 +60,11 @@ jobs:
       - name: Check documentation links and anchors
         run: .venv/bin/python tools/check_doc_links.py
 
+      # Docstrings carry :class:`X` roles and repository paths that
+      # nothing else reads; a rename leaves them pointing at nothing.
+      - name: Check docstring references
+        run: .venv/bin/python tools/check_docstring_refs.py
+
       - name: Run the test suite
         env:
           QT_QPA_PLATFORM: offscreen

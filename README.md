@@ -864,7 +864,7 @@ profit.
 | `docs/en/developers/` | Indexed developer docs — ADRs, AFML specifications, threat model, live-trading roadmap ([start here](docs/en/developers/README.md)) |
 | `src/crypto_trading_lab/` | Source: domain, exchanges, security, persistence, market data, indicators, backtesting, research, reporting, i18n, UI |
 | `tests/` | 64 test modules — engine arithmetic is hand-verified |
-| `tools/` | Asset generators (the contributor banner GIF) and the ccxt evaluation script |
+| `tools/` | Asset generators (the contributor banner GIF), the ccxt evaluation script, and two offline checkers: Markdown links/anchors and docstring references |
 | `requirements-all.txt` | Every dependency for a machine without Debian packages (pip, virtualenv, Windows, macOS) |
 | `Makefile` | `make test`, `make run`, `make banner`, `make translations` |
 | `.github/` | CI workflow, pull-request and issue templates |
