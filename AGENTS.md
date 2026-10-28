@@ -71,7 +71,7 @@ task.
 
 - Debian 13, Python 3.13.5, PyQt6 + pyqtgraph + SQLAlchemy +
   platformdirs from system packages (no venv)
-- Expected baseline: **827 passed, 2 skipped**
+- Expected baseline: **833 passed, 2 skipped**
 - GUI tests run offscreen (`QT_QPA_PLATFORM=offscreen`)
 
 ## Current position

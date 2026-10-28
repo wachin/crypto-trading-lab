@@ -411,6 +411,18 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   installed, so the chapter-41 export test runs instead of skipping).
 
 ### Fixed
+- **Annualized metrics no longer assume every candle is a day.**
+  `MetricConfig.periods_per_year` defaulted to 365 and no call site ever
+  overrode it, so an hourly run annualized after 365 candles — 15 days —
+  and reported that as a yearly return (volatility understated by about
+  4.9x, return by 24x). Monthly candles made it worse: a monthly run
+  needed 30 years of candles before annualizing at all, and at 365 of
+  them it labelled the 30-year total as one year's return. The run now
+  records its interval (`BacktestResult.interval`), and
+  `MetricConfig.for_interval` derives the periods per year from it —
+  365 daily, 8,760 hourly, 12 monthly (counted by definition, not by
+  dividing 365 by an approximate month). A run that does not record its
+  interval keeps the daily default and says so in the report's warnings.
 - **`StrategyRegistry` wrote to disk as a side effect of being built.**
   Its constructor created `data/strategy_registry/registry.json` under the
   *current working directory* — including the source tree — and did it for

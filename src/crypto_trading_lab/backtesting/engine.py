@@ -290,6 +290,10 @@ class BacktestResult:
     strategy_version: str = "unknown"
     dataset_version: str = "unknown"
     dataset_period: str = ""
+    #: Interval of the candles this run consumed (``1m``, ``1d``, ``1M``).
+    #: Chapter 40 needs it to annualize: a year is 12 monthly candles, not
+    #: 365 of them. Empty means "not recorded", and the metrics say so.
+    interval: str = ""
 
     @property
     def net_profit(self) -> Decimal:
@@ -640,4 +644,5 @@ def run_backtest(
             f"{candles[0].open_time.isoformat()} to "
             f"{candles[-1].close_time.isoformat()}"
         ),
+        interval=candles[0].interval,
     )

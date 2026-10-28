@@ -182,6 +182,14 @@ def test_ma_crossover_generates_trades_on_trend():
 
 
 
+def test_the_result_records_the_candle_interval():
+    # Chapter 40 annualizes from this: 12 monthly candles are a year, 365
+    # hourly candles are 15 days.
+    result = run_backtest(_candles([1, 2, 3]), NullStrategy())
+
+    assert result.interval == "1m"
+
+
 def test_built_in_strategies_declare_how_much_warmup_they_need():
     # The slow average must fill, then one more candle to compare it with.
     assert MACrossoverStrategy(fast=10, slow=30).warmup_candles == 31

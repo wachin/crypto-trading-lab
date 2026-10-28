@@ -22,6 +22,7 @@ from crypto_trading_lab.backtesting.metrics import (
     DISCLAIMER,
     MetricConfig,
     compute_performance,
+    periods_per_year_for,
 )
 from crypto_trading_lab.domain.models import Candle, Symbol
 
@@ -53,6 +54,7 @@ def _result(
     capital: Decimal = Decimal("100"),
     order_count: int = 0,
     exposure: tuple[bool, ...] | None = None,
+    interval: str = "",
 ) -> BacktestResult:
     equity_curve = tuple(Decimal(e) for e in equity)
     return BacktestResult(
@@ -68,6 +70,7 @@ def _result(
         candle_count=len(equity_curve),
         order_count=order_count,
         exposure_curve=exposure or tuple(False for _ in equity_curve),
+        interval=interval,
     )
 
 
@@ -192,6 +195,96 @@ def test_annualization_and_calmar():
     assert report.returns.annualized_is_valid
     assert abs(report.returns.annualized_return - Decimal(1)) < EPS
     assert report.risk.calmar_ratio is None  # monotonic: no drawdown
+
+
+def _monthly_candles(closes: list[int]) -> list[Candle]:
+    """Candles that open on the first day of consecutive months."""
+    candles: list[Candle] = []
+    for index, close in enumerate(closes):
+        year = 2024 + index // 12
+        month = index % 12 + 1
+        next_year, next_month = (
+            (year + 1, 1) if month == 12 else (year, month + 1)
+        )
+        candles.append(
+            Candle(
+                Symbol("BTC/USDT"),
+                "1M",
+                datetime(year, month, 1, tzinfo=timezone.utc),
+                datetime(next_year, next_month, 1, tzinfo=timezone.utc)
+                - timedelta(milliseconds=1),
+                open=Decimal(close),
+                high=Decimal(close + 1),
+                low=Decimal(close - 1),
+                close=Decimal(close),
+                volume=Decimal(10),
+            )
+        )
+    return candles
+
+
+def test_a_monthly_backtest_annualizes_from_its_own_interval():
+    # Twelve monthly candles are exactly one year, so the annualized return
+    # equals the total return; the old daily default would have suppressed
+    # it (12 < 365) and then, at 365 candles, reported 30 years as one.
+    candles = _monthly_candles(list(range(100, 112)))
+
+    result = run_backtest(candles, BuyAndHoldStrategy())
+    report = compute_performance(result)
+
+    assert result.interval == "1M"
+    assert report.returns.annualized_is_valid
+    assert (
+        abs(report.returns.annualized_return - result.return_fraction) < EPS
+    )
+
+
+def test_periods_per_year_follows_the_candle_interval():
+    assert periods_per_year_for("1d") == Decimal(365)
+    assert periods_per_year_for("1h") == Decimal(8760)
+    assert periods_per_year_for("4h") == Decimal(2190)
+    # A year holds twelve months whatever their length.
+    assert periods_per_year_for("1M") == Decimal(12)
+    assert periods_per_year_for("") is None
+    assert periods_per_year_for("hourly") is None
+
+
+def test_a_year_of_monthly_candles_annualizes_as_one_year():
+    # 12 monthly candles that double the account: annualized == total.
+    n = 12
+    equity = [
+        str(Decimal(100) + Decimal(100) * Decimal(i) / Decimal(n - 1))
+        for i in range(n)
+    ]
+
+    report = compute_performance(_result(equity, interval="1M"))
+
+    assert report.returns.annualized_is_valid
+    assert abs(report.returns.annualized_return - Decimal(1)) < EPS
+    assert "12" in report.metric_config["periodicity"]
+
+
+def test_a_short_hourly_run_is_not_annualized_as_if_it_were_daily():
+    # 365 hourly candles cover 15 days. Treating them as a year used to
+    # report a 15-day return as an annual one.
+    n = 365
+    equity = [
+        str(Decimal(100) + Decimal(100) * Decimal(i) / Decimal(n - 1))
+        for i in range(n)
+    ]
+
+    report = compute_performance(_result(equity, interval="1h"))
+
+    assert report.returns.annualized_is_valid is False
+    assert report.returns.annualized_return is None
+    assert "8760" in " ".join(report.warnings)
+
+
+def test_a_run_without_a_recorded_interval_says_what_it_assumed():
+    report = compute_performance(_result(["100", "110"]))
+
+    assert "365 periods per year" in " ".join(report.warnings)
+    assert "365" in report.metric_config["periodicity"]
 
 
 # --- 40.4 + 40.5 --------------------------------------------------------------

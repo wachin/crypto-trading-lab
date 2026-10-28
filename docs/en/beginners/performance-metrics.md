@@ -27,8 +27,11 @@ Every metric in the application comes with:
 
 The shared assumptions (chapter 40.7) are recorded with every report:
 
-- **Periodicity:** one equity sample per candle; 365 periods per year
-  by default (daily crypto candles).
+- **Periodicity:** one equity sample per candle, and the number of
+  periods per year comes from the candle interval — 365 for daily
+  candles, 8,760 for hourly, 52 for weekly, 12 for monthly. A year means
+  a year whatever the timeframe; a run whose interval is not recorded
+  falls back to the daily default and says so in its warnings.
 - **Annualization method:** geometric compounding for returns;
   square-root-of-time scaling for volatility and ratios.
 - **Assumed risk-free rate:** 0 by default.

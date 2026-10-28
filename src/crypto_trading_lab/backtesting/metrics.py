@@ -17,6 +17,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from crypto_trading_lab.backtesting.engine import BacktestResult
+from crypto_trading_lab.market_data.historical import (
+    CALENDAR_INTERVALS,
+    interval_seconds,
+)
 
 __all__ = [
     "DISCLAIMER",
@@ -30,7 +34,30 @@ __all__ = [
     "PerformanceReport",
     "compute_performance",
     "compare_reports",
+    "periods_per_year_for",
 ]
+
+#: Days in a year, used to turn an interval into periods per year.
+_DAYS_PER_YEAR = Decimal(365)
+
+
+def periods_per_year_for(interval: str) -> Decimal | None:
+    """Candles of ``interval`` in one year (``1d`` → 365, ``1M`` → 12).
+
+    ``None`` means the interval is unknown, so the caller has to decide
+    what to assume and say so. Calendar intervals are counted by
+    definition: a year holds twelve months, whatever their length, and
+    dividing 365 by an approximate month would annualize a year of
+    monthly candles as 1.01 years.
+    """
+    if not interval:
+        return None
+    if interval in CALENDAR_INTERVALS:
+        return Decimal(12)
+    seconds = interval_seconds(interval)
+    if not seconds:
+        return None
+    return _DAYS_PER_YEAR * Decimal(86400) / Decimal(seconds)
 
 #: Mandatory report disclaimer (ROADMAP 40.8).
 DISCLAIMER = (
@@ -49,6 +76,18 @@ class MetricConfig:
     risk_free_rate: Decimal = Decimal("0")      # annual fraction
     min_trades_warning: int = 30     # below this, statistics are fragile
     min_observations_ratio: int = 30  # below this, no Sharpe/Sortino
+
+    @classmethod
+    def for_interval(cls, interval: str) -> "MetricConfig":
+        """Annualization that matches the candle interval (40.7).
+
+        An unknown interval keeps the daily default; the report then says
+        so in its warnings instead of letting the assumption pass as fact.
+        """
+        periods = periods_per_year_for(interval)
+        if periods is None:
+            return cls()
+        return cls(periods_per_year=periods)
 
     def metadata(self) -> dict[str, str]:
         return {
@@ -318,9 +357,22 @@ def compute_performance(
     benchmark: BacktestResult | None = None,
     config: MetricConfig | None = None,
 ) -> PerformanceReport:
-    """Compute the chapter 40 metric catalogue for one backtest run."""
-    config = config or MetricConfig()
+    """Compute the chapter 40 metric catalogue for one backtest run.
+
+    When no ``config`` is given, the annualization is derived from the
+    run's candle interval: a year is 365 daily candles, 8,760 hourly
+    candles and 12 monthly candles. A run that does not record its
+    interval falls back to the daily default, with a warning.
+    """
     warnings: list[str] = []
+    if config is None:
+        config = MetricConfig.for_interval(result.interval)
+        if periods_per_year_for(result.interval) is None:
+            warnings.append(
+                "annualization assumes 365 periods per year: this run "
+                "does not record its candle interval, so the metrics "
+                "cannot be scaled to a year (chapter 40.7)"
+            )
     ppy = config.periods_per_year
 
     # --- 40.1 Return and profit metrics --------------------------------
