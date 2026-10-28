@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import random
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -18,16 +19,19 @@ from crypto_trading_lab.backtesting.engine import (
 from crypto_trading_lab.backtesting.robustness import (
     CostSweepRow,
     DegradationReport,
+    ExecutionImpactReport,
     MonteCarloConfig,
     MonteCarloReport,
     PerturbationResult,
     RobustnessReport,
+    compare_execution_models,
     compute_robustness_report,
     monte_carlo_trades,
     out_of_sample_degradation,
     perturb_sma_crossover,
     sweep_costs,
 )
+from crypto_trading_lab.execution_realism import ExecutionConfig
 from crypto_trading_lab.domain.models import Candle, Symbol
 from crypto_trading_lab.market_data.splitting import PeriodKind, split_candles
 
@@ -249,3 +253,124 @@ def test_robustness_report_summary():
     report = compute_robustness_report(result)
     summary = report.summary()
     assert "Monte Carlo" in summary or "Robustness Report" in summary
+
+# -- 56.5: execution realism inside robustness -----------------------------
+
+
+def _trading_candles(n: int = 160) -> list[Candle]:
+    """A sine path, so SMA(5) really crosses SMA(20) and orders happen."""
+    closes = [
+        Decimal(str(round(100 + 15 * math.sin(index / 9), 4)))
+        for index in range(n)
+    ]
+    return [
+        Candle(
+            Symbol("BTC/USDT"),
+            "1m",
+            BASE + timedelta(minutes=index),
+            BASE + timedelta(minutes=index + 1),
+            open=close,
+            high=close + 1,
+            low=close - 1,
+            close=close,
+            volume=Decimal("50"),
+        )
+        for index, close in enumerate(closes)
+    ]
+
+
+def test_compare_execution_models_quantifies_the_difference():
+    """The report states what the execution assumptions cost (56.5)."""
+    candles = _trading_candles(160)
+
+    def factory():
+        return MACrossoverStrategy(fast=5, slow=20)
+
+    report = compare_execution_models(candles, factory, _config())
+    assert isinstance(report, ExecutionImpactReport)
+    assert report.baseline.model.startswith("cost model")
+    assert "chapter 56" in report.realistic.model
+    assert report.delta_net_profit == (
+        report.realistic.net_profit - report.baseline.net_profit
+    )
+    assert report.delta_return_fraction == (
+        report.realistic.return_fraction - report.baseline.return_fraction
+    )
+    # Both arms see the same signals; only the execution assumptions differ.
+    assert report.realistic.trades == report.baseline.trades
+    assert report.delta_net_profit != 0
+    # The direction is not guaranteed, and the note must say so: the cost
+    # model is a fixed adverse slippage, chapter 56 draws from a band.
+    assert "not a prediction" in report.note
+    assert "either direction" in report.note
+    assert "Execution impact" in report.summary()
+
+
+def test_compare_execution_models_is_reproducible():
+    """Same candles and seed produce the same comparison (37.8)."""
+    candles = _trading_candles(160)
+
+    def factory():
+        return MACrossoverStrategy(fast=5, slow=20)
+
+    first = compare_execution_models(candles, factory, _config(), seed=9)
+    second = compare_execution_models(candles, factory, _config(), seed=9)
+    assert first == second
+    assert first.seed == 9
+
+
+def test_cost_sweep_varies_the_execution_model_assumptions():
+    """With realism on, the sweep moves the model, not a dead field (56.3)."""
+    candles = _trading_candles(160)
+
+    def factory():
+        return MACrossoverStrategy(fast=5, slow=20)
+
+    config = BacktestConfig(
+        execution_config=ExecutionConfig(),
+        execution_seed=4,
+    )
+    rows = sweep_costs(candles, factory, config)
+    assert len(rows) > 1
+    # The sweep reports the assumption it actually varied: the model's own
+    # base slippage in basis points, not the unused cost-model fraction.
+    assert rows[0].slippage == Decimal(0)
+    assert rows[-1].slippage == Decimal("0.0020")
+    assert rows[0].net_profit != rows[-1].net_profit
+
+
+def test_robustness_report_includes_the_execution_impact():
+    """The consolidated report carries the execution comparison (56.5)."""
+    candles = _trading_candles(160)
+
+    def factory():
+        return MACrossoverStrategy(fast=5, slow=20)
+
+    result = run_backtest(candles, factory(), _config())
+    report = compute_robustness_report(
+        result,
+        candles=candles,
+        strategy_factory=factory,
+    )
+    assert report.execution_impact is not None
+    assert report.metadata["execution_models_compared"] == "yes"
+    assert "Execution impact" in report.summary()
+
+
+def test_robustness_report_can_skip_the_execution_impact():
+    """Callers that only want the chapter 44 tests can opt out."""
+    candles = _trading_candles(160)
+
+    def factory():
+        return MACrossoverStrategy(fast=5, slow=20)
+
+    result = run_backtest(candles, factory(), _config())
+    report = compute_robustness_report(
+        result,
+        candles=candles,
+        strategy_factory=factory,
+        include_execution_impact=False,
+    )
+    assert report.execution_impact is None
+    assert report.metadata["execution_models_compared"] == "no"
+    assert "Execution impact" not in report.summary()

@@ -37,6 +37,7 @@ from crypto_trading_lab.backtesting.metrics import (
 )
 from crypto_trading_lab.configuration.xdg import AppPaths
 from crypto_trading_lab.domain.models import Symbol
+from crypto_trading_lab.execution_realism import ExecutionConfig
 from crypto_trading_lab.education.curriculum import (
     CURRICULUM,
     LessonContent,
@@ -270,8 +271,10 @@ _COMMON_KEYS = frozenset(
         "symbol",
         "interval",
         "benchmark",
+        "execution_model",
+        "execution_seed",
     }
-)
+    )
 
 
 @dataclass(frozen=True)
@@ -525,10 +528,37 @@ def run_backtest_file(
             payload, "spread", "0.0002", minimum=Decimal("0")
         ),
     )
+    execution_model = str(
+        payload.get("execution_model", "cost_model")
+    ).strip().lower()
+    if execution_model in ("cost_model", "cost-model", "simple"):
+        execution_config = None
+    elif execution_model in (
+        "chapter_56",
+        "chapter-56",
+        "execution_realism",
+        "realistic",
+    ):
+        execution_config = ExecutionConfig()
+    else:
+        raise ApplicationError(
+            f"unknown execution_model {execution_model!r}; use "
+            "'cost_model' or 'chapter_56'"
+        )
+    seed_raw = payload.get("execution_seed", 42)
+    try:
+        execution_seed = int(seed_raw)
+    except (TypeError, ValueError) as exc:
+        raise ApplicationError(
+            f"execution_seed must be an integer, got {seed_raw!r}"
+        ) from exc
+
     config = BacktestConfig(
         initial_capital=initial_capital,
         position_fraction=position_fraction,
         costs=costs,
+        execution_config=execution_config,
+        execution_seed=execution_seed,
     )
 
     symbol = payload.get("symbol")

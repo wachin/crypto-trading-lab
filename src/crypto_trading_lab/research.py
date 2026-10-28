@@ -336,6 +336,7 @@ def run_research(
             monte_carlo_config=MonteCarloConfig(
                 scenarios=monte_carlo_scenarios, seed=1
             ),
+            config=config,
         )
 
     degradation = robustness.degradation if robustness else None

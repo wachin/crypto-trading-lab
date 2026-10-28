@@ -19,7 +19,7 @@ research tooling only and never touches money.
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Callable, Sequence
 
@@ -30,6 +30,7 @@ from crypto_trading_lab.backtesting.engine import (
     run_backtest,
 )
 from crypto_trading_lab.domain.models import Candle
+from crypto_trading_lab.execution_realism import ExecutionConfig
 from crypto_trading_lab.market_data.splitting import (
     PeriodKind,
     split_candles,
@@ -43,6 +44,10 @@ __all__ = [
     "perturb_sma_crossover",
     "CostSweepRow",
     "sweep_costs",
+    "ExecutionImpactRow",
+    "ExecutionImpactReport",
+    "compare_execution_models",
+    "EXECUTION_IMPACT_NOTE",
     "DegradationReport",
     "out_of_sample_degradation",
     "DEGRADATION_NOTE",
@@ -286,9 +291,16 @@ def sweep_costs(
     Reveals whether the apparent edge survives realistic cost
     uncertainty: a strategy that only works at exactly the assumed fee
     schedule is fragile.
+
+    When the run uses the chapter 56 execution model, the multipliers scale
+    that model's own slippage assumptions (base slippage and market impact)
+    instead of the cost model's slippage fraction, which the realistic path
+    does not read. The reported ``slippage`` column always names the
+    assumption that was actually varied.
     """
-    base = (config or BacktestConfig()).costs
     config = config or BacktestConfig()
+    base = config.costs
+    execution = config.execution_config
     rows: list[CostSweepRow] = []
     for m in multipliers:
         costs = CostModel(
@@ -297,28 +309,140 @@ def sweep_costs(
             slippage_fraction=base.slippage_fraction * m,
             spread_fraction=base.spread_fraction * m,
         )
+        execution_scaled = None
+        if execution is not None:
+            execution_scaled = replace(
+                execution,
+                base_slippage_bps=int(Decimal(execution.base_slippage_bps) * m),
+                impact_factor=execution.impact_factor * m,
+            )
         run = run_backtest(
             candles,
             strategy_factory(),
-            BacktestConfig(
-                initial_capital=config.initial_capital,
+            replace(
+                config,
                 costs=costs,
-                execution_model=config.execution_model,
-                intrabar_policy=config.intrabar_policy,
-                quantity_step=config.quantity_step,
-                min_notional=config.min_notional,
+                execution_config=execution_scaled,
             ),
         )
+        if execution_scaled is not None:
+            effective_slippage = Decimal(
+                execution_scaled.base_slippage_bps
+            ) / Decimal(10000)
+        else:
+            effective_slippage = costs.slippage_fraction
         rows.append(
             CostSweepRow(
                 fee=costs.taker_fee,
-                slippage=costs.slippage_fraction,
+                slippage=effective_slippage,
                 spread=costs.spread_fraction,
                 net_profit=run.net_profit,
                 return_fraction=run.return_fraction,
             )
         )
     return rows
+
+
+# --- 56.5: impact of the execution assumptions ----------------------------
+
+#: Mandatory interpretation line for the execution comparison (56.5).
+EXECUTION_IMPACT_NOTE = (
+    "Execution assumptions are a model, not reality: latency, queue "
+    "position and adverse selection are not observable offline. The "
+    "difference below measures how much of the result depends on those "
+    "assumptions; it is not a prediction of live performance. A smaller "
+    "cost under the chapter 56 model does not make it the safer estimate: "
+    "the cost model applies a fixed adverse slippage, while chapter 56 "
+    "draws its random component from a symmetric band, so the two can "
+    "differ in either direction. Read the magnitude, not the sign alone."
+)
+
+
+@dataclass(frozen=True)
+class ExecutionImpactRow:
+    """One execution model's contribution to a run (56.5)."""
+
+    model: str
+    net_profit: Decimal
+    return_fraction: Decimal
+    total_fees: Decimal
+    total_slippage: Decimal
+    trades: int
+    rejected_orders: int
+    partial_fills: int
+
+
+@dataclass(frozen=True)
+class ExecutionImpactReport:
+    """Cost-model baseline versus the chapter 56 execution model (56.5)."""
+
+    baseline: ExecutionImpactRow
+    realistic: ExecutionImpactRow
+    delta_net_profit: Decimal
+    delta_return_fraction: Decimal
+    seed: int
+    note: str = EXECUTION_IMPACT_NOTE
+
+    def summary(self) -> str:
+        """Plain-language line a beginner can read (56.5)."""
+        return (
+            f"Execution impact ({self.baseline.model} -> "
+            f"{self.realistic.model}): net profit {self.delta_net_profit:+}, "
+            f"{self.delta_return_fraction:+.2%} of capital, "
+            f"{self.realistic.rejected_orders} rejected and "
+            f"{self.realistic.partial_fills} partially filled orders."
+        )
+
+
+def _impact_row(model: str, run: BacktestResult) -> ExecutionImpactRow:
+    return ExecutionImpactRow(
+        model=model,
+        net_profit=run.net_profit,
+        return_fraction=run.return_fraction,
+        total_fees=run.total_fees,
+        total_slippage=run.total_slippage,
+        trades=len(run.trades),
+        rejected_orders=run.rejected_orders,
+        partial_fills=run.partial_fills,
+    )
+
+
+def compare_execution_models(
+    candles: Sequence[Candle],
+    strategy_factory: Callable[[], "object"],
+    config: BacktestConfig | None = None,
+    execution_config: ExecutionConfig | None = None,
+    *,
+    seed: int | None = None,
+) -> ExecutionImpactReport:
+    """Run the same strategy under both execution models (56.5).
+
+    The baseline is the chapter 37.1 cost model; the realistic arm is the
+    chapter 56 execution model with the given assumptions (defaults when
+    ``execution_config`` is None). Both arms share capital, sizing, fees and
+    fill timing, so the difference isolates the execution assumptions.
+    """
+    config = config or BacktestConfig()
+    seed = config.execution_seed if seed is None else seed
+    baseline_config = replace(config, execution_config=None)
+    realistic_config = replace(
+        config,
+        execution_config=(
+            execution_config if execution_config is not None else ExecutionConfig()
+        ),
+        execution_seed=seed,
+    )
+    baseline = run_backtest(candles, strategy_factory(), baseline_config)
+    realistic = run_backtest(candles, strategy_factory(), realistic_config)
+    return ExecutionImpactReport(
+        baseline=_impact_row("cost model (ch. 37.1)", baseline),
+        realistic=_impact_row("chapter 56 execution realism", realistic),
+        delta_net_profit=realistic.net_profit - baseline.net_profit,
+        delta_return_fraction=(
+            realistic.return_fraction - baseline.return_fraction
+        ),
+        seed=seed,
+    )
 
 
 # --- 44.7 Out-of-sample degradation --------------------------------------
@@ -401,6 +525,9 @@ class RobustnessReport:
     degradation: DegradationReport | None
     assumptions: str
     metadata: dict[str, str]
+    #: Chapter 56.5: what the execution assumptions cost, when candles and
+    #: a strategy factory were supplied.
+    execution_impact: ExecutionImpactReport | None = None
 
     def summary(self) -> str:
         """Plain-language summary for beginners."""
@@ -427,6 +554,8 @@ class RobustnessReport:
                 f"Out-of-sample: {dg.out_of_sample_return:.1%} ({status}, "
                 f"degradation {degradation_text})"
             )
+        if self.execution_impact:
+            parts.append(self.execution_impact.summary())
         if self.perturbation and any(p.collapsed for p in self.perturbation):
             parts.append("WARNING: Some parameter variations caused collapse.")
         parts.append(ROBUSTNESS_ASSUMPTIONS)
@@ -438,20 +567,37 @@ def compute_robustness_report(
     candles: Sequence[Candle] | None = None,
     strategy_factory: Callable[[], "object"] | None = None,
     monte_carlo_config: MonteCarloConfig | None = None,
+    config: BacktestConfig | None = None,
+    *,
+    include_execution_impact: bool = True,
 ) -> RobustnessReport:
-    """Produce a consolidated robustness report (44.9).
+    """Produce a consolidated robustness report (44.9, 56.5).
 
     Combines Monte Carlo, cost sweep, and out-of-sample degradation.
-    If candles + strategy_factory are provided, runs perturbation and cost sweep.
+    If candles + strategy_factory are provided, runs perturbation and cost
+    sweep, and compares the cost model against the chapter 56 execution
+    model so the report states what the execution assumptions cost.
+    ``config`` carries the run's own assumptions; without it the report
+    uses the engine defaults.
     """
+    config = config or BacktestConfig()
     mc = monte_carlo_trades(result, monte_carlo_config) if result.trades else None
 
     cost_sweep = None
     perturbation = None
     degradation = None
+    execution_impact = None
 
     if candles and strategy_factory:
-        cost_sweep = sweep_costs(candles, strategy_factory)
+        cost_sweep = sweep_costs(candles, strategy_factory, config)
+        if include_execution_impact:
+            execution_impact = compare_execution_models(
+                candles,
+                strategy_factory,
+                config,
+                execution_config=config.execution_config,
+                seed=config.execution_seed,
+            )
         perturbation = perturb_sma_crossover(
             candles,
             fast=5,
@@ -466,9 +612,14 @@ def compute_robustness_report(
         cost_sweep=cost_sweep,
         degradation=degradation,
         assumptions=ROBUSTNESS_ASSUMPTIONS,
+        execution_impact=execution_impact,
         metadata={
             "scenarios": str(mc.scenario_count) if mc else "N/A",
             "seed": str(mc.seed) if mc else "N/A",
+            "execution_realism": config.execution_realism_name(),
+            "execution_models_compared": (
+                "yes" if execution_impact is not None else "no"
+            ),
             "tests_run": str(sum([
                 1 if mc else 0,
                 1 if perturbation else 0,

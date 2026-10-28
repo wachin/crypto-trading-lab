@@ -31,8 +31,8 @@ wired afterwards.
   (`PaperSessionConfig.seed`). The model also had two defects fixed on the
   way: slippage could be *favourable* and `simulate_execution` discarded
   its own slippage calculation. 15 tests added; suite 645 passed,
-  2 skipped. Backtest/robustness wiring (56.5) remains open, so chapter 56
-  is `[~]`, not `[x]`.
+  2 skipped. The backtest/robustness half of 56.5 was still open at that
+  point and was closed on 2026-10-28 (see below).
 - **Batch C, item 14 — `reproducibility` wired: executed 2026-09-27.**
   `ExperimentManager.create()` now produces `code_hash` and `environment`
   for every record. Fixed on the way: the code hash returned the empty
@@ -308,9 +308,17 @@ them cannot change the suite. All are recoverable from git history.
   total negative, and `simulate_execution` computed its slippage price and
   then discarded it, returning the raw book-ladder average and reporting
   market impact as if it were slippage.
-- Still open: item **56.5** also requires the backtest engine (chapter 37)
-  and robustness (chapter 44) to use the model. They still use the simple
-  `CostModel`. Chapter 56 is therefore `[~]`.
+- **Closed 2026-10-28 (56.5):** the backtest engine (chapter 37) and
+  robustness (chapter 44) now use the model too. `BacktestConfig` carries
+  an optional `execution_config` and a recorded `execution_seed`; when it
+  is set, fills come from a synthetic book whose depth is the traded volume
+  *before* the fill candle, so an order larger than the modelled liquidity
+  is partially filled or rejected. The cost-model path is untouched and
+  keeps its exact arithmetic. In robustness, `sweep_costs` now scales the
+  model's own slippage assumptions (it used to drop the execution config
+  and the position fraction on the floor), and `compare_execution_models`
+  quantifies what the assumptions cost inside every robustness report.
+  Chapter 56 is `[x]`.
 
 ### 14. `reproducibility.py` (chapter 53) → `ExperimentManager` — DONE
 

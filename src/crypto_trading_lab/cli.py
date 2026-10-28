@@ -170,6 +170,13 @@ def _print_backtest(run: application.BacktestRun) -> None:
             f"({run.dataset.symbol} {run.dataset.interval})"
         )
     print(f"Candles: {run.candle_count}")
+    print(f"Execution model: {run.config.execution_realism_name()}")
+    if run.config.execution_config is not None:
+        print(f"Execution seed: {run.config.execution_seed}")
+        print(
+            f"Orders rejected: {result.rejected_orders}, "
+            f"partially filled: {result.partial_fills}"
+        )
     print(f"Initial capital: {_money(result.initial_capital)}")
     print(f"Final equity: {_money(result.final_equity)}")
     print(

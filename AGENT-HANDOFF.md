@@ -10,12 +10,12 @@ A new AI Agent must read this file **before** doing anything else, then
 
 ---
 
-## 1. Project state (last updated 2026-10-26)
+## 1. Project state (last updated 2026-10-28)
 
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 755 passed, 2 skipped, **exit code 0** —
+- **Tests:** 770 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
@@ -61,7 +61,9 @@ A new AI Agent must read this file **before** doing anything else, then
   testnet order placement (chapter 68) and packaging (chapters 15/16/18).
   Chapter 22 (the CLI) was completed on 2026-10-26: every subcommand now
   calls the shared use-case layer in `application.py`, so the CLI and the
-  GUI cannot diverge (§5.2 item 1).
+  GUI cannot diverge (§5.2 item 1). Chapter 56.5 was completed on
+  2026-10-28: the chapter 56 execution model now feeds the backtest engine
+  and the robustness report, not only paper trading (§5.2 item 2).
   **Real trading remains disabled by default.**
 
 ### What changed on 2026-09-19 (direction correction + Fase A/B)
@@ -194,7 +196,7 @@ agents:
 - **A local `.venv/` (gitignored) exists for the PyPI path.** It was built on
   2026-10-26 from `requirements-all.txt` and measured in
   `docs/en/developers/venv-setup.md` §8 (PyYAML 6.0.3, PyQt6 6.11.0,
-  pytest 9.1.1, same 755/2 result). The Debian packages stay the supported
+  pytest 9.1.1, same 770/2 result). The Debian packages stay the supported
   default; use the venv only to reproduce the pip path.
 
 ### One reference you will not have
@@ -311,7 +313,7 @@ features the code did not ship. Concretely:
 - **The documented test baseline was wrong in twelve places** and had
   drifted between 229 and 698. It was `707 passed, 2 skipped` after that
   review, and the suite **exits 0**. The chapter 22 CLI work on 2026-10-26
-  added 44 tests, so the current baseline is `755 passed, 2 skipped`.
+  added 44 tests, so the current baseline is `770 passed, 2 skipped`.
 - **The suite used to segfault while the interpreter shut down** (chapter 68
   imported Qt and re-initialised a `QObject`), so `make test` and CI failed
   while printing "passed". Fixed, with a regression test that forbids Qt in
@@ -360,10 +362,26 @@ features the code did not ship. Concretely:
    documentation: `docs/en/developers/cli.md`. YAML configurations read
    through PyYAML: `debian/control` depends on `python3-yaml`, and
    `requirements-all.txt` plus the `yaml` extra cover pip installs.
-2. **Chapter 56.5** — feed the execution model into the **backtest engine**
-   and robustness, not only paper trading.
+2. ~~**Chapter 56.5** — feed the execution model into the **backtest
+   engine** and robustness, not only paper trading.~~ **DONE 2026-10-28.**
+   Chapter 56 is `[x]`. `BacktestConfig.execution_config` selects the model
+   (and `execution_seed` makes it reproducible); with it set, the engine
+   fills from a synthetic book whose depth is the traded volume *before*
+   the fill candle, so oversized orders fill in part and orders with no
+   depth are rejected instead of assumed away. `run_backtest` records the
+   model and the seed in `config_metadata`, and the CLI names the model and
+   reports rejections and partial fills. In robustness, `sweep_costs` now
+   scales the model's own slippage assumptions (it used to drop the
+   execution config and `position_fraction`), and `compare_execution_models`
+   adds an `execution_impact` section to every `RobustnessReport`. Note the
+   direction: the cost model applies a fixed adverse slippage while
+   chapter 56 draws from a symmetric band, so the realistic arm can come
+   out cheaper — the report says so instead of implying safety. The
+   cost-model path is numerically unchanged. Tests:
+   `tests/backtesting/test_execution_in_backtest.py`, plus 8 new cases in
+   `tests/backtesting/test_robustness.py` and `tests/test_cli.py`.
 3. **Chapter 63.2** — drift over time, likely causes, and marking a strategy
-   as degraded.
+   as degraded. **This is the next task.**
 4. **Chapters 26.2/27** — a continuous Binance WebSocket feed (paper trading
    still replays a dataset). `ccxt` is verified to reach **Binance and
    Coinbase**; chapter 26.3's native Coinbase adapter was deleted as dead.
@@ -407,7 +425,7 @@ git submodule update --init external/freqtrade
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 755 passed, 2 skipped expected
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 770 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
@@ -421,4 +439,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-10-26. Baseline: 755 passed, 2 skipped.*
+*Handoff updated 2026-10-28. Baseline: 770 passed, 2 skipped.*

@@ -254,6 +254,10 @@ class PaperTradingWidget(QWidget):
                     initial_capital=capital,
                     position_fraction=position_fraction,
                     costs=config.costs(),
+                    # Same execution model as the session, so the drift
+                    # measures risk gating and not a model mismatch (56.5).
+                    execution_config=config.execution_config,
+                    execution_seed=config.seed,
                 ),
             )
             self._last_drift = drift_report_from_results(backtest, result)

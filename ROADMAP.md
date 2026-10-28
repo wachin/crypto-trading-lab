@@ -15,9 +15,8 @@ before writing code, and tick a checkbox only when the requirement is
 > yet. See `CONTRIBUTING.md` §4 for the ground rules.
 >
 > In the overview table, **Open** counts both `[ ]` and `[~]` items: a
-> partially-done item is still open work. Chapter 56.5 is the only `[~]`
-> item in this document, so it is the only row where that distinction
-> changes a number.
+> partially-done item is still open work. As of 2026-10-28 no `[~]`
+> subtask remains, so every open item is a plain `[ ]`.
 
 > **Honesty rule:** a chapter is never marked `[x]` because a header once
 > said so — the checkbox tracks evidence, not intention. When a
@@ -82,7 +81,7 @@ before writing code, and tick a checkbox only when the requirement is
 | 53 | [~] | 5 | 14 | No | Reproducibility |
 | 54 | [ ] | 0 | 9 | No | Research notebooks |
 | 55 | [ ] | 0 | 20 | No | AI research assistant |
-| 56 | [~] | 22 | 1 | No | Execution realism |
+| 56 | [x] | 23 | 0 | No | Execution realism |
 | 57 | [~] | 5 | 55 | Sí | Paper trading |
 | 58 | [~] | 0 | 74 | Sí | Risk manager |
 | 59 | [~] | 0 | 39 | Sí | Emergency kill switch |
@@ -3781,7 +3780,7 @@ The AI research assistant must:
 
 ---
 
-## [~] 56. Execution realism
+## [x] 56. Execution realism
 
 Execution realism models how orders behave in real markets. It must remain separate from strategy logic and from the risk manager.
 
@@ -3821,7 +3820,7 @@ Execution realism models how orders behave in real markets. It must remain separ
 
 - [x] Reports must state which execution model was used.
 - [x] Reports must quantify the impact of execution assumptions on results where practical.
-- [~] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results. *(Paper trading wired 2026-09-27: `paper_session.py` calls `simulate_market_order`; the backtest engine and robustness still use the simple cost model. See `docs/en/developers/unwired-modules-audit.md`.)*
+- [x] Execution realism feeds backtest (Chapter 37), paper trading (Chapter 57), and robustness (Chapter 44) results. *(Paper trading wired 2026-09-27: `paper_session.py` calls `simulate_market_order`. Backtest and robustness wired 2026-10-28: `BacktestConfig.execution_config` selects the model, the engine fills from the synthetic book, and `compare_execution_models` quantifies the difference inside every robustness report. See `docs/en/developers/cli.md` and `docs/en/developers/unwired-modules-audit.md`.)*
 
 ---
 

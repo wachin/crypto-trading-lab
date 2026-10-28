@@ -227,6 +227,67 @@ def test_backtest_runs_and_prints_metrics(tmp_path, capsys):
     assert "do not predict future returns" in output
 
 
+def test_backtest_records_the_cost_model_by_default(tmp_path, capsys):
+    """Every run states which execution model it used (56.2)."""
+    data_dir = tmp_path / "data"
+    csv_path = write_candles(tmp_path / "candles.csv")
+    assert run(["import-csv", str(csv_path), "--data-dir", str(data_dir)]) == 0
+    config = tmp_path / "strategy.json"
+    config.write_text(
+        json.dumps({"strategy": "ma_crossover", "fast": 5, "slow": 20}),
+        encoding="utf-8",
+    )
+    capsys.readouterr()
+    assert run(["backtest", str(config), "--data-dir", str(data_dir)]) == 0
+    assert "Execution model: cost_model (chapter 37.1)" in capsys.readouterr().out
+
+
+def test_backtest_can_select_the_execution_model(tmp_path, capsys):
+    """Chapter 56.5: the backtest can run the realistic execution model."""
+    data_dir = tmp_path / "data"
+    csv_path = write_candles(tmp_path / "candles.csv")
+    assert run(["import-csv", str(csv_path), "--data-dir", str(data_dir)]) == 0
+    config = tmp_path / "strategy.json"
+    config.write_text(
+        json.dumps(
+            {
+                "strategy": "ma_crossover",
+                "fast": 5,
+                "slow": 20,
+                "execution_model": "chapter_56",
+                "execution_seed": 7,
+            }
+        ),
+        encoding="utf-8",
+    )
+    capsys.readouterr()
+    code = run(["backtest", str(config), "--data-dir", str(data_dir)])
+    output = capsys.readouterr().out
+    assert code == 0
+    assert "Execution model: chapter_56_execution_realism" in output
+    assert "Execution seed: 7" in output
+    assert "Orders rejected:" in output
+
+
+def test_backtest_rejects_an_unknown_execution_model(tmp_path, capsys):
+    """A typo must not silently fall back to the cost model."""
+    data_dir = tmp_path / "data"
+    csv_path = write_candles(tmp_path / "candles.csv", count=10)
+    assert run(["import-csv", str(csv_path), "--data-dir", str(data_dir)]) == 0
+    config = tmp_path / "strategy.json"
+    config.write_text(
+        json.dumps(
+            {"strategy": "ma_crossover", "execution_model": "magic"}
+        ),
+        encoding="utf-8",
+    )
+    capsys.readouterr()
+    code = run(["backtest", str(config), "--data-dir", str(data_dir)])
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "unknown execution_model" in captured.err
+
+
 def test_backtest_with_a_broken_config_fails_with_a_reason(tmp_path, capsys):
     data_dir = tmp_path / "data"
     csv_path = write_candles(tmp_path / "candles.csv", count=10)

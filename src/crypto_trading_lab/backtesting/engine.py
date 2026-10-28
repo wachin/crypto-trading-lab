@@ -8,16 +8,33 @@ engine never lets a strategy see beyond the current candle.
 The full pipeline runs: market data → strategy signal → risk check →
 order → execution → position/portfolio update, mirroring chapter
 33.6's mandatory flow.
+
+Two execution models are available to a run (chapter 56.5):
+
+* the **cost model** (default) — a full fill at the next open, moved by
+  the configured half-spread and slippage fractions;
+* the **chapter 56 execution model** — a synthetic order book whose depth
+  comes from the traded volume *before* the fill candle, with
+  depth-based partial fills, rejections and a slippage model. It is
+  selected by passing an ExecutionConfig from execution_realism and is
+  always recorded in the result metadata together with its seed, so the
+  same run reproduces the same fills.
 """
 
 from __future__ import annotations
 
 import enum
+import random
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Protocol, Sequence
 
 from crypto_trading_lab.domain.models import Candle, OrderSide
+from crypto_trading_lab.execution_realism import (
+    ExecutionConfig,
+    FillType,
+    simulate_market_order,
+)
 from crypto_trading_lab.indicators.library import SMA, SMAStream
 
 __all__ = [
@@ -82,6 +99,20 @@ class BacktestConfig:
     intrabar_policy: IntrabarPolicy = IntrabarPolicy.CONSERVATIVE
     quantity_step: Decimal = Decimal("0.000001")
     min_notional: Decimal = Decimal("0")
+    #: Chapter 56 execution realism. When set, fills come from a synthetic
+    #: order book instead of the simple cost arithmetic; when None the run
+    #: keeps the chapter 37.1 cost model. Never set it to make an order
+    #: fill — a rejected order is information, not a defect.
+    execution_config: ExecutionConfig | None = None
+    #: Seed for the execution model (chapter 37.8 determinism). The same
+    #: seed and the same candles reproduce the same fills.
+    execution_seed: int = 42
+
+    def execution_realism_name(self) -> str:
+        """Which execution model this run used (chapter 56.2)."""
+        if self.execution_config is None:
+            return "cost_model (chapter 37.1)"
+        return "chapter_56_execution_realism"
 
     def metadata(self) -> dict[str, str]:
         return {
@@ -92,6 +123,12 @@ class BacktestConfig:
             "slippage_fraction": str(self.costs.slippage_fraction),
             "spread_fraction": str(self.costs.spread_fraction),
             "execution_model": self.execution_model.value,
+            "execution_realism": self.execution_realism_name(),
+            "execution_seed": (
+                str(self.execution_seed)
+                if self.execution_config is not None
+                else "not applicable"
+            ),
             "intrabar_policy": self.intrabar_policy.value,
             "quantity_step": str(self.quantity_step),
             "min_notional": str(self.min_notional),
@@ -223,6 +260,11 @@ class BacktestResult:
     candle_count: int
     order_count: int = 0
     exposure_curve: tuple[bool, ...] = ()  # True when in the market that candle
+    #: Chapter 56 execution realism: orders the model refused to fill and
+    #: orders it filled only in part. Both stay 0 under the cost model,
+    #: which always fills in full.
+    rejected_orders: int = 0
+    partial_fills: int = 0
     # Reproducibility records (ROADMAP 37.9).
     strategy_version: str = "unknown"
     dataset_version: str = "unknown"
@@ -252,6 +294,129 @@ def _step_quantity(quantity: Decimal, step: Decimal) -> Decimal:
     return units * step
 
 
+def _interval_seconds(candles: Sequence[Candle]) -> Decimal:
+    """Median spacing between candle opens, in seconds (chapter 56.4)."""
+    deltas = sorted(
+        delta
+        for delta in (
+            (later.open_time - earlier.open_time).total_seconds()
+            for earlier, later in zip(candles, candles[1:])
+        )
+        if delta > 0
+    )
+    if not deltas:
+        return Decimal(3600)
+    return Decimal(str(deltas[len(deltas) // 2]))
+
+
+def _average_daily_volume(
+    candles: Sequence[Candle],
+    index: int,
+    window: int,
+    interval_seconds: Decimal,
+) -> Decimal:
+    """Mean traded volume *before* ``index``, scaled to one day (56.4).
+
+    Only candles strictly before ``index`` are read: the fill happens at
+    that candle's open, so its own volume is not knowable yet. A result of
+    zero means "depth unknown", which the execution model turns into a
+    rejection instead of an assumption of unlimited liquidity.
+    """
+    if window < 1 or index < 1 or interval_seconds <= 0:
+        return Decimal(0)
+    start = max(0, index - window)
+    sample = candles[start:index]
+    if not sample:
+        return Decimal(0)
+    mean = sum((candle.volume for candle in sample), Decimal(0)) / Decimal(
+        len(sample)
+    )
+    return mean * Decimal(86400) / interval_seconds
+
+
+@dataclass(frozen=True)
+class _Fill:
+    """One order's outcome: price, filled quantity, and how it filled."""
+
+    price: Decimal
+    quantity: Decimal
+    rejected: bool
+    partial: bool
+
+
+def _simulate_fill(
+    *,
+    config: BacktestConfig,
+    rng: random.Random,
+    reference: Decimal,
+    side: str,
+    quantity: Decimal,
+    adv: Decimal,
+) -> _Fill:
+    """Price and size one market order (chapters 37.1 and 56).
+
+    Without an ``execution_config`` this is the original cost model: a full
+    fill at the reference price, worsened by half-spread and slippage. With
+    one, chapter 56 decides both the size (depth) and the price (spread,
+    market impact and a seeded random component).
+    """
+    if config.execution_config is None:
+        price = (
+            config.costs.buy_price(reference)
+            if side == "buy"
+            else config.costs.sell_price(reference)
+        )
+        return _Fill(price=price, quantity=quantity, rejected=False, partial=False)
+
+    result = simulate_market_order(
+        reference,
+        side,
+        quantity,
+        config.execution_config,
+        adv=adv,
+        spread_fraction=config.costs.spread_fraction,
+        rng=rng,
+    )
+    if result.fill_type is FillType.REJECTED or result.filled_quantity <= 0:
+        return _Fill(
+            price=Decimal(0), quantity=Decimal(0), rejected=True, partial=False
+        )
+    filled = _step_quantity(result.filled_quantity, config.quantity_step)
+    if filled <= 0:
+        return _Fill(
+            price=Decimal(0), quantity=Decimal(0), rejected=True, partial=False
+        )
+    return _Fill(
+        price=result.average_price,
+        quantity=filled,
+        rejected=False,
+        partial=filled < quantity,
+    )
+
+
+def _reported_costs(
+    config: BacktestConfig,
+    *,
+    reference: Decimal,
+    price: Decimal,
+    quantity: Decimal,
+) -> tuple[Decimal, Decimal]:
+    """Split one fill's adverse price shift into (spread, slippage).
+
+    Under the cost model the two are separate inputs, so they are reported
+    as configured. Under chapter 56 the fill price already contains the
+    half-spread, the market impact and the random component; charging the
+    spread a second time would double count it, so the whole shift from the
+    reference price is reported as slippage.
+    """
+    if config.execution_config is None:
+        return (
+            quantity * reference * config.costs.spread_fraction,
+            quantity * reference * config.costs.slippage_fraction,
+        )
+    return Decimal(0), (price - reference).copy_abs() * quantity
+
+
 def run_backtest(
     candles: Sequence[Candle],
     strategy: Strategy,
@@ -260,7 +425,9 @@ def run_backtest(
     """Run one deterministic backtest (chapter 37).
 
     Look-ahead protection: the strategy sees ``candles[:i+1]`` only,
-    and fills happen at the next candle's open at the earliest.
+    and fills happen at the next candle's open at the earliest. The
+    execution model is chosen by ``config.execution_config`` (chapter 56.5);
+    the default cost model fills every order in full.
     """
     config = config or BacktestConfig()
     if len(candles) < 2:
@@ -280,9 +447,14 @@ def run_backtest(
     equity_curve: list[Decimal] = []
     exposure_curve: list[bool] = []
     order_count = 0
+    rejected_orders = 0
+    partial_fills = 0
     total_fees = Decimal(0)
     total_slippage = Decimal(0)
     total_spread = Decimal(0)
+
+    rng = random.Random(config.execution_seed)
+    interval_seconds = _interval_seconds(candles)
 
     pending_signal: OrderSide | None = None  # filled at NEXT open
 
@@ -292,50 +464,123 @@ def run_backtest(
         # 1. Execute a signal generated at the PREVIOUS close.
         if pending_signal is not None and index > 0:
             fill_price = current.open
+            adv = Decimal(0)
+            if config.execution_config is not None:
+                adv = _average_daily_volume(
+                    candles,
+                    index,
+                    config.execution_config.adv_window,
+                    interval_seconds,
+                )
+
             if pending_signal is OrderSide.BUY and position == 0:
-                price = config.costs.buy_price(fill_price)
-                affordable = cash * config.position_fraction / price
-                quantity = _step_quantity(affordable, config.quantity_step)
-                if (
-                    quantity > 0
-                    and quantity * price >= config.min_notional
-                ):
-                    fee = quantity * price * config.costs.taker_fee
-                    spread = quantity * fill_price * config.costs.spread_fraction
-                    slip = quantity * fill_price * config.costs.slippage_fraction
-                    cash -= quantity * price + fee
-                    order_count += 1
-                    position = quantity
-                    avg_entry = price
-                    entry_time = current.open_time.isoformat()
-                    entry_fee, entry_slippage, entry_spread = fee, slip, spread
+                estimate = config.costs.buy_price(fill_price)
+                desired = _step_quantity(
+                    cash * config.position_fraction / estimate,
+                    config.quantity_step,
+                )
+                if desired > 0:
+                    fill = _simulate_fill(
+                        config=config,
+                        rng=rng,
+                        reference=fill_price,
+                        side="buy",
+                        quantity=desired,
+                        adv=adv,
+                    )
+                    if fill.rejected:
+                        rejected_orders += 1
+                    else:
+                        quantity = fill.quantity
+                        if fill.partial:
+                            partial_fills += 1
+                        if config.execution_config is not None:
+                            # Never commit more cash than the account holds:
+                            # the realistic fill price is only known now.
+                            affordable = _step_quantity(
+                                cash
+                                / (
+                                    fill.price
+                                    * (Decimal(1) + config.costs.taker_fee)
+                                ),
+                                config.quantity_step,
+                            )
+                            quantity = min(quantity, affordable)
+                        if (
+                            quantity > 0
+                            and quantity * fill.price >= config.min_notional
+                        ):
+                            price = fill.price
+                            fee = quantity * price * config.costs.taker_fee
+                            spread, slip = _reported_costs(
+                                config,
+                                reference=fill_price,
+                                price=price,
+                                quantity=quantity,
+                            )
+                            cash -= quantity * price + fee
+                            order_count += 1
+                            position = quantity
+                            avg_entry = price
+                            entry_time = current.open_time.isoformat()
+                            entry_fee = fee
+                            entry_slippage = slip
+                            entry_spread = spread
 
             elif pending_signal is OrderSide.SELL and position > 0:
-                price = config.costs.sell_price(fill_price)
-                fee = position * price * config.costs.taker_fee
-                order_count += 1
-                spread = position * fill_price * config.costs.spread_fraction
-                slip = position * fill_price * config.costs.slippage_fraction
-                cash += position * price - fee
-                trades.append(
-                    TradeRecord(
-                        entry_time=entry_time,
-                        exit_time=current.open_time.isoformat(),
-                        side="buy",
-                        quantity=position,
-                        entry_price=avg_entry,
-                        exit_price=price,
-                        entry_fee=entry_fee,
-                        exit_fee=fee,
-                        slippage_cost=entry_slippage + slip,
-                        spread_cost=entry_spread + spread,
-                    )
+                fill = _simulate_fill(
+                    config=config,
+                    rng=rng,
+                    reference=fill_price,
+                    side="sell",
+                    quantity=position,
+                    adv=adv,
                 )
-                total_fees += entry_fee + fee
-                total_slippage += entry_slippage + slip
-                total_spread += entry_spread + spread
-                position = Decimal(0)
-                avg_entry = Decimal(0)
+                if fill.rejected:
+                    rejected_orders += 1
+                else:
+                    quantity = fill.quantity
+                    if fill.partial:
+                        partial_fills += 1
+                    price = fill.price
+                    fee = quantity * price * config.costs.taker_fee
+                    spread, slip = _reported_costs(
+                        config,
+                        reference=fill_price,
+                        price=price,
+                        quantity=quantity,
+                    )
+                    # A partial exit carries only its share of the entry
+                    # costs; the remainder stays with the open position.
+                    fraction = quantity / position
+                    closed_fee = entry_fee * fraction
+                    closed_slippage = entry_slippage * fraction
+                    closed_spread = entry_spread * fraction
+                    cash += quantity * price - fee
+                    order_count += 1
+                    trades.append(
+                        TradeRecord(
+                            entry_time=entry_time,
+                            exit_time=current.open_time.isoformat(),
+                            side="buy",
+                            quantity=quantity,
+                            entry_price=avg_entry,
+                            exit_price=price,
+                            entry_fee=closed_fee,
+                            exit_fee=fee,
+                            slippage_cost=closed_slippage + slip,
+                            spread_cost=closed_spread + spread,
+                        )
+                    )
+                    total_fees += closed_fee + fee
+                    total_slippage += closed_slippage + slip
+                    total_spread += closed_spread + spread
+                    position -= quantity
+                    entry_fee -= closed_fee
+                    entry_slippage -= closed_slippage
+                    entry_spread -= closed_spread
+                    if position == 0:
+                        avg_entry = Decimal(0)
             pending_signal = None
 
         # 2. Value the portfolio at this candle's close.
@@ -364,6 +609,8 @@ def run_backtest(
         candle_count=len(candles),
         order_count=order_count,
         exposure_curve=tuple(exposure_curve),
+        rejected_orders=rejected_orders,
+        partial_fills=partial_fills,
         strategy_version=str(getattr(strategy, "version", "unknown")),
         # Chapter 53 (experiment tracking) does not exist yet, so
         # datasets are honestly recorded as unversioned.

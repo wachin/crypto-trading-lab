@@ -64,6 +64,8 @@ taker_fee: 0.001
 slippage: 0.0005
 spread: 0.0002
 benchmark: buy_and_hold    # buy_and_hold | null_strategy | none
+execution_model: cost_model # cost_model | chapter_56 (see below)
+execution_seed: 42         # reproduces the chapter 56 fills
 # symbol: BTC/USDT         # optional: which stored market to use
 # interval: 1m
 ```
@@ -77,7 +79,32 @@ The output is the same evidence the Lab shows: net profit, drawdown,
 trade statistics, risk ratios, cost attribution, the benchmark
 comparison, every statistical warning, and the disclaimer. A backtest
 that looks profitable and a backtest that says "no edge here" are both
-legitimate results.
+legitimate results. The output always names the execution model it used.
+
+### Choosing the execution model (chapter 56)
+
+`execution_model: cost_model` (the default) fills every order in full at
+the next candle's open, moved by the configured `slippage` and `spread`
+fractions. It is fast, deterministic, and a fair first look.
+
+`execution_model: chapter_56` runs the execution-realism model instead: a
+synthetic order book is built from the traded volume of the candles
+**before** the fill candle, and the order walks that book. Three things can
+happen, and all three are reported:
+
+- a **full fill** at a price that includes the half-spread, the market
+  impact and a seeded random component;
+- a **partial fill** when the order is larger than the modelled depth —
+  only what the book absorbs is bought or sold;
+- a **rejection** when there is no depth at all, which includes the case
+  where the stored candles carry no volume. The model refuses to assume
+  unlimited liquidity, so it refuses the order.
+
+`execution_seed` makes the random component reproducible: the same candles,
+configuration and seed produce the same fills. Real latency and slippage
+depend on market conditions that no offline model can observe, so treat a
+difference between the two models as a measure of *how much the result
+depends on execution assumptions* — not as a prediction.
 
 ## doctor
 

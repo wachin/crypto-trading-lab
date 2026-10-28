@@ -29,7 +29,7 @@ and the measured `ccxt` evaluation.
 
 `.venv/` is already in [`.gitignore`](../../../.gitignore); never commit it.
 
-> **Verified:** Debian 13 (system packages) — 755 passed, 2 skipped, exit 0.
+> **Verified:** Debian 13 (system packages) — 770 passed, 2 skipped, exit 0.
 > **Windows 10** — verified on 2026-10-01 with these exact steps: clean `pip`
 > install, the window opens, and the suite reports the same results on Python
 > 3.14.7.
@@ -138,7 +138,7 @@ Verify:
 
 ```bash
 python -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 755 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python -m pytest tests/ -q   # → 770 passed, 2 skipped
 PYTHONPATH=src python -m crypto_trading_lab            # launch the app
 ```
 
@@ -292,7 +292,7 @@ python3 -m venv .venv
 | **PyYAML** | **6.0.3** |
 | ccxt / pypdf / keyring | 4.5.90 / 6.21.2 / 25.7.0 |
 | pytest / pytest-qt | 9.1.1 / 4.5.0 |
-| Full suite inside the venv | **755 passed, 2 skipped**, exit 0 |
+| Full suite inside the venv | **770 passed, 2 skipped**, exit 0 |
 | `crypto-trading-lab backtest strategy.yaml` | ran and printed the metrics |
 | `crypto-trading-lab doctor` | 9 passed, 1 warning (no `docs/es` tree), 2 skipped, 0 failed |
 

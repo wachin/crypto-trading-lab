@@ -14,6 +14,27 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **Execution realism now feeds the backtest and the robustness report, not
+  only paper trading (chapter 56.5).** `BacktestConfig` gained
+  `execution_config` and `execution_seed`; when a configuration is set,
+  fills come from the chapter 56 synthetic order book whose depth is the
+  traded volume of the candles *before* the fill candle, so an order larger
+  than the modelled liquidity is partially filled and an order with no
+  depth is rejected instead of being assumed away. Every run records the
+  model and the seed in `config_metadata`; the CLI names the model and
+  reports rejections and partial fills. The cost-model path is numerically
+  unchanged. In robustness, `sweep_costs` scales the execution model's own
+  slippage assumptions when realism is on (it also stopped dropping
+  `position_fraction` and `execution_config`), and `compare_execution_models`
+  adds an `execution_impact` section — baseline versus realistic, with the
+  delta in profit and return — to every `RobustnessReport`. The report
+  states the direction caveat: the cost model applies a fixed adverse
+  slippage while chapter 56 draws from a symmetric band, so the realistic
+  arm can come out cheaper, and that is not evidence of safety. 15 new
+  tests; baseline 755 → **770 passed, 2 skipped**. Chapter 56 is `[x]`.
+  Documented in `docs/en/developers/cli.md` and
+  `docs/en/developers/unwired-modules-audit.md`.
+
 - **A working command-line interface (chapter 22), and the shared use-case
   layer behind it.** The five subcommands that printed one line and returned
   `0` now do real work: `database check` runs SQLite's
