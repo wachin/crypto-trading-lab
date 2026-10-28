@@ -66,6 +66,40 @@ def _paths(tmp_path) -> AppPaths:
     )
 
 
+def test_the_timeframe_dropdown_offers_the_exchange_intervals(qapp, tmp_path):
+    widget = HistoricalDataWidget(source=_fake_source(), paths=_paths(tmp_path))
+    items = [
+        widget.interval_combo.itemData(index)
+        for index in range(widget.interval_combo.count())
+    ]
+
+    assert items[0] == "1s", "the fastest interval comes first"
+    assert "30m" in items and "1w" in items
+    assert "1M" not in items, "calendar months cannot be validated yet"
+    assert widget.interval_combo.currentData() == "1h", "the default is unchanged"
+    widget.close()
+
+
+def test_a_one_second_download_over_years_is_refused_with_an_explanation(
+    qapp, tmp_path, monkeypatch
+):
+    from PyQt6.QtWidgets import QMessageBox
+
+    monkeypatch.setattr(QMessageBox, "warning", staticmethod(lambda *a, **k: None))
+    widget = HistoricalDataWidget(source=_fake_source(), paths=_paths(tmp_path))
+    widget.interval_combo.setCurrentText("1s")
+    widget.start_date.setDate(QDate.currentDate().addYears(-5))
+    widget.end_date.setDate(QDate.currentDate())
+
+    outcome = widget.download()
+    text = widget.data_view.toPlainText()
+
+    assert outcome is None
+    assert "too long for this timeframe" in text
+    assert "Choose a shorter period or a slower timeframe" in text
+    widget.close()
+
+
 def test_widget_builds_a_valid_request(qapp, tmp_path):
     widget = HistoricalDataWidget(source=_fake_source(), paths=_paths(tmp_path))
     widget.symbol_combo.setCurrentText("BTC/USDT")

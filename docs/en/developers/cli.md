@@ -145,12 +145,18 @@ warmed up yet* rather than *no opportunity*. A strategy that does not
 declare a warm-up prints no line, because guessing a number would be worse
 than saying nothing.
 
-Sub-minute candles are streamable but not downloadable: `--interval 1s`
-works for a live session, while `download` keeps its shorter list because a
-day of 1s candles is 86,400 rows. Be careful with what the faster interval
-buys you — a 100-second SMA(5/20) session over 1s candles made three trades
-and paid 25.5 in fees and slippage against a smaller price move. The cost
-per trade is fixed; the number of trades is not.
+The live path accepts every interval the exchange streams, `1s` included,
+and the GUI's Historical Data screen offers the same fixed-duration set
+for downloads. Two limits stay: monthly candles (`1M`) are streaming-only,
+because a calendar month is 28-31 days and the gap validator counts from a
+single fixed step, and a period that would need more than 2,000,000
+candles is refused *before* the first request, telling you to shorten the
+period or pick a slower timeframe.
+
+Be careful with what a faster interval buys you — a 100-second SMA(5/20)
+session over 1s candles made three trades and paid 25.5 in fees and
+slippage against a smaller price move. The cost per trade is fixed; the
+number of trades is not.
 
 The command needs the optional `websockets` package. Without it the command
 fails with the install line instead of a traceback, the same way a missing

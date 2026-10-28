@@ -14,6 +14,18 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **The GUI timeframe dropdown offers the exchange's intervals.** The
+  Historical Data screen listed the six intervals the downloader knew; it
+  now lists all fifteen fixed-duration intervals Binance serves, fastest
+  first (`1s` … `1w`), and the default stays `1h`. `1M` is absent on
+  purpose: calendar months are 28-31 days, so the gap validator — which
+  counts from one fixed step — would report a false gap or a false
+  overlap. Offering `1s` also made a real footgun reachable: a 1-second
+  download over the default five-year range is about 157 million candles,
+  and the old guard only fired after walking two million of them page by
+  page. A request now estimates its size first and raises
+  `DownloadTooLarge` with a plain-language explanation before the first
+  network call.
 - **`paper-live` accepts every interval Binance streams, including `1s`.**
   The live path validated against the historical downloader's curated
   `TIMEFRAMES` table, so `--interval 1s` was refused even though the

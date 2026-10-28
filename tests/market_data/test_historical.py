@@ -14,11 +14,14 @@ from decimal import Decimal
 import pytest
 
 from crypto_trading_lab.domain.models import Candle, Symbol
+from crypto_trading_lab.exchanges.binance.config import BINANCE_INTERVALS
 from crypto_trading_lab.market_data.historical import (
     BINANCE_PAGE_LIMIT,
+    SUPPORTED_INTERVALS,
     TIMEFRAMES,
     BinanceKlinesSource,
     DatasetVersion,
+    DownloadTooLarge,
     HistoricalDataError,
     HistoricalRequest,
     build_dataset_id,
@@ -72,13 +75,15 @@ def _rows(count: int, start: datetime | None = None) -> list[list[object]]:
     return [_kline(start + i * HOUR) for i in range(count)]
 
 
-def test_interval_seconds_parses_streaming_only_intervals():
-    # The downloader's table does not know 1s, but the live feed streams it.
+def test_interval_seconds_parses_a_streaming_only_interval():
+    # 1M is streaming-only: the downloader cannot validate calendar months,
+    # so it is absent from TIMEFRAMES and must be parsed from the suffix.
+    assert "1M" not in TIMEFRAMES
+    assert interval_seconds("1M") == 30 * 24 * 60 * 60
     assert interval_seconds("1s") == 1
     assert interval_seconds("3m") == 180
     assert interval_seconds("4h") == 4 * 60 * 60
     assert interval_seconds("1w") == 7 * 24 * 60 * 60
-    assert interval_seconds("1M") == 30 * 24 * 60 * 60
 
 
 def test_interval_seconds_returns_none_for_a_non_interval():
@@ -91,6 +96,50 @@ def test_interval_seconds_returns_none_for_a_non_interval():
 def test_interval_seconds_agrees_with_the_downloader_table():
     for interval, seconds in TIMEFRAMES.items():
         assert interval_seconds(interval) == seconds
+
+
+def test_the_downloader_offers_every_fixed_duration_interval():
+    # The GUI dropdown and the request validator both read this table. Only
+    # the calendar-month interval is missing, on purpose.
+    assert set(TIMEFRAMES) == set(BINANCE_INTERVALS) - {"1M"}
+    assert "1s" in SUPPORTED_INTERVALS
+    assert SUPPORTED_INTERVALS[0] == "1s", "the dropdown starts at the fastest"
+
+
+def test_a_period_too_long_for_its_timeframe_is_refused_before_any_request():
+    start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    fake = FakeBinance(_rows(10, start))
+    source = BinanceKlinesSource(opener=fake, pause_seconds=0)
+    request = HistoricalRequest("binance", "BTC/USDT", "1s", start, start + HOUR)
+
+    with pytest.raises(DownloadTooLarge) as caught:
+        source.fetch(request, max_candles=100)
+
+    assert fake.calls == [], "nothing should reach the network"
+    assert "too long for this timeframe" in caught.value.beginner_explanation()
+
+
+def test_one_second_candles_validate_cleanly():
+    start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    candles = [
+        Candle(
+            symbol=Symbol("BTC/USDT"),
+            interval="1s",
+            open_time=start + timedelta(seconds=i),
+            close_time=start + timedelta(seconds=i + 1, milliseconds=-1),
+            open=Decimal("100"),
+            high=Decimal("101"),
+            low=Decimal("99"),
+            close=Decimal("100"),
+            volume=Decimal("1"),
+        )
+        for i in range(10)
+    ]
+
+    validation = validate_candles(candles, "1s")
+
+    assert validation.ok is True
+    assert validation.missing == 0
 
 
 def test_fetch_single_page_builds_decimal_candles():

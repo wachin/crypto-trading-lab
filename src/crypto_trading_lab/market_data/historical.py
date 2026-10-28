@@ -39,6 +39,7 @@ __all__ = [
     "interval_seconds",
     "DEFAULT_BINANCE_BASE_URL",
     "HistoricalDataError",
+    "DownloadTooLarge",
     "HistoricalRequest",
     "BinanceKlinesSource",
     "DatasetValidation",
@@ -50,14 +51,31 @@ __all__ = [
 ]
 
 
-#: Binance Spot interval → duration in seconds.
+#: Binance Spot interval → duration in seconds, in the order the exchange
+#: documents them. Every interval here has a *fixed* duration, because
+#: :func:`validate_candles` counts gaps from one step size.
+#:
+#: ``1M`` is deliberately absent: a calendar month is 28-31 days, so a
+#: monthly series would be reported as overlapping or off-grid. Streaming
+#: still accepts it — see ``BINANCE_INTERVALS`` in
+#: ``exchanges/binance/config.py`` — but it cannot be downloaded until the
+#: validator learns about irregular intervals.
 TIMEFRAMES: dict[str, int] = {
+    "1s": 1,
     "1m": 60,
+    "3m": 3 * 60,
     "5m": 5 * 60,
     "15m": 15 * 60,
+    "30m": 30 * 60,
     "1h": 60 * 60,
+    "2h": 2 * 60 * 60,
     "4h": 4 * 60 * 60,
+    "6h": 6 * 60 * 60,
+    "8h": 8 * 60 * 60,
+    "12h": 12 * 60 * 60,
     "1d": 24 * 60 * 60,
+    "3d": 3 * 24 * 60 * 60,
+    "1w": 7 * 24 * 60 * 60,
 }
 
 SUPPORTED_INTERVALS: tuple[str, ...] = tuple(TIMEFRAMES)
@@ -116,6 +134,20 @@ class HistoricalDataError(RuntimeError):
             "outside the exchange's history, or the symbol/timeframe "
             "combination does not exist. Nothing was saved, so you can "
             "safely try again. Details: " + str(self)
+        )
+
+
+class DownloadTooLarge(HistoricalDataError):
+    """The period is too long for the chosen timeframe."""
+
+    def beginner_explanation(self) -> str:
+        """Say what to change, instead of listing network failures."""
+        return (
+            "That period is too long for this timeframe: it would need far "
+            "more candles than one download accepts. Nothing was downloaded "
+            "and nothing was saved. Choose a shorter period or a slower "
+            "timeframe — for example 1 hour instead of 1 second. "
+            "Details: " + str(self)
         )
 
 
@@ -244,6 +276,17 @@ class BinanceKlinesSource:
         """
         start = _utc(request.start)
         end = _utc(request.end)
+        # Refuse an impossible period before the first request: walking
+        # to the limit page by page would take thousands of round trips
+        # and look like a hang.
+        expected = int(
+            (end - start).total_seconds() / TIMEFRAMES[request.interval]
+        ) + 1
+        if expected > max_candles:
+            raise DownloadTooLarge(
+                f"about {expected:,} candles of {request.interval} is "
+                f"above the {max_candles:,} safety limit"
+            )
         cursor = start
         candles: list[Candle] = []
         seen: set[datetime] = set()

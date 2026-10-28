@@ -15,7 +15,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 818 passed, 2 skipped, **exit code 0** —
+- **Tests:** 823 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
@@ -408,8 +408,9 @@ features the code did not ship. Concretely:
    short to warm the strategy up now says so (`warmup_candles` on the
    strategy, a `Warm-up:` line in the output and a sentence in the note)
    instead of leaving an empty journal looking like a flat market. The same
-   day, `paper-live` was opened to every interval Binance streams
-   (`1s` included); the downloader keeps its shorter `TIMEFRAMES` list.
+   day, `paper-live` and the Historical Data screen were opened to every
+   fixed-duration interval Binance serves (`1s` included); `1M` stays
+   streaming-only because a calendar month is not a fixed step.
    Chapter 27 is `[x]`
    (the troubleshooting links pointed at a file that did not exist; it now
    exists and a test resolves every link and anchor). Chapter 26 stays `[~]`
@@ -460,7 +461,7 @@ git submodule update --init external/freqtrade
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 818 passed, 2 skipped expected
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 823 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
@@ -474,4 +475,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-10-28. Baseline: 818 passed, 2 skipped.*
+*Handoff updated 2026-10-28. Baseline: 823 passed, 2 skipped.*
