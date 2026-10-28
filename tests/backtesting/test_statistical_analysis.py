@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import random
 import statistics
 
@@ -116,16 +117,36 @@ def test_bootstrap_interval_covers_true_mean():
     assert result.lower <= 0 <= result.upper
 
 
-def test_probabilistic_sharpe_ratio():
-    # With high SR and large n, p-value should be small
+def _psr_p_value(per_period_sharpe: float, n: int) -> float:
+    """The same standard-error test, written independently of the code."""
+    se = math.sqrt((1 + per_period_sharpe**2 / 2) / n)
+    z = per_period_sharpe / se
+    return 0.5 * (1 + math.erf(-z / math.sqrt(2)))
+
+
+def test_probabilistic_sharpe_ratio_uses_the_per_period_sharpe():
+    # A true per-period Sharpe of 0.10 over one year of daily candles,
+    # handed in as annualized return and volatility.
+    # Per period: mean 0.001, standard deviation 0.01.
     p = probabilistic_sharpe_ratio(
-        annualized_return=0.20,
-        annualized_volatility=0.20,
-        n_observations=252,  # One year of daily data
-        trials=1,
+        annualized_return=0.001 * 365,
+        annualized_volatility=0.01 * math.sqrt(365),
+        n_observations=365,
+        periods_per_year=365,
     )
+
     assert p is not None
-    assert p < 0.05  # Significant
+    assert abs(p - _psr_p_value(0.10, 365)) < 1e-12
+    assert 0.02 < p < 0.04
+
+
+def test_an_annualized_sharpe_is_not_fed_to_a_per_candle_sample_size():
+    # Annualized SR = 1.0 over 252 candles. Treating that number as if it
+    # were per-period made z four times too large and reported p = 0.0.
+    p = probabilistic_sharpe_ratio(0.20, 0.20, 252)
+
+    assert p is not None
+    assert p > 0.15
 
 
 def test_probabilistic_sharpe_small_sample():

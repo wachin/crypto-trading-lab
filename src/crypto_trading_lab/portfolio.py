@@ -110,38 +110,66 @@ def compute_portfolio_returns(
 def compute_portfolio_metrics(
     portfolio_returns: ReturnsSeries,
     risk_free_rate: Decimal = Decimal(0),
+    *,
+    periods_per_year: int = 365,
 ) -> PortfolioMetrics:
     """
     Compute portfolio-level metrics (51.3).
+
+    ``periods_per_year`` is the frequency of the return series. The
+    default is 365 because crypto trades every day; pass 12 for monthly
+    returns or 8760 for hourly ones. The old code assumed 252 equity
+    trading days for every series, which understated a daily crypto
+    Sharpe by ``sqrt(365/252)``.
+
+    Returns compound: ``total_return`` is ``prod(1 + r) - 1``, not the
+    sum of the returns, and the drawdown is measured on the compounded
+    equity curve. It used to be measured on the return values themselves,
+    so a series of 1% returns reported a 50% drawdown.
+
+    There is no one-year guard here, unlike ``backtesting.metrics``: four
+    periods annualize to an absurd number. A caller that shows this
+    number must decide whether the series is long enough to deserve it.
     """
     if not portfolio_returns.returns:
         raise ValueError("Need return series")
-    
+    if periods_per_year <= 0:
+        raise ValueError("periods_per_year must be positive")
+
     n = len(portfolio_returns.returns)
     returns = [float(r) for r in portfolio_returns.returns]
-    
-    # Total return
-    total_return = sum(portfolio_returns.returns)
-    
-    # Drawdown
-    max_drawdown = Decimal(0)
-    peak = Decimal(0)
+
+    # Compounded equity curve: the basis for total return and drawdown.
+    curve = [Decimal(1)]
     for ret in portfolio_returns.returns:
-        peak = max(peak, ret)
-        dd = (peak - ret) / peak if peak > 0 else Decimal(0)
-        max_drawdown = max(max_drawdown, dd)
-    
-    # Annualized return (assume 252 trading days)
-    annualized_return = total_return / Decimal(n) * Decimal(252)
-    
-    # Volatility
+        curve.append(curve[-1] * (Decimal(1) + ret))
+    total_return = curve[-1] - Decimal(1)
+
+    max_drawdown = Decimal(0)
+    peak = curve[0]
+    for value in curve:
+        peak = max(peak, value)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - value) / peak)
+
+    # Geometric annualization; a total loss stays at -100%.
+    growth = Decimal(1) + total_return
+    if growth > 0:
+        exponent = Decimal(periods_per_year) / Decimal(n)
+        annualized_return = (growth.ln() * exponent).exp() - Decimal(1)
+    else:
+        annualized_return = Decimal(-1)
+
     if n > 1:
-        variance = sum((r - statistics.mean(returns)) ** 2 for r in returns) / (n - 1)
-        volatility = Decimal(str(variance ** 0.5)) * Decimal(252).sqrt()
+        variance = sum(
+            (r - statistics.mean(returns)) ** 2 for r in returns
+        ) / (n - 1)
+        volatility = (
+            Decimal(str(variance**0.5)) * Decimal(periods_per_year).sqrt()
+        )
     else:
         volatility = Decimal(0)
-    
-    # Sharpe ratio
+
     if volatility > 0:
         sharpe = (annualized_return - risk_free_rate) / volatility
     else:

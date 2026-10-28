@@ -95,6 +95,47 @@ def test_compute_portfolio_metrics_basic():
     assert metrics.total_return > 0
 
 
+def test_portfolio_total_return_compounds():
+    # 1.01 * 1.02 - 1, not 0.01 + 0.02.
+    returns = ReturnsSeries("p", [Decimal("0.01"), Decimal("0.02")])
+
+    metrics = compute_portfolio_metrics(returns)
+
+    assert abs(metrics.total_return - Decimal("0.0302")) < Decimal("1e-9")
+
+
+def test_portfolio_drawdown_comes_from_the_equity_curve():
+    # 1.00 -> 1.01 -> 0.9898: a 2% drop from the peak, not the 50% the
+    # old return-space arithmetic reported.
+    returns = ReturnsSeries("p", [Decimal("0.01"), Decimal("-0.02")])
+
+    metrics = compute_portfolio_metrics(returns)
+
+    assert abs(metrics.total_drawdown - Decimal("0.02")) < Decimal("1e-6")
+
+
+def test_portfolio_annualization_follows_the_periods_per_year():
+    returns = ReturnsSeries(
+        "p",
+        [Decimal("0.01"), Decimal("0.02"), Decimal("0.01"), Decimal("0.02")],
+    )
+
+    daily = compute_portfolio_metrics(returns, periods_per_year=365)
+    equity_market = compute_portfolio_metrics(returns, periods_per_year=252)
+
+    assert daily.annualized_return > equity_market.annualized_return
+    # Volatility scales by sqrt(periods per year).
+    ratio = daily.volatility / equity_market.volatility
+    assert abs(ratio - (Decimal(365) / Decimal(252)).sqrt()) < Decimal("1e-9")
+
+
+def test_portfolio_rejects_a_non_positive_periods_per_year():
+    returns = ReturnsSeries("p", [Decimal("0.01")])
+
+    with pytest.raises(ValueError):
+        compute_portfolio_metrics(returns, periods_per_year=0)
+
+
 def test_warn_instability_high_correlation():
     """Should warn about high correlations."""
     correlations = [

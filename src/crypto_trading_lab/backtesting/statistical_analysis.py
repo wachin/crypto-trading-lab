@@ -179,23 +179,38 @@ def probabilistic_sharpe_ratio(
     annualized_volatility: float,
     n_observations: int,
     trials: int = 1,
+    *,
+    periods_per_year: float = 365.0,
 ) -> float | None:
     """
     Compute Deflated Sharpe Ratio (PSR) per Chapter 43.1 / 49.5.
-    
+
     Corrects the Sharpe ratio for:
     - Multiple hypothesis testing (number of trials)
     - Non-normal returns (skewness and kurtosis)
     - Sample length
-    
+
     Returns a p-value: probability that true SR <= 0.
-    
+
+    The Sharpe is **de-annualized** before it meets ``n_observations``:
+    Eq. 2 of Bailey & López de Prado (2014) takes ``SR_hat`` and ``T``
+    in the returns' own frequency, and the standard error below divides
+    by ``sqrt(T)``. Feeding an annualized Sharpe into a per-candle
+    ``T`` inflates ``z`` by ``sqrt(periods_per_year)`` — a one-year run
+    with a true per-period Sharpe of 0.10 comes out at p = 0.000
+    instead of 0.028. See ``docs/en/developers/afml-techniques.md``,
+    the "annualization trap".
+
     Note: This is a research tool only. Not a guarantee of future performance.
     """
     if annualized_volatility == 0 or n_observations < 2:
         return None
-    
-    sharpe = annualized_return / annualized_volatility
+    if periods_per_year <= 0:
+        raise ValueError("periods_per_year must be positive")
+
+    sharpe = (
+        annualized_return / annualized_volatility
+    ) / math.sqrt(periods_per_year)
     
     # Deflate for number of trials (multiple testing)
     # Under null, max of T trials follows extreme value distribution

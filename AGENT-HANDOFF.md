@@ -15,7 +15,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 838 passed, 2 skipped, **exit code 0** —
+- **Tests:** 843 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
@@ -417,7 +417,11 @@ features the code did not ship. Concretely:
    that followed added the other half: `min_span_days` (30) gates
    Sharpe/Sortino validity on market time, not just row count, and
    `ExperimentRecord.metric_config` stores the assumptions with the
-   metrics so a saved Sharpe stays readable at the interval it used.
+   metrics so a saved Sharpe stays readable at the interval it used. The
+   two test-only helpers from that review are fixed as well:
+   `probabilistic_sharpe_ratio` de-annualizes before meeting its
+   per-candle sample size, and `compute_portfolio_metrics` takes
+   `periods_per_year`, compounds, and measures drawdown on the curve.
    Chapter 27 is `[x]`
    (the troubleshooting links pointed at a file that did not exist; it now
    exists and a test resolves every link and anchor). Chapter 26 stays `[~]`
@@ -468,7 +472,7 @@ git submodule update --init external/freqtrade
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 838 passed, 2 skipped expected
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 843 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
@@ -482,4 +486,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-10-28. Baseline: 838 passed, 2 skipped.*
+*Handoff updated 2026-10-28. Baseline: 843 passed, 2 skipped.*

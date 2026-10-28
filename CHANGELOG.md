@@ -411,6 +411,22 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   installed, so the chapter-41 export test runs instead of skipping).
 
 ### Fixed
+- **The probabilistic Sharpe ratio mixed two frequencies.** It divided
+  annualized return by annualized volatility and then fed that
+  *annualized* ratio to `sqrt((1 + SR²/2) / T)` with `T` counted per
+  candle — the "annualization trap" already recorded in
+  `afml-techniques.md`. It now takes `periods_per_year` and de-annualizes
+  the ratio first: a one-year daily run with a true per-period Sharpe of
+  0.10 returns p ≈ 0.028 instead of p = 0.000. Nothing in the application
+  called it yet, so no shipped number changed.
+- **Portfolio metrics used a 252-day year and a return-space drawdown.**
+  `compute_portfolio_metrics` assumed 252 equity-market trading days for
+  every series (a daily crypto Sharpe was understated by sqrt(365/252)),
+  annualized arithmetically from the sum of returns, and measured the
+  drawdown on the returns themselves — a series of 1% returns reported a
+  50% drawdown. It now takes `periods_per_year` (default 365), compounds
+  the returns into an equity curve, annualizes geometrically and measures
+  the drawdown on that curve. Test-only today.
 - **A valid annualized Sharpe needs market time, not just rows.** With
   the periods per year derived from the interval, the same 30-observation
   series reports a Sharpe of 181 at 1m and 0.87 at 1M — both marked

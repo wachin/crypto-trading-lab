@@ -352,6 +352,12 @@ Eq. 52–53 (pp. 126–127); Figs. 14.2–14.3 (pp. 127–128).
   `SR_0 / sqrt(periods_per_year)`. Skipping this conversion produces an
   absurd result (DSR → 0 or → 1 instead of ≈ 0.90) and is the single easiest
   way to implement the formula wrongly.
+  `backtesting.statistical_analysis.probabilistic_sharpe_ratio` applies the
+  conversion: it accepts annualized return and volatility, takes
+  `periods_per_year`, and divides the ratio by `sqrt(periods_per_year)`
+  before it meets the observation count. A one-year daily run with a true
+  per-period Sharpe of 0.10 now returns p ≈ 0.028; feeding the annualized
+  value straight in returned p = 0.000.
 - **Correlation caveat.** `N` is the number of *independent* trials. The
   paper's Appendix 3 covers determining `N` when trials are not independent;
   that appendix is not in the locally obtained copy of the paper. Until it is
