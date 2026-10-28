@@ -501,3 +501,7 @@ def test_paper_live_runs_a_scripted_feed(tmp_path, capsys, monkeypatch):
     assert "Live paper trading" in output
     assert "Candles received: 3" in output
     assert "Initial capital: 5000" in output
+    # Three candles cannot warm up the default SMA(10/30), and the output
+    # must say so instead of leaving an empty journal unexplained.
+    assert "Warm-up: the strategy needs 31 candles" in output
+    assert "only 3 arrived" in output

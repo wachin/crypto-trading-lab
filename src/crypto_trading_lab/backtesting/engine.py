@@ -168,6 +168,12 @@ class Strategy(Protocol):
 
     name: str
 
+    #: Candles the strategy needs before it can emit its first signal.
+    #: A strategy that cannot state this reports 0 and gets no warm-up
+    #: warning, which is honest: guessing a number would be worse than
+    #: saying nothing.
+    warmup_candles: int
+
     def on_candle(self, index: int, candles: Sequence[Candle]) -> OrderSide | None:
         """Decide using candles up to and including ``index``."""
 
@@ -198,6 +204,11 @@ class MACrossoverStrategy:
     def name(self) -> str:
         return f"SMA({self.fast})xSMA({self.slow}) crossover"
 
+    @property
+    def warmup_candles(self) -> int:
+        """The slow average must fill, then one more candle to compare."""
+        return self.slow + 1
+
     def on_candle(self, index, candles):
         candle = candles[index]
         fast = self._fast_stream.update(candle)
@@ -226,6 +237,11 @@ class BuyAndHoldStrategy:
     def name(self) -> str:
         return "Buy and hold"
 
+    @property
+    def warmup_candles(self) -> int:
+        """It buys on the first candle it sees."""
+        return 1
+
     def on_candle(self, index, candles):
         return OrderSide.BUY if index == 0 else None
 
@@ -239,6 +255,11 @@ class NullStrategy:
     @property
     def name(self) -> str:
         return "Null (never trades)"
+
+    @property
+    def warmup_candles(self) -> int:
+        """It never trades, so it needs nothing."""
+        return 0
 
     def on_candle(self, index, candles):
         return None

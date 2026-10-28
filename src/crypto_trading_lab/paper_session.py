@@ -316,6 +316,9 @@ class PaperSessionResult:
     max_drawdown: Decimal
     open_position: Decimal
     note: str = PAPER_TRADING_NOTE
+    #: Candles the strategy needed before it could emit its first signal
+    #: (0 when the strategy does not declare one).
+    warmup_candles: int = 0
 
     @property
     def net_profit(self) -> Decimal:
@@ -456,6 +459,7 @@ def run_paper_session(
     if not candles:
         raise ValueError("paper trading needs at least one candle")
     config = config or PaperSessionConfig(interval=candles[0].interval)
+    warmup_candles = int(getattr(strategy, "warmup_candles", 0) or 0)
     manager = risk_manager or default_risk_manager()
     market_symbol = symbol or str(candles[0].symbol)
     dataset_id = dataset.dataset_id if dataset else "unversioned"
@@ -604,6 +608,7 @@ def run_paper_session(
         total_slippage=slippage_total,
         max_drawdown=max_drawdown,
         open_position=position,
+        warmup_candles=warmup_candles,
     )
 
 
@@ -677,6 +682,7 @@ async def run_paper_session_live(
         raise ValueError("max_runtime_seconds must be positive")
 
     manager = risk_manager or default_risk_manager()
+    warmup_candles = int(getattr(strategy, "warmup_candles", 0) or 0)
     market_symbol = config.symbol
     dataset_id = f"live_{config.symbol}_{config.interval}"
     rng = random.Random(config.seed)
@@ -933,6 +939,19 @@ async def run_paper_session_live(
     final_equity = mark_equity(final_price) if completed_candles else cash
 
     note_lines = [PAPER_TRADING_NOTE]
+    # Only explain an *empty* journal: a strategy that traded despite
+    # declaring a longer warm-up would make the claim below false.
+    if (
+        warmup_candles
+        and 0 < len(completed_candles) < warmup_candles
+        and not journal.entries
+    ):
+        note_lines.append(
+            f"The strategy needs {warmup_candles} candles to warm up and "
+            f"this session received {len(completed_candles)}, so it could not "
+            "generate a single signal. Run for longer, or use a faster "
+            "strategy, before reading anything into the empty journal."
+        )
     if not completed_candles:
         note_lines.append(
             "The feed produced no closed candle during this session, so there "
@@ -966,4 +985,5 @@ async def run_paper_session_live(
         max_drawdown=max_drawdown,
         open_position=position,
         note="\n".join(note_lines),
+        warmup_candles=warmup_candles,
     )

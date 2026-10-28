@@ -188,6 +188,73 @@ def test_a_session_without_candles_says_so_instead_of_pretending():
     assert "no closed candle" in result.note
 
 
+
+
+# -- warm-up ---------------------------------------------------------------
+
+
+class SlowStrategy:
+    """A strategy that needs more candles than the session will deliver."""
+
+    name = "slow"
+    version = "1.0.0"
+    warmup_candles = 31
+
+    def on_candle(self, index, candles):
+        if len(candles) < self.warmup_candles:
+            return None
+        return OrderSide.BUY
+
+
+def test_a_short_session_explains_the_warm_up_instead_of_looking_flat():
+    result, _ = _run_live(
+        [kline_message(0, "100"), kline_message(1, "101")],
+        strategy=SlowStrategy(),
+    )
+
+    assert result.warmup_candles == 31
+    assert "needs 31 candles to warm up" in result.note
+    assert "received 2" in result.note
+    assert "empty journal" in result.note
+    # The warning must not change the account: it is an explanation, not a trade.
+    assert not result.journal.entries
+    assert result.final_equity == result.config.initial_capital
+
+
+class EagerStrategy(SlowStrategy):
+    """Declares a long warm-up but trades on the first candle anyway."""
+
+    def on_candle(self, index, candles):
+        return OrderSide.BUY
+
+
+def test_the_warning_never_claims_an_empty_journal_that_is_not_empty():
+    result, _ = _run_live(
+        [kline_message(0, "100"), kline_message(1, "101")],
+        strategy=EagerStrategy(),
+    )
+
+    assert result.warmup_candles == 31
+    assert result.journal.entries, "this strategy traded during its warm-up"
+    assert "could not generate a single signal" not in result.note
+
+
+def test_a_session_that_warmed_up_carries_no_warm_up_warning():
+    messages = [kline_message(index, "100") for index in range(31)]
+    result, _ = _run_live(messages, strategy=SlowStrategy())
+
+    assert len(result.equity_curve) == 31
+    assert "warm up" not in result.note
+    assert result.journal.entries, "the strategy can signal once it is warm"
+
+
+def test_a_strategy_without_a_declared_warm_up_reports_zero():
+    result, _ = _run_live([kline_message(0, "100")])
+
+    assert result.warmup_candles == 0
+    assert "warm up" not in result.note
+
+
 def test_the_result_keeps_the_callers_capital_and_fees():
     result, _ = _run_live(
         [kline_message(0, "100")],

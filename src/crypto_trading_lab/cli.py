@@ -261,7 +261,16 @@ def paper_live_cmd(args: Any) -> int:
     print("== Live paper trading (chapter 26.2) ==")
     print(f"Strategy: {result.strategy_name}")
     print(f"Dataset: {result.dataset_id}")
-    print(f"Candles received: {len(result.equity_curve)}")
+    received = len(result.equity_curve)
+    print(f"Candles received: {received}")
+    if result.warmup_candles:
+        line = (
+            f"Warm-up: the strategy needs {result.warmup_candles} "
+            "candles before its first signal"
+        )
+        if received < result.warmup_candles:
+            line += f", and only {received} arrived"
+        print(line)
     print()
     print(result.summary())
     return 0

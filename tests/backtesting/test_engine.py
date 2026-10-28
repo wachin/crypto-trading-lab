@@ -181,6 +181,15 @@ def test_ma_crossover_generates_trades_on_trend():
     assert result.final_equity >= Decimal(0)
 
 
+
+def test_built_in_strategies_declare_how_much_warmup_they_need():
+    # The slow average must fill, then one more candle to compare it with.
+    assert MACrossoverStrategy(fast=10, slow=30).warmup_candles == 31
+    # Buy-and-hold acts on the first candle it is shown.
+    assert BuyAndHoldStrategy().warmup_candles == 1
+    # A strategy that never trades needs nothing.
+    assert NullStrategy().warmup_candles == 0
+
 def test_config_metadata_recorded():
     result = run_backtest(_candles([1, 2, 3]), NullStrategy())
     meta = result.config_metadata

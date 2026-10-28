@@ -88,6 +88,20 @@ def test_paper_session_fills_trades_and_journals_them():
     assert filled.risk_decision == "approve"
 
 
+
+
+def test_a_replayed_session_reports_the_strategy_warm_up():
+    result = run_paper_session(
+        _candles(),
+        MACrossoverStrategy(fast=5, slow=20),
+        config=PaperSessionConfig(interval="1h"),
+        dataset=_dataset(),
+    )
+
+    assert result.warmup_candles == 21
+    # 400 candles is plenty, so the replayed note says nothing about warm-up.
+    assert "warm up" not in result.note
+
 def test_paper_session_never_bypasses_the_risk_manager():
     # A zero position allowance must reject every entry.
     strict = RiskManager(

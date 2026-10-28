@@ -61,7 +61,7 @@ pointing every proxy at a dead port changes nothing:
 http_proxy=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 \
 ALL_PROXY=http://127.0.0.1:9 QT_QPA_PLATFORM=offscreen \
 python3 -m pytest tests/ -q
-# → 807 passed, 2 skipped, exit code 0
+# → 813 passed, 2 skipped, exit code 0
 ```
 
 The two skips are intentional guards in `tests/exchanges/contract.py`

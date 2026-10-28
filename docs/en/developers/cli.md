@@ -136,6 +136,15 @@ of a fabricated one, and **no signal is evaluated while the feed is
 degraded** — those candles are buffered so the strategy keeps its history,
 and the note says how many were skipped.
 
+A strategy cannot trade before it has seen enough candles. The default
+`ma_crossover` needs 31 one-minute candles (30 to fill the slow average,
+plus one to compare it with); `buy_and_hold` needs 1. When the session ends
+first, the output prints a `Warm-up:` line with the number the strategy
+needed and the number that arrived, so an empty journal reads as *not
+warmed up yet* rather than *no opportunity*. A strategy that does not
+declare a warm-up prints no line, because guessing a number would be worse
+than saying nothing.
+
 The command needs the optional `websockets` package. Without it the command
 fails with the install line instead of a traceback, the same way a missing
 YAML reader does.

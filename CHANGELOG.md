@@ -14,6 +14,16 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **The live session says when a strategy never warmed up.** A short
+  `paper-live` run can end before the strategy has seen enough candles to
+  emit its first signal, and the empty journal then looked like a flat
+  market. Strategies now declare `warmup_candles` (`ma_crossover` reports
+  `slow + 1`, buy-and-hold 1, a strategy that does not declare one reports
+  0 and gets no warning), `PaperSessionResult.warmup_candles` carries it,
+  and a session that received fewer candles than that adds a sentence to
+  its note explaining why nothing happened. The CLI prints a `Warm-up:`
+  line next to `Candles received:`. The warning is an explanation only: it
+  does not change the account, the journal or the risk gate.
 - **A working Binance WebSocket feed, and paper trading over it (chapters
   26.2 and 27).** The client existed but could not do its job: `start()`
   blocked forever, so a caller could never stop it; the staleness check ran
