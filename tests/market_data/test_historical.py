@@ -17,6 +17,7 @@ from crypto_trading_lab.domain.models import Candle, Symbol
 from crypto_trading_lab.exchanges.binance.config import BINANCE_INTERVALS
 from crypto_trading_lab.market_data.historical import (
     BINANCE_PAGE_LIMIT,
+    CALENDAR_INTERVALS,
     SUPPORTED_INTERVALS,
     TIMEFRAMES,
     BinanceKlinesSource,
@@ -76,9 +77,8 @@ def _rows(count: int, start: datetime | None = None) -> list[list[object]]:
 
 
 def test_interval_seconds_parses_a_streaming_only_interval():
-    # 1M is streaming-only: the downloader cannot validate calendar months,
-    # so it is absent from TIMEFRAMES and must be parsed from the suffix.
-    assert "1M" not in TIMEFRAMES
+    # A calendar month has no exact duration; 30 days is the arithmetic
+    # approximation used for volume scaling and size estimates.
     assert interval_seconds("1M") == 30 * 24 * 60 * 60
     assert interval_seconds("1s") == 1
     assert interval_seconds("3m") == 180
@@ -98,10 +98,10 @@ def test_interval_seconds_agrees_with_the_downloader_table():
         assert interval_seconds(interval) == seconds
 
 
-def test_the_downloader_offers_every_fixed_duration_interval():
-    # The GUI dropdown and the request validator both read this table. Only
-    # the calendar-month interval is missing, on purpose.
-    assert set(TIMEFRAMES) == set(BINANCE_INTERVALS) - {"1M"}
+def test_the_downloader_offers_every_interval_the_exchange_serves():
+    # The GUI dropdown and the request validator both read this table.
+    assert set(TIMEFRAMES) == set(BINANCE_INTERVALS)
+    assert CALENDAR_INTERVALS == {"1M"}, "only the month is calendar-based"
     assert "1s" in SUPPORTED_INTERVALS
     assert SUPPORTED_INTERVALS[0] == "1s", "the dropdown starts at the fastest"
 
@@ -140,6 +140,85 @@ def test_one_second_candles_validate_cleanly():
 
     assert validation.ok is True
     assert validation.missing == 0
+
+
+def _monthly(count: int, start: datetime | None = None) -> list[Candle]:
+    """``count`` candles that open on the first day of consecutive months."""
+    start = start or datetime(2024, 1, 1, tzinfo=timezone.utc)
+    candles: list[Candle] = []
+    year, month = start.year, start.month
+    for _ in range(count):
+        next_year, next_month = (year + 1, 1) if month == 12 else (year, month + 1)
+        open_time = datetime(year, month, 1, tzinfo=timezone.utc)
+        close_time = (
+            datetime(next_year, next_month, 1, tzinfo=timezone.utc)
+            - timedelta(milliseconds=1)
+        )
+        candles.append(
+            Candle(
+                symbol=Symbol("BTC/USDT"),
+                interval="1M",
+                open_time=open_time,
+                close_time=close_time,
+                open=Decimal("100"),
+                high=Decimal("101"),
+                low=Decimal("99"),
+                close=Decimal("100"),
+                volume=Decimal("1"),
+            )
+        )
+        year, month = next_year, next_month
+    return candles
+
+
+def test_monthly_candles_validate_by_calendar_not_by_fixed_step():
+    # A fixed 30-day step would call February an overlap and August a gap;
+    # the calendar check only counts months.
+    validation = validate_candles(_monthly(13), "1M")
+
+    assert validation.ok is True
+    assert validation.missing == 0
+    assert validation.duplicates == 0
+
+
+def test_monthly_validation_counts_a_missing_month():
+    candles = _monthly(4)
+    del candles[2]  # drop March
+
+    validation = validate_candles(candles, "1M")
+
+    assert validation.missing == 1
+    assert validation.ok is False
+
+
+def test_monthly_validation_rejects_a_candle_that_starts_mid_month():
+    candles = _monthly(3)
+    mid_month = candles[1].open_time.replace(day=15)
+    candles[1] = Candle(
+        symbol=candles[1].symbol,
+        interval="1M",
+        open_time=mid_month,
+        close_time=candles[1].close_time,
+        open=candles[1].open,
+        high=candles[1].high,
+        low=candles[1].low,
+        close=candles[1].close,
+        volume=candles[1].volume,
+    )
+
+    validation = validate_candles(candles, "1M")
+
+    assert validation.ok is False
+    assert any("calendar month" in issue for issue in validation.issues)
+
+
+def test_monthly_validation_counts_a_duplicate_month():
+    candles = _monthly(3)
+    candles.append(candles[1])
+
+    validation = validate_candles(candles, "1M")
+
+    assert validation.duplicates == 1
 
 
 def test_fetch_single_page_builds_decimal_candles():

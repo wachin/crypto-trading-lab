@@ -36,6 +36,7 @@ from crypto_trading_lab.domain.models import Candle, Symbol
 __all__ = [
     "TIMEFRAMES",
     "SUPPORTED_INTERVALS",
+    "CALENDAR_INTERVALS",
     "interval_seconds",
     "DEFAULT_BINANCE_BASE_URL",
     "HistoricalDataError",
@@ -55,11 +56,10 @@ __all__ = [
 #: documents them. Every interval here has a *fixed* duration, because
 #: :func:`validate_candles` counts gaps from one step size.
 #:
-#: ``1M`` is deliberately absent: a calendar month is 28-31 days, so a
-#: monthly series would be reported as overlapping or off-grid. Streaming
-#: still accepts it — see ``BINANCE_INTERVALS`` in
-#: ``exchanges/binance/config.py`` — but it cannot be downloaded until the
-#: validator learns about irregular intervals.
+    #: ``1M`` is the one exception: a calendar month is 28-31 days, so the
+    #: 30-day value here is arithmetic only (it scales volume to a day, and
+    #: estimates how many candles a period needs). Validation does *not* use
+    #: it — see ``CALENDAR_INTERVALS``.
 TIMEFRAMES: dict[str, int] = {
     "1s": 1,
     "1m": 60,
@@ -76,7 +76,14 @@ TIMEFRAMES: dict[str, int] = {
     "1d": 24 * 60 * 60,
     "3d": 3 * 24 * 60 * 60,
     "1w": 7 * 24 * 60 * 60,
+    "1M": 30 * 24 * 60 * 60,
 }
+
+#: Intervals whose candles start on calendar boundaries rather than on a
+#: fixed grid. They are validated by counting months, never by dividing a
+#: duration: February is 28 days and August is 31, so a fixed step reports
+#: a false gap or a false overlap on real data.
+CALENDAR_INTERVALS: frozenset[str] = frozenset({"1M"})
 
 SUPPORTED_INTERVALS: tuple[str, ...] = tuple(TIMEFRAMES)
 
@@ -373,12 +380,18 @@ class DatasetValidation:
 
     @property
     def ok(self) -> bool:
-        """Ready for research when nothing structural is wrong."""
+        """Ready for research when nothing structural is wrong.
+
+        ``issues`` counts: an off-grid or overlapping series used to be
+        reported as ready while its problems were listed nowhere, because
+        the explanation only prints issues when this is False.
+        """
         return (
             self.candle_count > 0
             and self.duplicates == 0
             and self.invalid == 0
             and self.missing == 0
+            and not self.issues
         )
 
     def beginner_explanation(self) -> str:
@@ -405,29 +418,14 @@ class DatasetValidation:
         return "\n".join(lines)
 
 
-def validate_candles(
-    candles: Sequence[Candle],
-    interval: str,
-    *,
-    invalid: int = 0,
-) -> DatasetValidation:
-    """Check a candle series for gaps, duplicates and bad values.
-
-    ``Candle`` refuses to exist with impossible values, so ``invalid``
-    is passed by the downloader as the count of raw rows it rejected
-    before construction (a real, measurable number rather than a guess).
-    """
-    if interval not in TIMEFRAMES:
-        raise ValueError(f"unsupported interval {interval!r}")
-    if not candles:
-        return DatasetValidation(0, None, None, 0, 0, invalid)
-
-    step = timedelta(seconds=TIMEFRAMES[interval])
-    ordered = sorted(candles, key=lambda c: c.open_time)
+def _count_fixed_step_gaps(
+    ordered: Sequence[Candle],
+    step: timedelta,
+    issues: list[str],
+) -> tuple[int, int]:
+    """Count duplicates and gaps on an evenly spaced series."""
     duplicates = 0
     missing = 0
-    issues: list[str] = []
-
     previous: datetime | None = None
     for candle in ordered:
         if previous is not None:
@@ -446,13 +444,82 @@ def validate_candles(
         previous = candle.open_time
 
     # Timestamp regularity: a candle must open on the interval grid.
+    seconds = int(step.total_seconds())
     for candle in ordered:
-        if int(candle.open_time.timestamp()) % TIMEFRAMES[interval] != 0:
+        if int(candle.open_time.timestamp()) % seconds != 0:
             issues.append(
                 f"candle at {candle.open_time.isoformat()} is not "
                 "aligned with the timeframe grid"
             )
             break
+    return duplicates, missing
+
+
+def _count_monthly_gaps(
+    ordered: Sequence[Candle],
+    issues: list[str],
+) -> tuple[int, int]:
+    """Count duplicates and gaps by calendar month (``1M`` candles).
+
+    A month is 28-31 days, so dividing a duration cannot work: February
+    would look too short and a 31-day month would look like a gap.
+    """
+    duplicates = 0
+    missing = 0
+    previous: datetime | None = None
+    for candle in ordered:
+        moment = candle.open_time
+        if (
+            moment.day != 1
+            or moment.hour != 0
+            or moment.minute != 0
+            or moment.second != 0
+            or moment.microsecond != 0
+        ):
+            issues.append(
+                f"candle at {moment.isoformat()} does not start a calendar month"
+            )
+            break
+        if previous is not None:
+            months = (moment.year - previous.year) * 12 + (
+                moment.month - previous.month
+            )
+            if months == 0:
+                duplicates += 1
+            elif months > 1:
+                missing += months - 1
+        previous = moment
+    return duplicates, missing
+
+
+def validate_candles(
+    candles: Sequence[Candle],
+    interval: str,
+    *,
+    invalid: int = 0,
+) -> DatasetValidation:
+    """Check a candle series for gaps, duplicates and bad values.
+
+    ``Candle`` refuses to exist with impossible values, so ``invalid``
+    is passed by the downloader as the count of raw rows it rejected
+    before construction (a real, measurable number rather than a guess).
+
+    Evenly spaced intervals are checked against a fixed step. Calendar
+    intervals (``1M``) are checked month by month instead, because no
+    single step describes a calendar.
+    """
+    if interval not in TIMEFRAMES:
+        raise ValueError(f"unsupported interval {interval!r}")
+    if not candles:
+        return DatasetValidation(0, None, None, 0, 0, invalid)
+
+    ordered = sorted(candles, key=lambda c: c.open_time)
+    issues: list[str] = []
+    if interval in CALENDAR_INTERVALS:
+        duplicates, missing = _count_monthly_gaps(ordered, issues)
+    else:
+        step = timedelta(seconds=TIMEFRAMES[interval])
+        duplicates, missing = _count_fixed_step_gaps(ordered, step, issues)
 
     if duplicates:
         issues.append(f"{duplicates} duplicate timestamps")

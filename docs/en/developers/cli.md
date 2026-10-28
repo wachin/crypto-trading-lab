@@ -146,12 +146,12 @@ declare a warm-up prints no line, because guessing a number would be worse
 than saying nothing.
 
 The live path accepts every interval the exchange streams, `1s` included,
-and the GUI's Historical Data screen offers the same fixed-duration set
-for downloads. Two limits stay: monthly candles (`1M`) are streaming-only,
-because a calendar month is 28-31 days and the gap validator counts from a
-single fixed step, and a period that would need more than 2,000,000
-candles is refused *before* the first request, telling you to shorten the
-period or pick a slower timeframe.
+and the GUI's Historical Data screen offers the same set for downloads.
+Monthly candles (`1M`) are validated month by month rather than against a
+fixed step, because a calendar month is 28-31 days. One limit stays: a
+period that would need more than 2,000,000 candles is refused *before*
+the first request, telling you to shorten the period or pick a slower
+timeframe.
 
 Be careful with what a faster interval buys you — a 100-second SMA(5/20)
 session over 1s candles made three trades and paid 25.5 in fees and

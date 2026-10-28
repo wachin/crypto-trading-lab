@@ -14,13 +14,21 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **Monthly candles can be downloaded and validated.** `1M` joins the
+  downloader's vocabulary, and `validate_candles` checks it by calendar
+  month instead of by a fixed step: February is 28 days and August is 31,
+  so the old arithmetic called one an overlap and the other a gap.
+  `CALENDAR_INTERVALS` names the intervals that need the calendar path,
+  and the 30-day entry in `TIMEFRAMES` is now arithmetic only (volume
+  scaling, size estimates). This also fixed `DatasetValidation.ok`, which
+  ignored `issues` entirely — an off-grid or overlapping series was
+  reported as "ready for research" while its problems were printed
+  nowhere, because the explanation only lists issues when `ok` is false.
 - **The GUI timeframe dropdown offers the exchange's intervals.** The
   Historical Data screen listed the six intervals the downloader knew; it
-  now lists all fifteen fixed-duration intervals Binance serves, fastest
-  first (`1s` … `1w`), and the default stays `1h`. `1M` is absent on
-  purpose: calendar months are 28-31 days, so the gap validator — which
-  counts from one fixed step — would report a false gap or a false
-  overlap. Offering `1s` also made a real footgun reachable: a 1-second
+  now lists all sixteen intervals Binance serves, fastest first (`1s` …
+  `1M`), and the default stays `1h`. Offering `1s` also made a real
+  footgun reachable: a 1-second
   download over the default five-year range is about 157 million candles,
   and the old guard only fired after walking two million of them page by
   page. A request now estimates its size first and raises
@@ -30,9 +38,8 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   The live path validated against the historical downloader's curated
   `TIMEFRAMES` table, so `--interval 1s` was refused even though the
   exchange serves it. The exchange's own vocabulary now lives in
-  `BINANCE_INTERVALS` (`exchanges/binance/config.py`) and only the live
-  path uses it; the downloader keeps its shorter list, because a day of 1s
-  candles is 86,400 rows. Fixing the validation exposed a second, silent
+  `BINANCE_INTERVALS` (`exchanges/binance/config.py`), and the downloader
+  adopted it later the same day. Fixing the validation exposed a second, silent
   defect: the chapter-56 volume proxy read the same table, so an interval
   it did not know produced zero average daily volume, an empty synthetic
   book and a rejection of every order. `interval_seconds()` now derives the

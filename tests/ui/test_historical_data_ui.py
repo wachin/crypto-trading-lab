@@ -74,8 +74,8 @@ def test_the_timeframe_dropdown_offers_the_exchange_intervals(qapp, tmp_path):
     ]
 
     assert items[0] == "1s", "the fastest interval comes first"
+    assert items[-1] == "1M", "the slowest interval comes last"
     assert "30m" in items and "1w" in items
-    assert "1M" not in items, "calendar months cannot be validated yet"
     assert widget.interval_combo.currentData() == "1h", "the default is unchanged"
     widget.close()
 
