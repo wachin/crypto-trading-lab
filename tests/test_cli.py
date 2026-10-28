@@ -470,6 +470,38 @@ def test_paper_live_rejects_an_unknown_interval(tmp_path, capsys):
     assert "unsupported interval" in captured.err
 
 
+def test_paper_live_accepts_a_one_second_interval(tmp_path, capsys, monkeypatch):
+    from crypto_trading_lab import application
+
+    real = application.run_live_paper_session
+
+    def with_feed(**kwargs):
+        return real(
+            **kwargs,
+            websocket_factory=lambda url: _ScriptedFeed(
+                [_kline(0, "100"), _kline(1, "101")]
+            ),
+        )
+
+    monkeypatch.setattr(application, "run_live_paper_session", with_feed)
+    capsys.readouterr()
+    code = run(
+        [
+            "paper-live",
+            "--interval",
+            "1s",
+            "--minutes",
+            "0.05",
+            "--data-dir",
+            str(tmp_path / "data"),
+        ]
+    )
+    output = capsys.readouterr().out
+
+    assert code == 0
+    assert "Dataset: live_BTC/USDT_1s" in output
+
+
 def test_paper_live_runs_a_scripted_feed(tmp_path, capsys, monkeypatch):
     from crypto_trading_lab import application
 

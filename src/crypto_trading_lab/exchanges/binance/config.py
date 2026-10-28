@@ -12,7 +12,37 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-__all__ = ["BinanceEndpoints", "BINANCE_SPOT_ENDPOINTS"]
+__all__ = [
+    "BinanceEndpoints",
+    "BINANCE_SPOT_ENDPOINTS",
+    "BINANCE_SPOT_TESTNET_ENDPOINTS",
+    "BINANCE_INTERVALS",
+    "endpoints_for",
+]
+
+
+#: Every kline interval the Spot API serves, in the order it documents
+#: them. This is the *streaming* vocabulary: ``1s`` is usable live, but a
+#: day of it is 86,400 candles, so the historical downloader keeps its own
+#: shorter list (``market_data.historical.TIMEFRAMES``).
+BINANCE_INTERVALS: tuple[str, ...] = (
+    "1s",
+    "1m",
+    "3m",
+    "5m",
+    "15m",
+    "30m",
+    "1h",
+    "2h",
+    "4h",
+    "6h",
+    "8h",
+    "12h",
+    "1d",
+    "3d",
+    "1w",
+    "1M",
+)
 
 
 @dataclass(frozen=True)

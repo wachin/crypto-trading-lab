@@ -37,7 +37,7 @@ from crypto_trading_lab.execution_realism import (
     ExecutionConfig,
     simulate_market_order,
 )
-from crypto_trading_lab.market_data.historical import TIMEFRAMES, DatasetVersion
+from crypto_trading_lab.market_data.historical import DatasetVersion, interval_seconds
 from crypto_trading_lab.risk_manager import (
     LossLimits,
     OperationalLimits,
@@ -391,7 +391,7 @@ def _adv_at(
     It only looks backwards, so it cannot leak the fill candle's volume into
     the decision.
     """
-    step = TIMEFRAMES.get(interval)
+    step = interval_seconds(interval)
     if not step or window < 1:
         return ZERO
     start = max(0, index + 1 - window)

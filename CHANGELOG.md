@@ -14,6 +14,18 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **`paper-live` accepts every interval Binance streams, including `1s`.**
+  The live path validated against the historical downloader's curated
+  `TIMEFRAMES` table, so `--interval 1s` was refused even though the
+  exchange serves it. The exchange's own vocabulary now lives in
+  `BINANCE_INTERVALS` (`exchanges/binance/config.py`) and only the live
+  path uses it; the downloader keeps its shorter list, because a day of 1s
+  candles is 86,400 rows. Fixing the validation exposed a second, silent
+  defect: the chapter-56 volume proxy read the same table, so an interval
+  it did not know produced zero average daily volume, an empty synthetic
+  book and a rejection of every order. `interval_seconds()` now derives the
+  duration from the interval string, and a test pins a 1s session that
+  fills instead of rejecting.
 - **The live session says when a strategy never warmed up.** A short
   `paper-live` run can end before the strategy has seen enough candles to
   emit its first signal, and the empty journal then looked like a flat

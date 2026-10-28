@@ -647,8 +647,10 @@ def run_live_paper_session(
     ``websocket_factory`` exists so tests can drive a scripted feed; the
     CLI never passes it.
     """
-    from crypto_trading_lab.exchanges.binance.config import endpoints_for
-    from crypto_trading_lab.market_data.historical import TIMEFRAMES
+    from crypto_trading_lab.exchanges.binance.config import (
+        BINANCE_INTERVALS,
+        endpoints_for,
+    )
     from crypto_trading_lab.paper_session import (
         LivePaperConfig,
         run_paper_session_live,
@@ -657,8 +659,8 @@ def run_live_paper_session(
 
     if minutes <= 0:
         raise ApplicationError("minutes must be positive")
-    if interval not in TIMEFRAMES:
-        known_intervals = ", ".join(sorted(TIMEFRAMES))
+    if interval not in BINANCE_INTERVALS:
+        known_intervals = ", ".join(BINANCE_INTERVALS)
         raise ApplicationError(
             f"unsupported interval {interval!r}; use one of {known_intervals}"
         )

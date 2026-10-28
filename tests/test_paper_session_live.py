@@ -24,6 +24,7 @@ from crypto_trading_lab.exchanges.connection_manager import (
     ReconnectionPolicy,
     StaleDataDetector,
 )
+from crypto_trading_lab.execution_realism import ExecutionConfig
 from crypto_trading_lab.paper_session import LivePaperConfig, run_paper_session_live
 
 D = Decimal
@@ -188,6 +189,31 @@ def test_a_session_without_candles_says_so_instead_of_pretending():
     assert "no closed candle" in result.note
 
 
+
+
+# -- sub-minute intervals ---------------------------------------------------
+
+
+def test_a_one_second_session_still_fills_with_the_execution_model():
+    # The chapter-56 model sizes the book from average daily volume, which is
+    # derived from the interval. When 1s was missing from the duration table
+    # the proxy came back as zero, the book had no depth and every order was
+    # rejected — a silent realism loss, not a visible error.
+    messages = [kline_message(index, str(100 + index)) for index in range(6)]
+    result, _ = _run_live(
+        messages,
+        strategy=BuyThenSell(),
+        interval="1s",
+        execution_config=ExecutionConfig(),
+    )
+
+    assert result.config.interval == "1s"
+    assert result.journal.filled_entries
+    assert not [
+        entry
+        for entry in result.journal.entries
+        if entry.risk_decision == "reject"
+    ]
 
 
 # -- warm-up ---------------------------------------------------------------

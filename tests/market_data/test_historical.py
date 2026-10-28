@@ -16,6 +16,7 @@ import pytest
 from crypto_trading_lab.domain.models import Candle, Symbol
 from crypto_trading_lab.market_data.historical import (
     BINANCE_PAGE_LIMIT,
+    TIMEFRAMES,
     BinanceKlinesSource,
     DatasetVersion,
     HistoricalDataError,
@@ -23,6 +24,7 @@ from crypto_trading_lab.market_data.historical import (
     build_dataset_id,
     compute_dataset_checksum,
     download_dataset,
+    interval_seconds,
     validate_candles,
 )
 
@@ -68,6 +70,27 @@ class FakeBinance:
 def _rows(count: int, start: datetime | None = None) -> list[list[object]]:
     start = start or datetime(2024, 1, 1, tzinfo=timezone.utc)
     return [_kline(start + i * HOUR) for i in range(count)]
+
+
+def test_interval_seconds_parses_streaming_only_intervals():
+    # The downloader's table does not know 1s, but the live feed streams it.
+    assert interval_seconds("1s") == 1
+    assert interval_seconds("3m") == 180
+    assert interval_seconds("4h") == 4 * 60 * 60
+    assert interval_seconds("1w") == 7 * 24 * 60 * 60
+    assert interval_seconds("1M") == 30 * 24 * 60 * 60
+
+
+def test_interval_seconds_returns_none_for_a_non_interval():
+    assert interval_seconds("7s") is not None  # syntactically fine, not a Binance one
+    assert interval_seconds("hourly") is None
+    assert interval_seconds("0m") is None
+    assert interval_seconds("") is None
+
+
+def test_interval_seconds_agrees_with_the_downloader_table():
+    for interval, seconds in TIMEFRAMES.items():
+        assert interval_seconds(interval) == seconds
 
 
 def test_fetch_single_page_builds_decimal_candles():

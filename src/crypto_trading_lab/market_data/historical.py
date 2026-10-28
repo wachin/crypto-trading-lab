@@ -36,6 +36,7 @@ from crypto_trading_lab.domain.models import Candle, Symbol
 __all__ = [
     "TIMEFRAMES",
     "SUPPORTED_INTERVALS",
+    "interval_seconds",
     "DEFAULT_BINANCE_BASE_URL",
     "HistoricalDataError",
     "HistoricalRequest",
@@ -60,6 +61,39 @@ TIMEFRAMES: dict[str, int] = {
 }
 
 SUPPORTED_INTERVALS: tuple[str, ...] = tuple(TIMEFRAMES)
+
+#: Seconds in one candle for each unit suffix the exchange uses.
+_UNIT_SECONDS: dict[str, int] = {
+    "s": 1,
+    "m": 60,
+    "h": 60 * 60,
+    "d": 24 * 60 * 60,
+    "w": 7 * 24 * 60 * 60,
+    # A calendar month is not a fixed number of seconds; the volume proxy
+    # needs one, so it uses 30 days and says so here.
+    "M": 30 * 24 * 60 * 60,
+}
+
+
+def interval_seconds(interval: str) -> int | None:
+    """Seconds covered by one candle of ``interval`` (``1s``, ``4h``, ``1M``).
+
+    Returns ``None`` when the string is not an interval, so callers can
+    tell "unknown" from "zero seconds". The downloader's curated
+    ``TIMEFRAMES`` table wins when it has the key; everything else is
+    parsed from the suffix, because streaming accepts intervals the
+    downloader deliberately does not offer (``1s``).
+    """
+    if interval in TIMEFRAMES:
+        return TIMEFRAMES[interval]
+    unit = interval[-1:]
+    number = interval[:-1]
+    if not unit or not number.isdigit() or unit not in _UNIT_SECONDS:
+        return None
+    amount = int(number)
+    if amount < 1:
+        return None
+    return amount * _UNIT_SECONDS[unit]
 
 DEFAULT_BINANCE_BASE_URL = "https://api.binance.com"
 

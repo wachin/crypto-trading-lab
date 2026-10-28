@@ -122,7 +122,7 @@ crypto-trading-lab paper-live --strategy ma_crossover --set fast=5 --set slow=20
 | `--strategy` | `ma_crossover` | Any id from `list-strategies`. |
 | `--set KEY=VALUE` | none | Strategy parameter; repeatable. |
 | `--symbol` | `BTC/USDT` | Streamed pair. |
-| `--interval` | `1m` | Candle interval (`1m`, `5m`, `1h`, ...). |
+| `--interval` | `1m` | Any Binance kline interval: `1s`, `1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `1d`, `3d`, `1w`, `1M`. |
 | `--minutes` | `5` | How long to listen before returning. |
 | `--capital` | `10000` | Simulated starting balance. |
 | `--fee` | `0.001` | Taker fee as a fraction. |
@@ -144,6 +144,13 @@ needed and the number that arrived, so an empty journal reads as *not
 warmed up yet* rather than *no opportunity*. A strategy that does not
 declare a warm-up prints no line, because guessing a number would be worse
 than saying nothing.
+
+Sub-minute candles are streamable but not downloadable: `--interval 1s`
+works for a live session, while `download` keeps its shorter list because a
+day of 1s candles is 86,400 rows. Be careful with what the faster interval
+buys you — a 100-second SMA(5/20) session over 1s candles made three trades
+and paid 25.5 in fees and slippage against a smaller price move. The cost
+per trade is fixed; the number of trades is not.
 
 The command needs the optional `websockets` package. Without it the command
 fails with the install line instead of a traceback, the same way a missing

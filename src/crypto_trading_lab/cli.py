@@ -349,7 +349,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="strategy parameter, repeatable (e.g. --set fast=5)",
     )
     paper_live.add_argument("--symbol", default="BTC/USDT")
-    paper_live.add_argument("--interval", default="1m")
+    paper_live.add_argument(
+        "--interval",
+        default="1m",
+        help=(
+            "any Binance kline interval: 1s, 1m, 3m, 5m, 15m, 30m, 1h, "
+            "2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M (default: 1m)"
+        ),
+    )
     paper_live.add_argument(
         "--minutes",
         type=float,
