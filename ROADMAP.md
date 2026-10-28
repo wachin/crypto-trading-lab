@@ -88,7 +88,7 @@ before writing code, and tick a checkbox only when the requirement is
 | 60 | [~] | 15 | 1 | No | Risk of ruin and capital depletion |
 | 61 | [~] | 2 | 16 | No | Capital protection |
 | 62 | [~] | 1 | 19 | Sí | Live monitoring |
-| 63 | [~] | 6 | 11 | No | Live vs backtest drift |
+| 63 | [~] | 11 | 6 | No | Live vs backtest drift |
 | 64 | [ ] | 0 | 16 | No | Strategy failure detection |
 | 65 | [~] | 2 | 8 | No | Strategy promotion pipeline |
 | 66 | [ ] | 0 | 20 | No | Strategy qualification |
@@ -4297,11 +4297,11 @@ Analyze:
 
 ### 63.2 Drift reporting
 
-- [ ] Compare realized metrics against expected ranges from the backtest.
-- [ ] Show drift over time, not only as a single value.
-- [ ] Explain likely causes for each drift dimension.
-- [ ] Distinguish expected variability from meaningful degradation.
-- [ ] The system must be able to mark a strategy as degraded or suspicious (see Chapter 64).
+- [x] Compare realized metrics against expected ranges from the backtest. (`expected_ranges()`: a trade bootstrap for the return band, anchored on the realised return; the drawdown band is anchored on the observed drawdown because a trade-level bootstrap cannot see intra-trade drawdown. Every band carries its `basis`.)
+- [x] Show drift over time, not only as a single value. (`drift_over_time()` splits both equity curves into equal slices and reports the drift of each.)
+- [x] Explain likely causes for each drift dimension. (`LIKELY_CAUSES` names a mechanism per metric; shown only for degraded and outside-expected verdicts.)
+- [x] Distinguish expected variability from meaningful degradation. (Four verdicts: `within_expected`, `expected_tail`, `outside_expected`, `degraded`; a miss beyond half the band width is degradation, inside it is a tail. A run with fewer than two backtest trades is `suspicious`/unvalidated, never healthy.)
+- [x] The system must be able to mark a strategy as degraded or suspicious (see Chapter 64). (`assess_drift()` returns `StrategyHealth` — healthy / suspicious / degraded — with the reasons and the evidence, rendered by the Paper Trading screen. It never touches the risk manager.)
 
 ### 63.3 Education
 

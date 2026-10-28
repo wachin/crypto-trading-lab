@@ -14,6 +14,30 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **Drift reporting (chapter 63.2).** A paper session is now judged against
+  what its backtest predicted, not just compared to it. `expected_ranges()`
+  builds the band each metric should stay inside: the return band comes from
+  resampling the backtest's own trades, anchored on the return the run
+  actually realised (the bootstrap sees closed trades only, while the run
+  also holds open positions); the drawdown band is anchored on the observed
+  drawdown and widened by a 1.5x tolerance, because a trade-level bootstrap
+  cannot see the drawdown that happens inside a trade and would otherwise
+  report a band of zero for any profitable run. Every band states its
+  `basis`. `drift_over_time()` splits both equity curves into equal slices,
+  so a run that drifts away in its last third no longer hides behind an
+  average. `assess_drift()` returns a `StrategyHealth` verdict — healthy,
+  suspicious or degraded — using four per-metric verdicts that separate a
+  normal tail (outside the band by less than half its width) from real
+  degradation, and treats a result *better* than the band as a warning
+  about the model rather than good news. Each dimension carries a list of
+  likely causes to check. A backtest with fewer than two trades produces no
+  band, and the run is reported as unvalidated rather than healthy. The
+  Paper Trading screen renders the whole analysis after every session; the
+  assessment never touches the risk manager. 12 new tests; baseline 770 →
+  **782 passed, 2 skipped**. Documented in
+  `docs/en/developers/live-vs-backtest-drift.md`.
+
+
 - **Execution realism now feeds the backtest and the robustness report, not
   only paper trading (chapter 56.5).** `BacktestConfig` gained
   `execution_config` and `execution_seed`; when a configuration is set,

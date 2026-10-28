@@ -37,8 +37,11 @@ from crypto_trading_lab.backtesting.engine import (
 )
 from crypto_trading_lab.domain.models import Candle
 from crypto_trading_lab.live_vs_backtest import (
+    DriftAssessment,
     DriftReport,
+    assess_drift,
     drift_report_from_results,
+    render_drift_analysis,
     render_drift_report,
 )
 from crypto_trading_lab.market_data.historical import DatasetVersion
@@ -68,6 +71,7 @@ class PaperTradingWidget(QWidget):
         self._dataset = dataset
         self._last: PaperSessionResult | None = None
         self._last_drift: DriftReport | None = None
+        self._last_assessment: DriftAssessment | None = None
 
         self.setWindowTitle(self.tr("Paper Trading"))
         layout = QVBoxLayout(self)
@@ -246,6 +250,7 @@ class PaperTradingWidget(QWidget):
         # at the same position sizing, so the difference reflects execution
         # and risk gating rather than a sizing artefact.
         self._last_drift = None
+        self._last_assessment = None
         if len(self._candles) >= 2:
             backtest = run_backtest(
                 self._candles,
@@ -261,9 +266,19 @@ class PaperTradingWidget(QWidget):
                 ),
             )
             self._last_drift = drift_report_from_results(backtest, result)
+            # Chapter 63.2: expected ranges, drift over time, likely causes
+            # and a healthy/suspicious/degraded verdict.
+            self._last_assessment = assess_drift(
+                backtest, result, report=self._last_drift
+            )
 
         account_text = result.summary()
-        if self._last_drift is not None:
+        if self._last_assessment is not None:
+            account_text = (
+                f"{account_text}\n\n"
+                f"{render_drift_analysis(self._last_assessment)}"
+            )
+        elif self._last_drift is not None:
             account_text = (
                 f"{account_text}\n\n{render_drift_report(self._last_drift)}"
             )
@@ -299,6 +314,11 @@ class PaperTradingWidget(QWidget):
     def last_drift(self) -> DriftReport | None:
         """Chapter-63 drift report from the last session, when available."""
         return self._last_drift
+
+    @property
+    def last_assessment(self) -> DriftAssessment | None:
+        """Chapter 63.2 verdict (healthy / suspicious / degraded)."""
+        return self._last_assessment
 
     # -- follow-up -------------------------------------------------------
 
