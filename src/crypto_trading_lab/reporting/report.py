@@ -164,7 +164,9 @@ def build_backtest_report(
         "recorded above under the "
         f"{result.config_metadata.get('execution_model', 'next-open')} "
         "execution model. No market impact, partial fill, latency or exchange "
-        "rejection is modelled."
+        "rejection is modelled. "
+        f"Annualization: {report.metric_config.get('periodicity', 'not recorded')}; "
+        f"{report.metric_config.get('annualization_method', 'not recorded')}."
     )
     limitations = (
         "Limitations: this is a single in-sample run. No out-of-sample "

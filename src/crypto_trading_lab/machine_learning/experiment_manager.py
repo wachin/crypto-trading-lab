@@ -73,6 +73,10 @@ class ExperimentRecord:
     dataset_checksum: str = ""
     code_hash: str = ""
     metrics: dict[str, str] = field(default_factory=dict)
+    #: How those metrics were computed (chapter 40.7): periodicity,
+    #: annualization method and the rest. A Sharpe stored without it
+    #: cannot be compared with one computed at another interval.
+    metric_config: dict[str, str] = field(default_factory=dict)
     tags: tuple[str, ...] = ()
     #: Compact environment record (chapter 53.2): Python, platform,
     #: git revision and dependency versions at the time of the run.
@@ -94,6 +98,7 @@ def _record_to_dict(exp: ExperimentRecord) -> dict[str, Any]:
         "parameters": exp.parameters,
         "execution_assumptions": exp.execution_assumptions,
         "metrics": exp.metrics,
+        "metric_config": dict(exp.metric_config),
         "software_version": exp.software_version,
         "random_seed": exp.random_seed,
         "timestamp": exp.timestamp.isoformat(),
@@ -128,6 +133,7 @@ def _record_from_dict(item: dict[str, Any]) -> ExperimentRecord:
         code_hash=item.get("code_hash", ""),
         environment=dict(item.get("environment", {})),
         metrics=dict(item.get("metrics", {})),
+        metric_config=dict(item.get("metric_config", {})),
         tags=tuple(item.get("tags", ())),
     )
 
@@ -442,6 +448,7 @@ class ExperimentManager:
         dataset_checksum: str = "",
         code_hash: str = "",
         metrics: dict[str, str] | None = None,
+        metric_config: dict[str, str] | None = None,
         tags: Iterable[str] = (),
         status: ExperimentStatus = ExperimentStatus.DRAFT,
         environment: dict[str, Any] | None = None,
@@ -481,6 +488,7 @@ class ExperimentManager:
             dataset_checksum=dataset_checksum,
             code_hash=code_hash,
             metrics=dict(metrics or {}),
+            metric_config=dict(metric_config or {}),
             tags=tuple(tags),
             environment=dict(environment),
         )

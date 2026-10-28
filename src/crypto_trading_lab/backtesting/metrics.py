@@ -76,6 +76,10 @@ class MetricConfig:
     risk_free_rate: Decimal = Decimal("0")      # annual fraction
     min_trades_warning: int = 30     # below this, statistics are fragile
     min_observations_ratio: int = 30  # below this, no Sharpe/Sortino
+    #: Market time a run must cover before a per-candle ratio is scaled
+    #: to a year. Rows alone are not enough: 30 one-minute candles are
+    #: half an hour, and annualizing that multiplies noise, not signal.
+    min_span_days: int = 30
 
     @classmethod
     def for_interval(cls, interval: str) -> "MetricConfig":
@@ -111,6 +115,10 @@ class MetricConfig:
             "zero_returns_treatment": (
                 "zero returns are kept; zero volatility or zero downside "
                 "deviation disables the corresponding ratio (None)"
+            ),
+            "risk_metric_min_span_days": (
+                f"{self.min_span_days}: a run covering less market time "
+                "reports Sharpe/Sortino as descriptive only"
             ),
             "relevant_assumptions": (
                 "long-only spot engine; all fills assumed complete "
@@ -477,6 +485,13 @@ def compute_performance(
 
     n_obs = len(period_returns)
     enough_observations = n_obs >= config.min_observations_ratio
+    # A count is not a span: 30 one-minute candles are half an hour, and
+    # annualizing a ratio measured over half an hour multiplies noise by
+    # sqrt(525600). Require market time as well as rows.
+    span_days = (
+        Decimal(n_obs) / ppy * Decimal(365) if ppy > 0 else Decimal(0)
+    )
+    enough_span = span_days >= Decimal(config.min_span_days)
 
     volatility: Decimal | None = None
     downside_vol: Decimal | None = None
@@ -505,15 +520,26 @@ def compute_performance(
             "volatility-based metrics"
         )
 
-    if sharpe is not None and enough_observations:
+    if sharpe is not None and enough_observations and enough_span:
         sharpe_valid = True
-    if sortino is not None and enough_observations:
+    if sortino is not None and enough_observations and enough_span:
         sortino_valid = True
     if (sharpe is not None or sortino is not None) and not enough_observations:
         warnings.append(
             f"Sharpe/Sortino computed from only {n_obs} return "
             f"observations (< {config.min_observations_ratio}); they are "
             "descriptive, not statistically supported conclusions"
+        )
+    if (
+        (sharpe is not None or sortino is not None)
+        and enough_observations
+        and not enough_span
+    ):
+        warnings.append(
+            f"annualized risk metrics are descriptive only: {n_obs} "
+            f"candles cover {span_days:.1f} days, less than the "
+            f"{config.min_span_days} this report requires before "
+            "scaling a per-candle ratio to a year"
         )
     if sharpe is not None and volatility is not None and sharpe == 0:
         pass  # nothing special; zero is a legitimate value

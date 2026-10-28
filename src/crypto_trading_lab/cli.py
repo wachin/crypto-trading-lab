@@ -42,6 +42,18 @@ def _ratio(value: Decimal | None) -> str:
     return f"{value:.3f}"
 
 
+def _flagged(value: Decimal | None, valid: bool) -> str:
+    """A ratio, marked when the report calls it descriptive only.
+
+    The GUI already annotates these; printing the bare number here would
+    let a 30-candle run look like a conclusion.
+    """
+    text = _ratio(value)
+    if value is not None and not valid:
+        text += " (descriptive only, not statistically supported)"
+    return text
+
+
 def doctor(args: Any) -> int:
     """Run the chapter 22 diagnostics (never prints a secret)."""
     print("Checking system configuration...")
@@ -192,7 +204,10 @@ def _print_backtest(run: application.BacktestRun) -> None:
     )
     print(f"Win rate: {_percent(trades.win_rate)}")
     print(f"Profit factor: {_ratio(trades.profit_factor)}")
-    print(f"Sharpe ratio: {_ratio(report.risk.sharpe_ratio)}")
+    print(
+        f"Sharpe ratio: "
+        f"{_flagged(report.risk.sharpe_ratio, report.risk.sharpe_is_valid)}"
+    )
     print(f"Total fees: {_money(report.activity.trading_fees)}")
     print(f"Slippage cost: {_money(report.activity.slippage_cost)}")
     print(f"Spread cost: {_money(report.activity.spread_cost)}")

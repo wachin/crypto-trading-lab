@@ -11,6 +11,7 @@ import json
 import math
 import sys
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -468,6 +469,12 @@ def test_paper_live_rejects_an_unknown_interval(tmp_path, capsys):
     captured = capsys.readouterr()
     assert code == 1
     assert "unsupported interval" in captured.err
+
+
+def test_a_ratio_is_marked_when_the_report_calls_it_descriptive_only():
+    assert cli._flagged(Decimal("1.5"), True) == "1.500"
+    assert "descriptive only" in cli._flagged(Decimal("181.25"), False)
+    assert cli._flagged(None, False) == "not meaningful"
 
 
 def test_paper_live_accepts_a_one_second_interval(tmp_path, capsys, monkeypatch):

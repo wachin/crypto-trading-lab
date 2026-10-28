@@ -29,6 +29,25 @@ def test_experiment_manager_creates():
     assert record.strategy_name == "MACrossover"
 
 
+def test_metric_assumptions_are_stored_with_the_metrics(tmp_path):
+    path = tmp_path / "experiments.json"
+    manager = ExperimentManager(storage_path=path)
+    record = manager.create(
+        hypothesis="Sharpe is comparable across intervals",
+        strategy_name="MACrossover",
+        strategy_version="1.0.0",
+        dataset_version="v1",
+        parameters={},
+        metrics={"sharpe_ratio": "1.10"},
+        metric_config={"periodicity": "12 periods assumed per year"},
+    )
+
+    assert record.metric_config["periodicity"].startswith("12")
+    reloaded = ExperimentManager(storage_path=path)
+    reloaded.load()
+    assert reloaded.experiments[0].metric_config == record.metric_config
+
+
 def test_experiment_manager_update_status():
     """Should update experiment status."""
     manager = ExperimentManager()

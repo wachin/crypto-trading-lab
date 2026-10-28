@@ -64,6 +64,13 @@ def _report_data(n=80):
     return build_backtest_report(result, perf, "BTC/USDT", "1m")
 
 
+def test_the_report_states_how_its_metrics_were_annualized():
+    data = _report_data()
+
+    assert "Annualization:" in data.assumptions
+    assert "periods assumed per year" in data.assumptions
+
+
 def test_report_contains_every_chapter_41_field():
     data = _report_data()
     for field in (

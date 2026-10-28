@@ -411,6 +411,20 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   installed, so the chapter-41 export test runs instead of skipping).
 
 ### Fixed
+- **A valid annualized Sharpe needs market time, not just rows.** With
+  the periods per year derived from the interval, the same 30-observation
+  series reports a Sharpe of 181 at 1m and 0.87 at 1M — both marked
+  "valid", because the gate only counted observations. Thirty one-minute
+  candles are half an hour. `MetricConfig.min_span_days` (30) now also
+  gates Sharpe/Sortino validity, the warning says how many days the run
+  covers, and the CLI marks the number the way the GUI already did
+  ("descriptive only, not statistically supported") instead of printing
+  it bare.
+- **Stored metrics carry the assumptions they were computed under.**
+  `ExperimentRecord.metric_config` holds the chapter 40.7 record
+  (periodicity, annualization method, span rule), the exported report
+  states it in its assumptions, and both survive a reload. Without it a
+  saved Sharpe cannot be compared with one computed at another interval.
 - **Annualized metrics no longer assume every candle is a day.**
   `MetricConfig.periods_per_year` defaulted to 365 and no call site ever
   overrode it, so an hourly run annualized after 365 candles — 15 days —

@@ -50,6 +50,11 @@ the application says so instead of showing a pretty number:
   of periods;
 - Sharpe and Sortino computed from fewer than 30 return observations
   are flagged as *descriptive, not statistically supported*;
+- Sharpe and Sortino are also flagged when the run covers less than
+  **30 days of market time**, however many candles that is. Thirty
+  one-minute candles are half an hour: scaling a ratio measured over
+  half an hour to a year multiplies noise, not signal. The flag and the
+  reason are printed next to the number;
 - any run with fewer than 30 trades carries a *very small sample*
   warning.
 

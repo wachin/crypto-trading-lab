@@ -421,6 +421,10 @@ def run_research(
                 "out_of_sample_return": str(oos_return),
                 "qualification": qualification.outcome.value,
             },
+            # Chapter 40.7: the assumptions travel with the numbers,
+            # so a stored Sharpe can be read at the interval it was
+            # computed for.
+            metric_config=dict(report.metric_config),
             tags=(strategy_name,),
             status=ExperimentStatus.COMPLETED,
         )

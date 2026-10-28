@@ -264,6 +264,35 @@ def test_a_year_of_monthly_candles_annualizes_as_one_year():
     assert "12" in report.metric_config["periodicity"]
 
 
+def _alternating_equity(points: int) -> list[str]:
+    """A series with a non-zero, finite per-period Sharpe."""
+    value = Decimal(100)
+    out = [str(value)]
+    for index in range(points - 1):
+        value = value * (Decimal("1.01") if index % 2 == 0 else Decimal("0.994"))
+        out.append(str(value))
+    return out
+
+
+def test_thirty_hourly_candles_are_not_a_valid_annualized_sharpe():
+    # 30 observations are enough rows but only 30 hours of market time.
+    report = compute_performance(
+        _result(_alternating_equity(31), interval="1h")
+    )
+
+    assert report.risk.sharpe_ratio is not None
+    assert report.risk.sharpe_is_valid is False
+    assert "less than the 30" in " ".join(report.warnings)
+
+
+def test_thirty_daily_candles_are_a_valid_annualized_sharpe():
+    report = compute_performance(
+        _result(_alternating_equity(31), interval="1d")
+    )
+
+    assert report.risk.sharpe_is_valid is True
+
+
 def test_a_short_hourly_run_is_not_annualized_as_if_it_were_daily():
     # 365 hourly candles cover 15 days. Treating them as a year used to
     # report a 15-day return as an annual one.
