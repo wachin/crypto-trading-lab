@@ -2,9 +2,11 @@
 
 Replays a stored dataset through a strategy with simulated money, a
 mandatory risk gate and a full trading journal. It is explicit about
-what it is *not*: there is no continuous live feed yet (chapter 26.2 is
-pending), so the "real data" is a downloaded dataset replayed candle by
-candle.
+what it is *not*: this screen replays a dataset. The continuous Binance
+WebSocket feed (chapter 26.2) exists and runs the same risk gate and
+journal in `paper_session.run_paper_session_live`, and is reachable today
+through `crypto-trading-lab paper-live`; wiring it into this screen is a
+separate task, and until then the button here always replays.
 """
 
 from __future__ import annotations

@@ -52,7 +52,7 @@ before writing code, and tick a checkbox only when the requirement is
 | 24 | [~] | 54 | 0 | Sí | Glossary |
 | 25 | [x] | 13 | 0 | No | Reference projects |
 | 26 | [~] | 36 | 6 | No | Market-data sources and exchange adapters |
-| 27 | [~] | 21 | 1 | No | Connection state management |
+| 27 | [x] | 22 | 0 | No | Connection state management |
 | 28 | [~] | 19 | 1 | No | Data import |
 | 29 | [ ] | 0 | 23 | No | Data quality management |
 | 30 | [~] | 14 | 11 | No | Market precision and exchange rules |
@@ -1861,6 +1861,14 @@ Include:
 
 - [x] Do not implement Binance Futures.
 
+*Wiring note (2026-10-28).* The client is a real feed, not a placeholder:
+`start()` schedules the runner and returns, the watchdog detects silence
+without waiting for a message, connection renewal closes and reopens the
+socket, and duplicate/out-of-order detection is per stream. `run_paper_session_live()`
+runs a bounded session over it with the chapter-58 risk gate, and
+`crypto-trading-lab paper-live` exposes it from the CLI. A session never
+evaluates a signal while the feed is DEGRADED (chapter 27).
+
 ### 26.3 Coinbase
 
 **Not implemented.** The native read-only adapter was removed on
@@ -1889,7 +1897,7 @@ Initially add:
 
 ---
 
-## [~] 27. Connection state management
+## [x] 27. Connection state management
 
 Create a connection state machine with:
 
@@ -1921,7 +1929,7 @@ Every connection state must have:
 - [x] a technical description;
 - [x] a beginner-friendly explanation;
 - [x] a visible status label;
-- [ ] a troubleshooting link.
+- [x] a troubleshooting link. (Every state links to its own section of `docs/en/user-guide/20-troubleshooting.md`; a test resolves each link and its anchor, so a renamed heading fails the suite instead of the user.)
 
 ---
 

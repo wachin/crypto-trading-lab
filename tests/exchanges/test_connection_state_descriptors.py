@@ -56,3 +56,47 @@ class TestConnectionStateDescriptors:
             # Status labels should be capitalized and readable
             assert desc.status_label[0].isupper()
             assert ' ' in desc.status_label or len(desc.status_label) > 0
+
+
+def test_every_troubleshooting_link_resolves():
+    """Chapter 27: the link must lead somewhere, not just exist as a string.
+
+    The descriptors pointed at `docs/en/user-guide/20-troubleshooting.md`,
+    which did not exist, and two states had no link at all. A dead link in a
+    troubleshooting panel is worse than no panel: it tells the user where to
+    look and then wastes their time.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+
+    def slugify(heading: str) -> str:
+        text = heading.strip().lower()
+        text = re.sub(r"[^\w\s-]", "", text)
+        return text.replace(" ", "-")
+
+    anchors: dict[Path, set[str]] = {}
+
+    def anchors_of(path: Path) -> set[str]:
+        if path not in anchors:
+            found = {
+                slugify(match.group(2))
+                for match in re.finditer(
+                    r"^(#{1,6})\s+(.*?)\s*$",
+                    path.read_text(encoding="utf-8"),
+                    re.MULTILINE,
+                )
+            }
+            anchors[path] = found
+        return anchors[path]
+
+    for descriptor in get_all_descriptors():
+        link = descriptor.troubleshooting_link
+        assert link, f"{descriptor.state.value} has no troubleshooting link"
+        target, _, anchor = link.partition("#")
+        path = root / target
+        assert path.is_file(), f"{link} does not exist"
+        assert anchor in anchors_of(path), (
+            f"{link} points at a heading that is not in {target}"
+        )

@@ -7,9 +7,11 @@ the chapter-58 risk manager, fills at the next candle's open with fees,
 spread and slippage, and writes a journal entry for every decision —
 approved or rejected.
 
-It never touches an exchange and never uses real money. A continuous
-WebSocket feed is still pending (chapter 26.2); today the "real data" is
-a dataset downloaded from the exchange and replayed candle by candle.
+It never touches an exchange and never uses real money. Two data sources
+feed it: a stored dataset replayed candle by candle (the default), or the
+continuous Binance WebSocket feed (chapter 26.2) through
+:func:`run_paper_session_live`, which applies the same risk gate, the same
+execution model and the same journal to live candles.
 """
 
 from __future__ import annotations
@@ -19,12 +21,18 @@ import json
 import logging
 import random
 from dataclasses import dataclass, field
-from decimal import Decimal
+from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Sequence
 
 from crypto_trading_lab.backtesting.engine import CostModel
-from crypto_trading_lab.domain.models import Candle, OrderSide, Symbol
+from crypto_trading_lab.domain.models import (
+    Candle,
+    ConnectionState,
+    OrderSide,
+    Symbol,
+)
 from crypto_trading_lab.execution_realism import (
     ExecutionConfig,
     simulate_market_order,
@@ -630,43 +638,63 @@ async def run_paper_session_live(
     strategy,
     config: LivePaperConfig,
     risk_manager: RiskManager | None = None,
+    *,
+    websocket_factory=None,
+    client=None,
 ) -> PaperSessionResult:
-    """
-    Run paper trading against a live WebSocket feed.
+    """Run paper trading against a live Binance WebSocket feed (26.2, 57).
 
-    This connects to Binance testnet/production WebSocket streams and processes
-    real-time candles through the same risk manager and journal system as
-    historical replay. The strategy sees each closed candle and decisions are
-    filled at the next available price.
+    The session subscribes to the kline stream for one symbol and interval,
+    and every **closed** candle is pushed through the same risk gate, the same
+    chapter-56 execution model and the same journal as the replay session.
+    It runs for at most ``config.max_runtime_seconds`` and then returns, so
+    a caller never has to kill it.
 
-    This is a *live* engine: it receives real market data and never touches
-    real money. It can be used for testnet practice or continuous validation.
+    Differences from the replay session, stated because they matter:
 
-    Args:
-        strategy: Strategy with on_candle(index, candles) interface.
-        config: LivePaperConfig with connection and session parameters.
-        risk_manager: Optional custom risk manager.
+    * the fill reference is the closed candle's own close, not the next
+      candle's open — in a live feed the next open does not exist yet, and
+      waiting for it would mean acting on a candle that has already passed;
+    * partial data is possible: a session that receives no closed candle
+      returns an empty equity curve rather than a fabricated one;
+    * the journal is returned, not written to disk. The caller decides where
+      it belongs (the CLI and the UI know their data directory; this function
+      does not).
 
-    Returns:
-        PaperSessionResult with journal, equity curve, and metrics.
-
-    Note:
-        Requires API credentials for authenticated endpoints if using
-        private streams. For public kline/trade streams, no credentials needed.
+    ``websocket_factory`` lets tests drive a scripted feed instead of the
+    network. It is the same seam the client itself exposes. ``client``
+    replaces the feed client entirely, for tests that need to control its
+    state.
     """
     if not WS_AVAILABLE:
-        raise RuntimeError("WebSocket client not available. Check imports.")
-
+        raise RuntimeError(
+            "The WebSocket client is not available. Install the optional "
+            "'websockets' package (pip install websockets)."
+        )
     if config.endpoints is None:
-        raise ValueError("Endpoints must be provided")
+        raise ValueError("endpoints must be provided")
+    if config.max_runtime_seconds <= 0:
+        raise ValueError("max_runtime_seconds must be positive")
 
-    # Initialize components
     manager = risk_manager or default_risk_manager()
     market_symbol = config.symbol
     dataset_id = f"live_{config.symbol}_{config.interval}"
     rng = random.Random(config.seed)
 
-    cash = config.initial_capital if hasattr(config, 'initial_capital') else Decimal("10000")
+    # The result must describe the session the caller asked for, not a
+    # default one: net_profit is computed from this config's capital.
+    session_config = PaperSessionConfig(
+        initial_capital=config.initial_capital,
+        taker_fee=config.taker_fee,
+        slippage_fraction=config.slippage_fraction,
+        spread_fraction=config.spread_fraction,
+        position_fraction=config.position_fraction,
+        interval=config.interval,
+        execution_config=config.execution_config,
+        seed=config.seed,
+    )
+
+    cash = config.initial_capital
     position = ZERO
     fees = ZERO
     slippage_total = ZERO
@@ -676,57 +704,59 @@ async def run_paper_session_live(
 
     journal = TradeJournal(dataset_id=dataset_id, strategy_name=strategy.name)
     equity_curve: list[Decimal] = []
-    peak = cash
+    peak = config.initial_capital
     max_drawdown = ZERO
     trade_number = 0
     open_entry: JournalEntry | None = None
     consecutive_losses = 0
     daily_pnl = ZERO
 
-    # Candle buffer for strategy context
-    candles: list[Candle] = []
+    completed_candles: list[Candle] = []
+    feed_warnings: list[str] = []
+    stale_candles = 0
+
+    ws_client = client or BinanceWebSocketClient(
+        config.endpoints,
+        websocket_factory,
+    )
 
     def mark_equity(price: Decimal) -> Decimal:
         return cash + position * price
 
-    # Create WebSocket client
-    ws_client = BinanceWebSocketClient(config.endpoints)
+    def process_closed_candle(candle: Candle) -> None:
+        """Decide and fill on one completed candle (runs in arrival order)."""
+        nonlocal cash, position, fees, slippage_total, realized, entry_cost
+        nonlocal entry_fee, peak, max_drawdown, trade_number, open_entry
+        nonlocal consecutive_losses, daily_pnl, stale_candles
 
-    # Subscribe to kline stream
-    stream_name = f"{config.symbol.replace('/', '').lower()}@kline_{config.interval}"
-    ws_client.subscribe(stream_name)
-
-    # Store completed candles for strategy context
-    completed_candles: list[Candle] = []
-
-    # Strategy callback for new candles
-    async def on_candle_closed(candle: Candle) -> None:
-        nonlocal cash, position, fees, slippage_total, realized, entry_cost, entry_fee
-        nonlocal peak, max_drawdown, trade_number, open_entry, consecutive_losses, daily_pnl
+        if ws_client.state is ConnectionState.DEGRADED:
+            # Chapter 27: never generate a signal from stale data. The
+            # candle is still buffered so the strategy keeps its history,
+            # but no order is evaluated and no fill can happen.
+            stale_candles += 1
+            completed_candles.append(candle)
+            if len(completed_candles) > config.max_candles:
+                completed_candles.pop(0)
+            return
 
         completed_candles.append(candle)
         if len(completed_candles) > config.max_candles:
             completed_candles.pop(0)
 
-        # Strategy sees completed candles up to current
         signal = strategy.on_candle(len(completed_candles) - 1, completed_candles)
-        price = candle.close
-        equity = mark_equity(price)
+        reference = candle.close
+        equity = mark_equity(reference)
 
-        # Track equity
         if equity > peak:
             peak = equity
         if peak > 0:
-            drawdown = (peak - equity) / peak
-            max_drawdown = max(max_drawdown, drawdown)
+            max_drawdown = max(max_drawdown, (peak - equity) / peak)
         equity_curve.append(equity)
 
         if signal is OrderSide.BUY and position == 0:
             trade_number += 1
-            reference = price  # Fill at current price for live
-            budget = equity * config.position_fraction if hasattr(config, 'position_fraction') else equity * Decimal("0.5")
+            budget = equity * config.position_fraction
             quantity = _step_down(budget / reference)
-
             order = RiskOrderRequest(
                 strategy_name=strategy.name,
                 symbol=str(market_symbol),
@@ -737,7 +767,7 @@ async def run_paper_session_live(
             )
             risk_portfolio = PortfolioState(
                 total_value=equity,
-                long_exposure=position * price,
+                long_exposure=position * reference,
                 short_exposure=ZERO,
                 daily_pnl=daily_pnl,
                 weekly_pnl=daily_pnl,
@@ -782,19 +812,20 @@ async def run_paper_session_live(
                     open_entry = entry
             journal.add(entry)
 
-        elif signal is OrderSide.SELL and position > 0 and open_entry is not None:
-            reference = price
+        elif signal is OrderSide.SELL and position > 0:
+            trade_number += 1
+            quantity = position
             order = RiskOrderRequest(
                 strategy_name=strategy.name,
                 symbol=str(market_symbol),
                 side="sell",
-                quantity=position,
+                quantity=quantity,
                 price=reference,
                 timestamp=candle.close_time.isoformat(),
             )
             risk_portfolio = PortfolioState(
                 total_value=equity,
-                long_exposure=position * price,
+                long_exposure=position * reference,
                 short_exposure=ZERO,
                 daily_pnl=daily_pnl,
                 weekly_pnl=daily_pnl,
@@ -808,12 +839,12 @@ async def run_paper_session_live(
                 signal="sell",
                 decision_time=candle.close_time.isoformat(),
                 reference_price=reference,
-                intended_quantity=position,
+                intended_quantity=quantity,
                 risk_decision=decision.decision.value,
                 risk_reason=decision.reason,
                 reason="exit",
             )
-            if decision.decision is RiskDecision.APPROVE:
+            if decision.decision is RiskDecision.APPROVE and quantity > 0:
                 adv = _adv_at(
                     completed_candles,
                     len(completed_candles) - 1,
@@ -821,9 +852,8 @@ async def run_paper_session_live(
                     _adv_window(config),
                 )
                 fill_price, filled_quantity = _reference_fill(
-                    config, "sell", position, reference, adv, rng
+                    config, "sell", quantity, reference, adv, rng
                 )
-                filled_quantity = min(filled_quantity, position)
                 if filled_quantity > 0:
                     order_value = filled_quantity * fill_price
                     fee = order_value * config.taker_fee
@@ -834,71 +864,96 @@ async def run_paper_session_live(
                     realized += pnl
                     cash += order_value - fee
                     fees += fee
-                    slippage_total += filled_quantity * (fill_price - reference)
+                    slippage_total += filled_quantity * (reference - fill_price)
                     daily_pnl += pnl
-                    if pnl < 0:
-                        consecutive_losses += 1
-                    else:
-                        consecutive_losses = 0
+                    consecutive_losses = (
+                        consecutive_losses + 1 if pnl < 0 else 0
+                    )
                     entry_cost -= closed_cost
                     entry_fee -= closed_fee
                     position -= filled_quantity
                     entry.fill_time = candle.close_time.isoformat()
                     entry.fill_price = fill_price
                     entry.fee = fee
-                    entry.slippage = filled_quantity * (fill_price - reference)
-                    if position == 0:
+                    entry.slippage = filled_quantity * (reference - fill_price)
+                    if position == 0 and open_entry is not None:
                         open_entry.exit_time = candle.close_time.isoformat()
                         open_entry.exit_price = fill_price
                         open_entry.pnl = pnl
                         open_entry = None
             journal.add(entry)
 
-        # Save journal periodically
-        journal.save(Path(f"live_paper_{dataset_id}.json"))
-
-    # Set up candle handler
     def handle_kline(payload: dict) -> None:
-        k = payload.get('k', {})
-        if not k.get('x', False):  # x = is_closed
-            return
+        """Turn a Binance kline payload into one completed candle."""
+        kline = payload.get("k") or {}
+        if not kline.get("x", False):
+            return  # still forming
         try:
-            from datetime import datetime, timezone
-            from decimal import Decimal
             candle = Candle(
                 symbol=Symbol(config.symbol),
                 interval=config.interval,
-                open_time=datetime.fromtimestamp(k['t'] / 1000, tz=timezone.utc),
-                close_time=datetime.fromtimestamp(k['T'] / 1000, tz=timezone.utc),
-                open=Decimal(k['o']),
-                high=Decimal(k['h']),
-                low=Decimal(k['l']),
-                close=Decimal(k['c']),
-                volume=Decimal(k['v']),
+                open_time=datetime.fromtimestamp(
+                    kline["t"] / 1000, tz=timezone.utc
+                ),
+                close_time=datetime.fromtimestamp(
+                    kline["T"] / 1000, tz=timezone.utc
+                ),
+                open=Decimal(kline["o"]),
+                high=Decimal(kline["h"]),
+                low=Decimal(kline["l"]),
+                close=Decimal(kline["c"]),
+                volume=Decimal(kline["v"]),
             )
-            asyncio.create_task(on_candle_closed(candle))
-        except Exception as e:
-            logging.getLogger(__name__).warning("Failed to parse live candle: %s", e)
+        except (KeyError, TypeError, ValueError, InvalidOperation):
+            logging.getLogger(__name__).warning(
+                "Ignoring a malformed kline payload"
+            )
+            return
+        process_closed_candle(candle)
 
     ws_client.add_candle_handler(handle_kline)
+    ws_client.add_warning_callback(
+        lambda state, message: feed_warnings.append(f"{state}: {message}")
+    )
+    ws_client.subscribe(
+        f"{config.symbol.replace('/', '').lower()}@kline_{config.interval}"
+    )
 
-    # Start WebSocket client
     await ws_client.start()
-
-    # Run for max_runtime_seconds or until disconnected
-    import asyncio
     try:
-        await asyncio.wait_for(ws_client._stop_event.wait(), timeout=config.max_runtime_seconds)
+        await asyncio.wait_for(
+            ws_client.wait_stopped(), timeout=config.max_runtime_seconds
+        )
     except asyncio.TimeoutError:
         pass
     finally:
         await ws_client.stop()
 
-    final_price = completed_candles[-1].close if completed_candles else Decimal(0)
-    final_equity = mark_equity(final_price) if final_price else cash
+    final_price = completed_candles[-1].close if completed_candles else ZERO
+    final_equity = mark_equity(final_price) if completed_candles else cash
+
+    note_lines = [PAPER_TRADING_NOTE]
+    if not completed_candles:
+        note_lines.append(
+            "The feed produced no closed candle during this session, so there "
+            "is nothing to report: an empty session is not a flat one."
+        )
+    health = ws_client.get_health_metrics()
+    note_lines.append(
+        f"Feed: {health['state']} after {health['message_count']} messages, "
+        f"{health['reconnect_attempts']} reconnect attempts."
+    )
+    if stale_candles:
+        note_lines.append(
+            f"{stale_candles} candle(s) arrived while the feed was degraded "
+            "and were buffered without generating any signal (chapter 27)."
+        )
+    if feed_warnings:
+        note_lines.append("Feed warnings:")
+        note_lines.extend(f"  {warning}" for warning in feed_warnings[-5:])
 
     return PaperSessionResult(
-        config=PaperSessionConfig() if hasattr(config, 'costs') else PaperSessionConfig(),
+        config=session_config,
         symbol=str(market_symbol),
         strategy_name=strategy.name,
         dataset_id=dataset_id,
@@ -910,4 +965,5 @@ async def run_paper_session_live(
         total_slippage=slippage_total,
         max_drawdown=max_drawdown,
         open_position=position,
+        note="\n".join(note_lines),
     )

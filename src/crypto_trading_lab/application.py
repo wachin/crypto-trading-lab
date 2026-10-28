@@ -14,6 +14,7 @@ prints anything: callers decide how to present the result.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sys
@@ -63,6 +64,7 @@ __all__ = [
     "list_strategies",
     "load_config_file",
     "run_backtest_file",
+    "run_live_paper_session",
     "run_doctor",
     "search_glossary",
 ]
@@ -614,6 +616,101 @@ def run_backtest_file(
         dataset=dataset,
         candle_count=len(candles),
     )
+
+
+# ---------------------------------------------------------------------------
+# Live paper trading over the WebSocket feed (chapters 22, 26.2 and 57)
+# ---------------------------------------------------------------------------
+
+
+def run_live_paper_session(
+    *,
+    strategy_id: str = "ma_crossover",
+    parameters: dict[str, Any] | None = None,
+    symbol: str = "BTC/USDT",
+    interval: str = "1m",
+    minutes: float = 5.0,
+    initial_capital: Decimal = Decimal("10000"),
+    taker_fee: Decimal = Decimal("0.001"),
+    environment: str = "spot-testnet",
+    paths: AppPaths | None = None,
+    websocket_factory: Any = None,
+):
+    """Run one paper session against the live Binance WebSocket feed.
+
+    This is the use case behind the ``paper-live`` subcommand. It resolves
+    the strategy from the registry, builds a chapter 26.2 configuration for
+    the requested environment and runs the session for at most ``minutes``.
+    Real money is never involved: the feed is public market data and the
+    account is simulated.
+
+    ``websocket_factory`` exists so tests can drive a scripted feed; the
+    CLI never passes it.
+    """
+    from crypto_trading_lab.exchanges.binance.config import endpoints_for
+    from crypto_trading_lab.market_data.historical import TIMEFRAMES
+    from crypto_trading_lab.paper_session import (
+        LivePaperConfig,
+        run_paper_session_live,
+    )
+    from crypto_trading_lab.strategy_registry import StrategyRegistry
+
+    if minutes <= 0:
+        raise ApplicationError("minutes must be positive")
+    if interval not in TIMEFRAMES:
+        known_intervals = ", ".join(sorted(TIMEFRAMES))
+        raise ApplicationError(
+            f"unsupported interval {interval!r}; use one of {known_intervals}"
+        )
+    try:
+        Symbol(symbol)
+    except (TypeError, ValueError) as exc:
+        raise ApplicationError(f"invalid symbol {symbol!r}: {exc}") from exc
+    try:
+        endpoints = endpoints_for(environment)
+    except ValueError as exc:
+        raise ApplicationError(str(exc)) from exc
+
+    paths = paths or AppPaths()
+    registry = StrategyRegistry(
+        storage_path=paths.data_dir / "strategy_registry"
+    )
+    registration = registry.get(strategy_id)
+    if registration is None or registration.factory is None:
+        known = ", ".join(
+            meta.strategy_id for meta in registry.list_strategies()
+        )
+        raise ApplicationError(
+            f"unknown strategy {strategy_id!r}; available: {known}"
+        )
+    try:
+        strategy = registry.create_instance(strategy_id, **(parameters or {}))
+    except (TypeError, ValueError) as exc:
+        raise ApplicationError(
+            f"could not create strategy {strategy_id!r}: {exc}"
+        ) from exc
+    if strategy is None:
+        raise ApplicationError(
+            f"strategy {strategy_id!r} has no factory and cannot run"
+        )
+
+    config = LivePaperConfig(
+        endpoints=endpoints,
+        symbol=symbol,
+        interval=interval,
+        max_runtime_seconds=max(1, int(minutes * 60)),
+        initial_capital=initial_capital,
+        taker_fee=taker_fee,
+    )
+    try:
+        return asyncio.run(
+            run_paper_session_live(
+                strategy, config, websocket_factory=websocket_factory
+            )
+        )
+    except RuntimeError as exc:
+        # Raised when the optional websockets package is missing.
+        raise ApplicationError(str(exc)) from exc
 
 
 # ---------------------------------------------------------------------------

@@ -67,7 +67,7 @@ _STATE_DESCRIPTORS: dict[ConnectionState, ConnectionStateDescriptor] = {
         technical_description="WebSocket connection established and receiving data streams normally.",
         beginner_explanation="Connected and receiving live data normally.",
         status_label="Connected",
-        troubleshooting_link="",
+        troubleshooting_link="docs/en/user-guide/20-troubleshooting.md#connected",
         severity="info",
     ),
     ConnectionState.DEGRADED: ConnectionStateDescriptor(
@@ -107,7 +107,7 @@ _STATE_DESCRIPTORS: dict[ConnectionState, ConnectionStateDescriptor] = {
         technical_description="Connection intentionally closed by user or application shutdown.",
         beginner_explanation="The connection was closed on purpose (for example, by you or the kill switch).",
         status_label="Stopped",
-        troubleshooting_link="",
+        troubleshooting_link="docs/en/user-guide/20-troubleshooting.md#stopped",
         severity="info",
     ),
 }

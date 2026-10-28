@@ -134,45 +134,57 @@ class RiskManager:
         order: OrderRequest,
         portfolio: PortfolioState,
     ) -> RiskDecisionResult:
-        """Check position and exposure limits."""
+        """Check position and exposure limits (58.1).
+
+        Exposure is computed from the position the order would *leave behind*,
+        not from the order size. Adding every order's notional to the current
+        exposure — the previous behaviour — made a sell that closes a long
+        look like a new position, so the manager could reject the very order
+        that reduces risk. A risk gate that blocks exits is worse than none.
+        """
         order_value = order.quantity * order.price
-        
-        # Check max position size
-        if order_value > portfolio.total_value * self.limits.max_position_size:
+
+        if order.side == "buy":
+            new_long = portfolio.long_exposure + order_value
+            new_short = portfolio.short_exposure
+        else:
+            # A sell closes the long first; only the excess opens a short.
+            closed = min(portfolio.long_exposure, order_value)
+            new_long = portfolio.long_exposure - closed
+            new_short = portfolio.short_exposure + (order_value - closed)
+        new_exposure = new_long + new_short
+
+        # Check max position size on the exposure the order creates.
+        if new_exposure > portfolio.total_value * self.limits.max_position_size:
             return RiskDecisionResult(
                 decision=RiskDecision.REJECT,
                 reason="Order exceeds maximum position size",
                 modified_order=None,
             )
-        
+
         # Check max total exposure
-        new_exposure = (
-            portfolio.long_exposure + portfolio.short_exposure + order_value
-        )
         if new_exposure > portfolio.total_value * self.limits.max_total_exposure:
             return RiskDecisionResult(
                 decision=RiskDecision.REJECT,
                 reason="Order exceeds maximum total exposure",
                 modified_order=None,
             )
-        
+
         # Check long exposure
-        if order.side == "buy":
-            if portfolio.long_exposure + order_value > portfolio.total_value * self.limits.max_long_exposure:
-                return RiskDecisionResult(
-                    decision=RiskDecision.REJECT,
-                    reason="Order exceeds maximum long exposure",
-                    modified_order=None,
-                )
-        
+        if new_long > portfolio.total_value * self.limits.max_long_exposure:
+            return RiskDecisionResult(
+                decision=RiskDecision.REJECT,
+                reason="Order exceeds maximum long exposure",
+                modified_order=None,
+            )
+
         # Check short exposure
-        if order.side == "sell":
-            if portfolio.short_exposure + order_value > portfolio.total_value * self.limits.max_short_exposure:
-                return RiskDecisionResult(
-                    decision=RiskDecision.REJECT,
-                    reason="Order exceeds maximum short exposure",
-                    modified_order=None,
-                )
+        if new_short > portfolio.total_value * self.limits.max_short_exposure:
+            return RiskDecisionResult(
+                decision=RiskDecision.REJECT,
+                reason="Order exceeds maximum short exposure",
+                modified_order=None,
+            )
         
         return RiskDecisionResult(
             decision=RiskDecision.APPROVE,

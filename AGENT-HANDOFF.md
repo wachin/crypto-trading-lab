@@ -15,7 +15,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 782 passed, 2 skipped, **exit code 0** —
+- **Tests:** 807 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
@@ -66,7 +66,9 @@ A new AI Agent must read this file **before** doing anything else, then
   and the robustness report, not only paper trading (§5.2 item 2). Chapter
   63.2 (drift reporting) was completed on 2026-10-28 as well (§5.2 item 3):
   expected ranges, drift over time, likely causes and a
-  healthy/suspicious/degraded verdict.
+  healthy/suspicious/degraded verdict. Chapters 26.2/27 were completed the
+  same day (§5.2 item 4): the Binance WebSocket client is a real feed and
+  `paper-live` runs a bounded session over it.
   **Real trading remains disabled by default.**
 
 ### What changed on 2026-09-19 (direction correction + Fase A/B)
@@ -199,7 +201,7 @@ agents:
 - **A local `.venv/` (gitignored) exists for the PyPI path.** It was built on
   2026-10-26 from `requirements-all.txt` and measured in
   `docs/en/developers/venv-setup.md` §8 (PyYAML 6.0.3, PyQt6 6.11.0,
-  pytest 9.1.1, same 782/2 result). The Debian packages stay the supported
+  pytest 9.1.1, same 807/2 result). The Debian packages stay the supported
   default; use the venv only to reproduce the pip path.
 
 ### One reference you will not have
@@ -316,7 +318,7 @@ features the code did not ship. Concretely:
 - **The documented test baseline was wrong in twelve places** and had
   drifted between 229 and 698. It was `707 passed, 2 skipped` after that
   review, and the suite **exits 0**. The chapter 22 CLI work on 2026-10-26
-  added 44 tests, so the current baseline is `782 passed, 2 skipped`.
+  added 44 tests, so the current baseline is `807 passed, 2 skipped`.
 - **The suite used to segfault while the interpreter shut down** (chapter 68
   imported Qt and re-initialised a `QObject`), so `make test` and CI failed
   while printing "passed". Fixed, with a regression test that forbids Qt in
@@ -395,10 +397,23 @@ features the code did not ship. Concretely:
    needs live trading (chapter 68), and 63.3 (the education text) is still
    open. Tests: 12 new cases in `tests/test_live_vs_backtest.py`; documented
    in `docs/en/developers/live-vs-backtest-drift.md`.
-4. **Chapters 26.2/27** — a continuous Binance WebSocket feed (paper trading
-   still replays a dataset). `ccxt` is verified to reach **Binance and
-   Coinbase**; chapter 26.3's native Coinbase adapter was deleted as dead.
-   **This is the next task.**
+4. ~~**Chapters 26.2/27** — a continuous Binance WebSocket feed.~~ **DONE
+   2026-10-28.** The client had five real defects, all fixed: `start()`
+   blocked forever; staleness was only checked after a message arrived;
+   renewal logged a line and kept the dead socket; dedup keyed on event time
+   across streams; tickers were never dispatched. `run_paper_session_live()`
+   now runs a bounded session, writes nothing to the working directory, keeps
+   the caller's config, and refuses to evaluate a signal while the feed is
+   DEGRADED. `crypto-trading-lab paper-live` exposes it. Chapter 27 is `[x]`
+   (the troubleshooting links pointed at a file that did not exist; it now
+   exists and a test resolves every link and anchor). Chapter 26 stays `[~]`
+   for 26.1 "demonstrations" and 26.3 Coinbase, neither of which this task
+   covered. **Next task: chapters 15/16/18 (packaging).**
+
+   *Known limitation, stated so nobody is surprised:* the Paper Trading
+   **screen** still replays a dataset. The live session is reachable from the
+   CLI only; wiring it into the Qt screen needs a thread or an asyncio bridge
+   and is deliberately left as its own task.
 5. **Chapters 15/16/18** — packaging. The Debian packaging is stale:
    `debian/rules` calls `setup.py install` and `debian/control` does not list
    pyqtgraph or platformdirs.
@@ -439,7 +454,7 @@ git submodule update --init external/freqtrade
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 782 passed, 2 skipped expected
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 807 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
@@ -453,4 +468,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-10-28. Baseline: 782 passed, 2 skipped.*
+*Handoff updated 2026-10-28. Baseline: 807 passed, 2 skipped.*

@@ -14,6 +14,35 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **A working Binance WebSocket feed, and paper trading over it (chapters
+  26.2 and 27).** The client existed but could not do its job: `start()`
+  blocked forever, so a caller could never stop it; the staleness check ran
+  *after* a message arrived, which is the one case where staleness is not a
+  problem; connection renewal logged a line and kept the dead socket open;
+  duplicate detection keyed on the event time across all streams, so a kline
+  and a trade in the same millisecond looked like duplicates; ticker streams
+  were never dispatched; and an empty client spun the CPU. All of that is
+  fixed: `start()` schedules the runner and returns, a watchdog detects
+  silence on a timer, renewal really closes and reopens the socket,
+  deduplication is per stream (klines key on the event time so forming and
+  closed updates both survive), ticker messages reach their handlers, a
+  broken handler no longer kills the feed, and `stop()` cancels the real
+  tasks. `run_paper_session_live()` now runs a bounded session and returns a
+  coherent result: it used to await the blocking `start()`, so the timeout
+  never fired; it wrote the journal into the current working directory on
+  every candle; and it reported a default `PaperSessionConfig` whatever the
+  caller asked for. Signals are no longer evaluated while the feed is
+  DEGRADED (chapter 27) — those candles are buffered and counted in the
+  note. New `crypto-trading-lab paper-live` command. **Fixed on the way:**
+  the risk manager added every order's notional to the current exposure, so
+  a sell that closes a long was rejected for exceeding the exposure limit —
+  the gate could block the order that reduces risk. Exposure is now computed
+  from the position the order leaves behind. 26 new tests; baseline 782 →
+  **807 passed, 2 skipped**. Chapter 27 is `[x]`; every connection state now
+  links to a real section of `docs/en/user-guide/20-troubleshooting.md`, and
+  a test fails if a link or its anchor stops resolving.
+
+
 - **Drift reporting (chapter 63.2).** A paper session is now judged against
   what its backtest predicted, not just compared to it. `expected_ranges()`
   builds the band each metric should stay inside: the return band comes from

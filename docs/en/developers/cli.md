@@ -106,6 +106,40 @@ depend on market conditions that no offline model can observe, so treat a
 difference between the two models as a measure of *how much the result
 depends on execution assumptions* — not as a prediction.
 
+## paper-live
+
+`paper-live` paper-trades the **live** Binance WebSocket feed instead of a
+stored dataset (chapters 26.2 and 57). Public market data needs no API key;
+the account is simulated and no order ever reaches an exchange.
+
+```bash
+crypto-trading-lab paper-live --symbol BTC/USDT --interval 1m --minutes 5
+crypto-trading-lab paper-live --strategy ma_crossover --set fast=5 --set slow=20
+```
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--strategy` | `ma_crossover` | Any id from `list-strategies`. |
+| `--set KEY=VALUE` | none | Strategy parameter; repeatable. |
+| `--symbol` | `BTC/USDT` | Streamed pair. |
+| `--interval` | `1m` | Candle interval (`1m`, `5m`, `1h`, ...). |
+| `--minutes` | `5` | How long to listen before returning. |
+| `--capital` | `10000` | Simulated starting balance. |
+| `--fee` | `0.001` | Taker fee as a fraction. |
+| `--environment` | `spot-testnet` | `spot-testnet` or `production`. |
+
+The session applies the same risk gate, the same chapter-56 execution
+model and the same journal as a replay, with three differences that the
+output states: fills use the closed candle's own close (there is no next
+open yet), a session that receives no candle returns an empty curve instead
+of a fabricated one, and **no signal is evaluated while the feed is
+degraded** — those candles are buffered so the strategy keeps its history,
+and the note says how many were skipped.
+
+The command needs the optional `websockets` package. Without it the command
+fails with the install line instead of a traceback, the same way a missing
+YAML reader does.
+
 ## doctor
 
 `doctor` checks, in order: Python version, required modules, the

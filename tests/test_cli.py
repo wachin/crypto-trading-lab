@@ -6,6 +6,7 @@ when it cannot. The tests drive main() exactly as a user would.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import math
 import sys
@@ -355,3 +356,148 @@ def test_entry_point_does_not_import_qt_for_the_cli():
     )
     assert completed.returncode == 0
     assert completed.stdout.strip() == "False"
+
+
+# -- paper-live (chapters 26.2 and 57) --------------------------------------
+
+
+class _ScriptedFeed:
+    """Minimal stand-in for a Binance socket: yields, then stays open."""
+
+    def __init__(self, messages):
+        self._messages = list(messages)
+        self._closed = asyncio.Event()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc_info):
+        return False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self._messages:
+            return self._messages.pop(0)
+        await self._closed.wait()
+        raise StopAsyncIteration
+
+    async def close(self):
+        self._closed.set()
+
+
+def _kline(index: int, close: str) -> str:
+    base = int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    open_ms = base + index * 60_000
+    return json.dumps(
+        {
+            "stream": "btcusdt@kline_1m",
+            "data": {
+                "e": "kline",
+                "E": open_ms + 59_999,
+                "k": {
+                    "t": open_ms,
+                    "T": open_ms + 59_999,
+                    "s": "BTCUSDT",
+                    "i": "1m",
+                    "o": close,
+                    "h": close,
+                    "l": close,
+                    "c": close,
+                    "v": "5",
+                    "x": True,
+                },
+            },
+        }
+    )
+
+
+def test_paper_live_is_exposed():
+    parser = cli.build_parser()
+    actions = [a for a in parser._actions if a.dest == "command"]
+    assert "paper-live" in actions[0].choices
+
+
+def test_paper_live_rejects_an_unknown_strategy_without_connecting(tmp_path, capsys):
+    code = run(
+        [
+            "paper-live",
+            "--strategy",
+            "nope",
+            "--minutes",
+            "0.01",
+            "--data-dir",
+            str(tmp_path / "data"),
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "unknown strategy" in captured.err
+
+
+def test_paper_live_rejects_a_malformed_parameter(tmp_path, capsys):
+    code = run(
+        [
+            "paper-live",
+            "--set",
+            "fast",
+            "--minutes",
+            "0.01",
+            "--data-dir",
+            str(tmp_path / "data"),
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "key=value" in captured.err
+
+
+def test_paper_live_rejects_an_unknown_interval(tmp_path, capsys):
+    code = run(
+        [
+            "paper-live",
+            "--interval",
+            "7s",
+            "--minutes",
+            "0.01",
+            "--data-dir",
+            str(tmp_path / "data"),
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "unsupported interval" in captured.err
+
+
+def test_paper_live_runs_a_scripted_feed(tmp_path, capsys, monkeypatch):
+    from crypto_trading_lab import application
+
+    real = application.run_live_paper_session
+
+    def with_feed(**kwargs):
+        return real(
+            **kwargs,
+            websocket_factory=lambda url: _ScriptedFeed(
+                [_kline(0, "100"), _kline(1, "101"), _kline(2, "102")]
+            ),
+        )
+
+    monkeypatch.setattr(application, "run_live_paper_session", with_feed)
+    capsys.readouterr()
+    code = run(
+        [
+            "paper-live",
+            "--minutes",
+            "0.05",
+            "--capital",
+            "5000",
+            "--data-dir",
+            str(tmp_path / "data"),
+        ]
+    )
+    output = capsys.readouterr().out
+    assert code == 0
+    assert "Live paper trading" in output
+    assert "Candles received: 3" in output
+    assert "Initial capital: 5000" in output

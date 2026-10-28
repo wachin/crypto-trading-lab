@@ -221,6 +221,52 @@ def backtest_cmd(args: Any) -> int:
     return 0
 
 
+def _parse_parameters(items: list[str]) -> dict[str, int]:
+    """Turn repeated ``--set key=value`` flags into strategy parameters."""
+    parameters: dict[str, int] = {}
+    for item in items:
+        key, separator, raw = item.partition("=")
+        if not separator or not key:
+            raise application.ApplicationError(
+                f"--set expects key=value, got {item!r}"
+            )
+        try:
+            parameters[key] = int(raw)
+        except ValueError as exc:
+            raise application.ApplicationError(
+                f"--set {key} must be an integer, got {raw!r}"
+            ) from exc
+    return parameters
+
+
+def paper_live_cmd(args: Any) -> int:
+    """Run paper trading against the live Binance WebSocket feed (26.2)."""
+    try:
+        parameters = _parse_parameters(getattr(args, "set", []) or [])
+        result = application.run_live_paper_session(
+            strategy_id=args.strategy,
+            parameters=parameters,
+            symbol=args.symbol,
+            interval=args.interval,
+            minutes=args.minutes,
+            initial_capital=Decimal(str(args.capital)),
+            taker_fee=Decimal(str(args.fee)),
+            environment=args.environment,
+            paths=getattr(args, "paths", None),
+        )
+    except application.ApplicationError as error:
+        print(f"Live session not run: {error}", file=sys.stderr)
+        return 1
+
+    print("== Live paper trading (chapter 26.2) ==")
+    print(f"Strategy: {result.strategy_name}")
+    print(f"Dataset: {result.dataset_id}")
+    print(f"Candles received: {len(result.equity_curve)}")
+    print()
+    print(result.summary())
+    return 0
+
+
 def _add_paths_option(parser: argparse.ArgumentParser) -> None:
     """Let tests and scripts point the CLI at an isolated data directory."""
     parser.add_argument(
@@ -276,6 +322,39 @@ def build_parser() -> argparse.ArgumentParser:
         help="candle interval for the file (default: 1m)",
     )
     _add_paths_option(import_csv)
+
+    paper_live = subparsers.add_parser(
+        "paper-live",
+        help="Paper-trade the live Binance WebSocket feed (chapters 26.2/57)",
+    )
+    paper_live.add_argument(
+        "--strategy",
+        default="ma_crossover",
+        help="strategy id from list-strategies (default: ma_crossover)",
+    )
+    paper_live.add_argument(
+        "--set",
+        action="append",
+        metavar="KEY=VALUE",
+        default=[],
+        help="strategy parameter, repeatable (e.g. --set fast=5)",
+    )
+    paper_live.add_argument("--symbol", default="BTC/USDT")
+    paper_live.add_argument("--interval", default="1m")
+    paper_live.add_argument(
+        "--minutes",
+        type=float,
+        default=5.0,
+        help="how long to listen before returning (default: 5)",
+    )
+    paper_live.add_argument("--capital", default="10000")
+    paper_live.add_argument("--fee", default="0.001")
+    paper_live.add_argument(
+        "--environment",
+        default="spot-testnet",
+        help="spot-testnet (default) or production",
+    )
+    _add_paths_option(paper_live)
 
     backtest = subparsers.add_parser("backtest", help="Run a backtest")
     backtest.add_argument(
@@ -352,6 +431,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return import_csv_cmd(args)
     if args.command == "backtest":
         return backtest_cmd(args)
+    if args.command == "paper-live":
+        return paper_live_cmd(args)
 
     print(f"Command not implemented: {args.command}", file=sys.stderr)
     return 1
