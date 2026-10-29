@@ -363,6 +363,7 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   remains unverified.
 
 ### Changed
+- **Chapter 67 (safety gates) is now [x].** The gate layer gained an Environment model (the five environments from 67.2), all eleven pre-trade checks (environment, exchange, account, balances, market-data freshness, order parameters, market constraints, risk/position/exposure limits, kill-switch, connection), a non-bypassable evaluate_order that runs every gate on each order, and explicit-confirmation guards so importing a configuration or a UI action can never silently move into a riskier environment. Real Trading stays disabled unless explicitly enabled. Tests extended in tests/test_safety_gates.py.
 - **ROADMAP packaging chapters were physically renumbered 15/16/18 → 81/82/83.** The scientific pipeline (LEARN → … → CONSIDER REAL TRADING) now owns chapters 1–80; packaging was appended as PART XVII (81 Python packaging, 82 Debian package, 83 AppImage) and tagged deferred until the loop runs. All prose cross-references in README, AGENTS, AGENT-HANDOFF, CONTRIBUTING, the developer docs, the exchange-adapter ADR and `conftest.py` were updated. The AFML *book* chapter references in `reference-projects.md` were deliberately left unchanged — they are bibliographic, not roadmap, chapters.
 - **Three internal README links were pointing at an anchor that does not
   exist.** They said `#what-is-not-verified` while the heading is "What is

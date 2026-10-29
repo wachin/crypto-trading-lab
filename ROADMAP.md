@@ -173,7 +173,7 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 64 | [ ] | 0 | 16 | No | Strategy failure detection |
 | 65 | [~] | 2 | 8 | No | Strategy promotion pipeline |
 | 66 | [ ] | 0 | 20 | No | Strategy qualification |
-| 67 | [ ] | 0 | 21 | No | Safety gates |
+| 67 | [x] | 21 | 0 | No | Safety gates |
 | 68 | [x] | 54 | 0 | No | Real trading |
 | 69 | [~] | 22 | 59 | No | Development phases |
 | 70 | [~] | 2 | 24 | No | Working method |
@@ -4422,7 +4422,7 @@ Not Qualified
 
 ---
 
-## [ ] 67. Safety gates
+## [x] 67. Safety gates
 
 Safety gates are the executable protection layer between the application and a real exchange.
 
@@ -4448,33 +4448,33 @@ Exchange
 
 The safety layer must verify:
 
-- [ ] Correct environment.
-- [ ] Correct exchange.
-- [ ] Correct account.
-- [ ] Current balances.
-- [ ] Current market data.
-- [ ] Valid order parameters.
-- [ ] Valid market constraints.
-- [ ] Risk limits.
-- [ ] Position limits.
-- [ ] Exposure limits.
-- [ ] Kill-switch state.
-- [ ] Connection state.
+- [x] Correct environment.
+- [x] Correct exchange.
+- [x] Correct account.
+- [x] Current balances.
+- [x] Current market data.
+- [x] Valid order parameters.
+- [x] Valid market constraints.
+- [x] Risk limits.
+- [x] Position limits.
+- [x] Exposure limits.
+- [x] Kill-switch state.
+- [x] Connection state.
 
 ### 67.1 Safety-gate rules
 
-- [ ] A strategy can never disable a safety gate.
-- [ ] Safety gates must be verified on every order, not only on the first order.
-- [ ] Safety-gate failures must be audited with reason and timestamp.
-- [ ] Safety-gate configuration changes require explicit user confirmation.
-- [ ] The application must never silently disable a safety gate.
+- [x] A strategy can never disable a safety gate.
+- [x] Safety gates must be verified on every order, not only on the first order.
+- [x] Safety-gate failures must be audited with reason and timestamp.
+- [x] Safety-gate configuration changes require explicit user confirmation.
+- [x] The application must never silently disable a safety gate.
 
 ### 67.2 Environment separation
 
-- [ ] Environments are: `Backtest`, `Historical Replay`, `Paper Trading`, `Exchange Testnet`, `Real Trading`.
-- [ ] The environment must be visible at all times.
-- [ ] Switching from testnet/paper to real trading must require explicit confirmation.
-- [ ] Importing a configuration must never silently switch environments.
+- [x] Environments are: `Backtest`, `Historical Replay`, `Paper Trading`, `Exchange Testnet`, `Real Trading`.
+- [x] The environment must be visible at all times.
+- [x] Switching from testnet/paper to real trading must require explicit confirmation.
+- [x] Importing a configuration must never silently switch environments.
 
 ---
 

@@ -442,8 +442,8 @@ features the code did not ship. Concretely:
    (strategies + builder), 37–38 (backtesting + splitting), 40–42
    (metrics/reports/benchmarks), 44–46 (robustness/walk-forward/regime), 57
    (paper-trading live wiring into the Qt screen), 62–64 (monitoring/health),
-   66 (qualification), 67 (safety gates). Close these on real-ish data before
-   any packaging.
+   66 (qualification). Close these on real-ish data before
+   any packaging. (Chapter 67 - safety gates - is [x] as of 2026-10-28.)
 6. **Chapter 48 — machine learning** is part of the loop's refute/robustness
    stage but deliberately unbuilt; it needs a dependency decision first
    (chapter 4) before any code, so it follows the loop stages that need no new
