@@ -20,10 +20,11 @@ A new AI Agent must read this file **before** doing anything else, then
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
 - **CI:** `tests` is **green on `main`** — run
-  [38777456963](https://github.com/wachin/crypto-trading-lab/actions/runs/38777456963)
-  (2026-10-15, commit `4926437`) reports the same 707/2 on `ubuntu-24.04` with
-  pip, and carries **no annotations**. It had never passed before. Do not let
-  a push go red without reading the log.
+  [40796376350](https://github.com/wachin/crypto-trading-lab/actions/runs/40796376350)
+  on commit `77102a2` (2026-10-28) reports 864/2 on `ubuntu-24.04` with pip and
+  carries **no annotations**. The first green run was `38777456963`
+  (2026-10-15); the suite had never passed before it. Do not let a push go red
+  without reading the log.
 - **Verified platforms:** Debian 13 (system packages, Python 3.13.5) and
   **Windows 10** (pip/PyPI, Python 3.14.7, 2026-10-01 — clean install, the
   window opens, identical numbers, `ccxt` reaches the network).
