@@ -22,6 +22,90 @@ before writing code, and tick a checkbox only when the requirement is
 > said so — the checkbox tracks evidence, not intention. When a
 > requirement is ambiguous, stop and say so instead of guessing.
 
+## Delivery sequencing — finish the loop before packaging
+
+
+This roadmap is organised **by topic** (the sixteen parts), but the work is
+**delivered as one working scientific loop**. The priority order is the loop
+below, not the chapter numbers. Packaging (chapters 15, 16, 18) is explicitly
+deferred until the loop runs end to end on real-ish data — shipping an
+installer for a program whose core loop does not yet close would hide the real
+work behind a package.
+
+> **Priority rule:** finish the loop first. A chapter numbered lower than a
+> packaging chapter is not necessarily earlier to build; the loop order below
+> is the authority for *what to do next*. Packaging stays `[ ]` until the loop
+> is operational.
+
+The loop, in order:
+
+```
+              CRYPTO TRADING LAB
+
+                    ↓
+              LEARN
+                    ↓
+             CHOOSE MARKET
+                    ↓
+              GET DATA
+                    ↓
+            FORM AN IDEA
+                    ↓
+          WRITE A HYPOTHESIS
+                    ↓
+              BACKTEST
+                    ↓
+              ANALYSE
+                    ↓
+           TRY TO REFUTE IT
+                    ↓
+          OOS / WALK-FORWARD
+                    ↓
+             ROBUSTNESS
+                    ↓
+            PAPER TRADING
+                    ↓
+            QUALIFICATION
+                    ↓
+               TESTNET
+                    ↓
+        ┌──────────────────┐
+        │ Is there evidence │
+        │ of an edge?       │
+        └──────────────────┘
+                  ↓
+            ONLY IF THERE IS
+                  ↓
+        CONSIDER REAL TRADING
+```
+
+How the loop maps to the chapters (the loop is the priority; the chapter
+numbers are just the spec's identifiers — see the Status overview by chapter
+for the exact `[x]` / `[~]` / `[ ]` of each):
+
+| Loop stage | Primary chapters |
+|---|---|
+| Learn | 1, 2, 23, 24, 80 |
+| Choose market | 3, 30, 33 |
+| Get data | 26, 28, 29, 73 |
+| Form an idea | 33, 34, 35 |
+| Write a hypothesis | 43, 53, 74 |
+| Backtest | 37, 38 |
+| Analyse | 40, 41, 42 |
+| Try to refute it | 43, 44 |
+| OOS / walk-forward | 38, 45 |
+| Robustness | 44, 46, 47 |
+| Paper trading | 57, 79 |
+| Qualification | 65, 66 |
+| Testnet | 68 |
+| Evidence-of-edge gate | 43, 74 |
+| Consider real trading | 67, 68 |
+
+**Deferred until the loop runs:** chapters 15 (Python packaging), 16 (Debian
+package) and 18 (AppImage). They are intentionally left `[ ]`; do not start
+them until every stage above is operational on real-ish data. The recommended
+task order is in `AGENT-HANDOFF.md` §5.2.
+
 ## Status overview by chapter
 
 | Ch. | Status | `[x]` inside | Open inside | Explicit pending note | Topic |
@@ -1013,7 +1097,7 @@ Verify:
 
 ---
 
-## [ ] 15. Python packaging
+## [ ] 15. Python packaging *(deferred — see §Delivery sequencing)*
 
 - [ ] Use `pyproject.toml`.
 - [ ] Prefer a simple Debian-compatible backend such as setuptools.
@@ -1041,7 +1125,7 @@ Expected commands:
 
 ---
 
-## [ ] 16. Debian package
+## [ ] 16. Debian package *(deferred — see §Delivery sequencing)*
 
 - [ ] Create a complete and valid `debian/` directory.
 
@@ -1184,7 +1268,7 @@ Evaluate at least:
 
 ---
 
-## [ ] 18. AppImage
+## [ ] 18. AppImage *(deferred — see §Delivery sequencing)*
 
 - [ ] Prepare a separate AppImage strategy.
 - [ ] Do not add AppImage tools to the official Debian package `Build-Depends`.

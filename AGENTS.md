@@ -82,10 +82,13 @@ research workflow, robustness analysis and paper trading over replayed
 datasets. All 16 unwired modules the 2026-09/10 audit found are now
 resolved, and chapter 22 (the CLI) is complete: every subcommand calls
 the shared use cases in `src/crypto_trading_lab/application.py`, the same
-functions the GUI uses. The immediate frontier is the **live-data path**
-— Binance WebSocket (ch. 26.2/27) — testnet order placement (ch. 68),
-feeding the execution model into the backtest engine (ch. 56.5), and
-packaging (ch. 15/16/18). Real trading stays disabled by default.
+functions the GUI uses. The immediate frontier is the **scientific loop**
+— finishing the end-to-end pipeline (learn → choose market → get data →
+idea → hypothesis → backtest → analyse → refute → OOS/walk-forward →
+robustness → paper trading → qualification → testnet → evidence-of-edge
+Gate) on real-ish data. Per `ROADMAP.md` §Delivery sequencing, **packaging
+(ch. 15/16/18) is deferred** until that loop runs. Real trading stays
+disabled by default.
 
 `ROADMAP.md` is the per-chapter source of truth for what remains; see
 `AGENT-HANDOFF.md` §5 for the exact continuation point.

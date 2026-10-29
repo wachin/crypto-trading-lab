@@ -58,8 +58,7 @@ A new AI Agent must read this file **before** doing anything else, then
   found in the audit; the last one, `strategy_registry`, was wired into the
   Lab and the CLI on 2026-10-07 and then re-reviewed, which exposed three
   further defects in it (see `unwired-modules-audit.md` item 16). The
-  frontier now is the live-data path (Binance WebSocket, chapters 26.2/27),
-  testnet order placement (chapter 68) and packaging (chapters 15/16/18).
+  frontier now is the **scientific loop** (see `ROADMAP.md` §Delivery sequencing): finish the end-to-end pipeline on real-ish data before any packaging. Packaging (chapters 15/16/18) is **deferred** until the loop runs.
   Chapter 22 (the CLI) was completed on 2026-10-26: every subcommand now
   calls the shared use-case layer in `application.py`, so the CLI and the
   GUI cannot diverge (§5.2 item 1). Chapter 56.5 was completed on
@@ -433,14 +432,29 @@ features the code did not ship. Concretely:
    **screen** still replays a dataset. The live session is reachable from the
    CLI only; wiring it into the Qt screen needs a thread or an asyncio bridge
    and is deliberately left as its own task.
-5. **Chapters 15/16/18** — packaging. The Debian packaging is stale:
-   `debian/rules` calls `setup.py install` and `debian/control` does not list
-   pyqtgraph or platformdirs.
-6. **Chapter 48** — machine learning is deliberately unbuilt; it needs a
-   dependency decision first (chapter 4) before any code.
+5. **Finish the scientific loop first — this is the priority.** `ROADMAP.md`
+   now carries a §Delivery sequencing section that defines the one thing to
+   ship before anything else: the end-to-end loop — learn → choose market →
+   get data → form an idea → write a hypothesis → backtest → analyse →
+   try to refute it → OOS / walk-forward → robustness → paper trading →
+   qualification → testnet → evidence-of-edge gate → (only then) consider
+   real trading. The loop stages still open are ch. 29 (data quality), 33–35
+   (strategies + builder), 37–38 (backtesting + splitting), 40–42
+   (metrics/reports/benchmarks), 44–46 (robustness/walk-forward/regime), 57
+   (paper-trading live wiring into the Qt screen), 62–64 (monitoring/health),
+   66 (qualification), 67 (safety gates). Close these on real-ish data before
+   any packaging.
+6. **Chapter 48 — machine learning** is part of the loop's refute/robustness
+   stage but deliberately unbuilt; it needs a dependency decision first
+   (chapter 4) before any code, so it follows the loop stages that need no new
+   dependency.
 7. **Translations** — the Spanish `.ts` still has untranslated strings that
-   fall back to English.
-8. ~~**Chapter 25 — finish the reference-project study.**~~ **DONE
+   fall back to English. UI polish; can proceed in parallel, not blocking.
+8. **Chapters 15/16/18 — packaging. DEFERRED until the loop runs.** Do not
+   start packaging until the §Delivery sequencing loop is operational end to
+   end. The Debian packaging is stale: `debian/rules` calls `setup.py install`
+   and `debian/control` does not list pyqtgraph or platformdirs.
+9. ~~**Chapter 25 — finish the reference-project study.**~~ **DONE
    2026-10-15.** All eight references are studied and documented in
    `reference-projects.md` Parts A–H; the chapter is `[x]` and its closing
    requirement is met. **This unblocks deleting `external/` (12 GB)** — the
