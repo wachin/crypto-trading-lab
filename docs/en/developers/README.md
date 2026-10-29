@@ -26,6 +26,7 @@ If you are new, read in this order:
 | [`configuration-guide.md`](configuration-guide.md) | touch settings, XDG paths or `config.json` |
 | [`cli.md`](cli.md) | use, extend or test the chapter 22 command-line interface |
 | [`working-method.md`](working-method.md) | make a change the way this project expects (tests, docs, honesty) |
+| [`agent-onboarding-tracker.md`](agent-onboarding-tracker.md) | check whether the agent-onboarding surface (AGENTS.md, CLAUDE.md, reading lists, baseline) is complete and current |
 | [`small-context-contributing.md`](small-context-contributing.md) | contribute with a small context window — measured costs, what never to load |
 | [`threat-model.md`](threat-model.md) | touch credentials, logging, adapters or anything security-shaped |
 | [`capital-protection.md`](capital-protection.md) | work on risk, position sizing or drawdown limits |
