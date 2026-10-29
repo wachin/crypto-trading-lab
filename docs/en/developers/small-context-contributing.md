@@ -91,6 +91,6 @@ hand back a bounded result rather than a broad refactor.
 
 `AGENT-HANDOFF.md` §5.2: the chapter 22 CLI is finished (2026-10-26),
 so start from the next item instead — the execution model in the backtest
-engine (chapter 56.5) or one Debian packaging task (chapter 16). Both are
+engine (chapter 56.5) or one Debian packaging task (chapter 82). Both are
 bounded and entirely offline. Pick a single command or a single table,
 and the existing test suite tells you whether it still works.

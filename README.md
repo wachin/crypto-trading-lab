@@ -31,7 +31,7 @@ Survive → Validate → Earn. In that order, non-negotiable.
 🤝 **This repository is built agent-first and we want your agent on the team.**
 
 Crypto Trading Lab is not a finished product; it is a *specification with
-a codebase catching up to it*. `ROADMAP.md` holds 80 chapters of
+a codebase catching up to it*. `ROADMAP.md` holds 83 chapters of
 requirements — 2,828 checkboxes — and **roughly two thirds of them are
 still open** (its status table counts them per chapter, so the number is
 always current). Each one is small enough to land in a focused pull
@@ -122,7 +122,7 @@ cryptocurrency research laboratory. Follow these rules exactly.
 - **Testing** — financial regression tests and property-based tests for
   the engine are always welcome; hand-verified arithmetic beats coverage
   theatre.
-- **Packaging** — the Debian package (chapter 16), AppImage (chapter 18)
+- **Packaging** — the Debian package (chapter 82), AppImage (chapter 83)
   and reproducible builds.
 - **Accessibility & i18n** — keyboard navigation, screen-reader labels,
   translated documentation.
@@ -178,7 +178,7 @@ history and is recorded in [`CHANGELOG.md`](CHANGELOG.md).
 | Task | Where |
 |---|---|
 | Feed the chapter-56 execution model into the backtest engine too | `backtesting/engine.py`, chapter 56.5 |
-| Finish the Debian packaging (stale `debian/rules`, missing dependencies) | `debian/`, chapter 16 |
+| Finish the Debian packaging (stale `debian/rules`, missing dependencies) | `debian/`, chapter 82 |
 | Add the missing glossary terms (asset, blockchain, wallet, spread, liquidity, out-of-sample, walk-forward, robustness…) | `docs/en/beginners/glossary.md`, chapter 24 |
 | Translate the new UI strings into Spanish | `.ts` via Qt Linguist |
 | Lesson → screen links in the Learning Center | `ui/education/`, chapter 80 |
@@ -853,7 +853,7 @@ profit.
 
 | Path | Purpose |
 |---|---|
-| `ROADMAP.md` | **The specification** — 80 chapters, checklist-driven progress |
+| `ROADMAP.md` | **The specification** — 83 chapters, checklist-driven progress |
 | `AGENT-HANDOFF.md` | Current state + exact continuation point |
 | `AGENTS.md` | Non-negotiable ground rules for AI contributors |
 | `CONTRIBUTING.md` | How to contribute (with or without an AI agent) |

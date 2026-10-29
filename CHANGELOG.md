@@ -363,6 +363,7 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   remains unverified.
 
 ### Changed
+- **ROADMAP packaging chapters were physically renumbered 15/16/18 → 81/82/83.** The scientific pipeline (LEARN → … → CONSIDER REAL TRADING) now owns chapters 1–80; packaging was appended as PART XVII (81 Python packaging, 82 Debian package, 83 AppImage) and tagged deferred until the loop runs. All prose cross-references in README, AGENTS, AGENT-HANDOFF, CONTRIBUTING, the developer docs, the exchange-adapter ADR and `conftest.py` were updated. The AFML *book* chapter references in `reference-projects.md` were deliberately left unchanged — they are bibliographic, not roadmap, chapters.
 - **Three internal README links were pointing at an anchor that does not
   exist.** They said `#what-is-not-verified` while the heading is "What is
   verified, and what is not". Renaming the `## Quick start` heading also

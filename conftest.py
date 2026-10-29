@@ -1,7 +1,7 @@
 """Test bootstrap: make the src-layout package importable without install.
 
 The spike runs tests directly from a source checkout; once the project
-is pip-installed (chapter 15) this file can shrink to nothing.
+is pip-installed (chapter 81) this file can shrink to nothing.
 """
 
 import sys

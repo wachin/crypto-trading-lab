@@ -110,7 +110,7 @@ balances never go silently negative.
   deliberately **not** in this spike; the handler registries and
   `dispatch_ticker` seam are where they attach.
 - `pyproject.toml` scaffolding (setuptools, src layout) exists with
-  `ccxt` as an *optional* extra; chapter 15's full packaging (entry
+  `ccxt` as an *optional* extra; chapter 81's full packaging (entry
   points, translations, icons) remains open.
 
 ## Verification

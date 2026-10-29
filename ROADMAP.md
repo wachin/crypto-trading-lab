@@ -1,8 +1,8 @@
 # ROADMAP — the specification
 
 Crypto Trading Lab is built specification-first: this file is the
-contract every contribution is measured against. It is organised as 80
-chapters grouped into 16 parts. Read the chapter that owns your task
+contract every contribution is measured against. It is organised as 83
+chapters grouped into 17 parts. Read the chapter that owns your task
 before writing code, and tick a checkbox only when the requirement is
 **implemented and tested**.
 
@@ -27,7 +27,7 @@ before writing code, and tick a checkbox only when the requirement is
 
 This roadmap is organised **by topic** (the sixteen parts), but the work is
 **delivered as one working scientific loop**. The priority order is the loop
-below, not the chapter numbers. Packaging (chapters 15, 16, 18) is explicitly
+below, not the chapter numbers. Packaging (chapters 81, 82, 83) is explicitly
 deferred until the loop runs end to end on real-ish data — shipping an
 installer for a program whose core loop does not yet close would hide the real
 work behind a package.
@@ -101,8 +101,8 @@ for the exact `[x]` / `[~]` / `[ ]` of each):
 | Evidence-of-edge gate | 43, 74 |
 | Consider real trading | 67, 68 |
 
-**Deferred until the loop runs:** chapters 15 (Python packaging), 16 (Debian
-package) and 18 (AppImage). They are intentionally left `[ ]`; do not start
+**Deferred until the loop runs:** chapters 81 (Python packaging), 82 (Debian
+package) and 83 (AppImage). They are intentionally left `[ ]`; do not start
 them until every stage above is operational on real-ish data. The recommended
 task order is in `AGENT-HANDOFF.md` §5.2.
 
@@ -124,10 +124,7 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 12 | [ ] | 0 | 13 | No | Background processing |
 | 13 | [~] | 1 | 14 | No | Performance |
 | 14 | [~] | 4 | 53 | No | Tests |
-| 15 | [ ] | 0 | 16 | No | Python packaging |
-| 16 | [ ] | 0 | 43 | No | Debian package |
 | 17 | [~] | 1 | 61 | No | Debian dependency documentation |
-| 18 | [ ] | 0 | 17 | No | AppImage |
 | 19 | [~] | 15 | 137 | No | Documentation |
 | 20 | [~] | 20 | 38 | No | Multilingual support and Qt Linguist |
 | 21 | [~] | 2 | 70 | Sí | Main interface, themes, and accessibility |
@@ -190,6 +187,9 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 78 | [x] | 4 | 0 | No | Complexity and multiple-testing awareness |
 | 79 | [x] | 11 | 0 | No | Paper trading over real market data and trading journal |
 | 80 | [x] | 7 | 0 | No | Learning Center as a real course |
+| 81 | [ ] | 0 | 16 | No | Python packaging |
+| 82 | [ ] | 0 | 43 | No | Debian package |
+| 83 | [ ] | 0 | 17 | No | AppImage |
 
 ---
 
@@ -1097,99 +1097,6 @@ Verify:
 
 ---
 
-## [ ] 15. Python packaging *(deferred — see §Delivery sequencing)*
-
-- [ ] Use `pyproject.toml`.
-- [ ] Prefer a simple Debian-compatible backend such as setuptools.
-
-Include:
-
-- [ ] project metadata;
-- [ ] graphical entry point;
-- [ ] console entry point;
-- [ ] translation files;
-- [ ] icons;
-- [ ] license;
-- [ ] example files;
-- [ ] typing information;
-- [ ] resources through `importlib.resources`.
-
-Expected commands:
-
-- [ ] `python3 -m build`
-- [ ] `python3 -m pytest`
-- [ ] `python3 -m crypto_trading_lab`
-- [ ] `crypto-trading-lab`
-
-- [ ] Do not use paths that depend on the current working directory.
-
----
-
-## [ ] 16. Debian package *(deferred — see §Delivery sequencing)*
-
-- [ ] Create a complete and valid `debian/` directory.
-
-Expected files:
-
-- [ ] `debian/changelog`
-- [ ] `debian/control`
-- [ ] `debian/copyright`
-- [ ] `debian/rules`
-- [ ] `debian/source/format`
-- [ ] `debian/watch`
-- [ ] `debian/upstream/metadata`
-- [ ] `debian/crypto-trading-lab.install`
-- [ ] `debian/crypto-trading-lab.manpages`
-- [ ] `debian/crypto-trading-lab.desktop`
-- [ ] `debian/crypto-trading-lab.metainfo.xml`
-
-Use:
-
-- [ ] debhelper-compat;
-- [ ] dh-python;
-- [ ] pybuild;
-- [ ] `dh-sequence-python3` where appropriate;
-- [ ] automatic Python dependency substitution;
-- [ ] tests during package build;
-- [ ] `Rules-Requires-Root: no`;
-- [ ] source format `3.0 (quilt)`.
-
-The package must:
-
-- [ ] install into standard paths;
-- [ ] not install into `/opt`;
-- [ ] not include a virtual environment;
-- [ ] not download dependencies during the build;
-- [ ] not use pip during Debian package construction;
-- [ ] not include prebuilt wheels;
-- [ ] not modify user files during installation;
-- [ ] respect XDG directories;
-- [ ] store user data in appropriate user directories;
-- [ ] install icons;
-- [ ] install a `.desktop` file;
-- [ ] install AppStream metadata;
-- [ ] include a man page;
-- [ ] pass `lintian` reasonably;
-- [ ] build in a clean environment using `sbuild` or `pbuilder`.
-
-Carefully classify:
-
-- [ ] `Build-Depends`;
-- [ ] `Depends`;
-- [ ] `Recommends`;
-- [ ] `Suggests`.
-
-- [ ] Do not declare a development-only package as a mandatory runtime dependency.
-
-Include instructions for:
-
-- [ ] `dpkg-buildpackage -us -uc -b`
-- [ ] `lintian ../*.changes`
-
-- [ ] Verify exact Debian 12 package names before writing `debian/control`.
-
----
-
 ## [~] 17. Debian dependency documentation
 
 Create:
@@ -1265,35 +1172,6 @@ Evaluate at least:
 - [ ] Create a Spanish translation later at `docs/es/developers/dependencias-debian.md`
 
 - [ ] English documentation must be completed first.
-
----
-
-## [ ] 18. AppImage *(deferred — see §Delivery sequencing)*
-
-- [ ] Prepare a separate AppImage strategy.
-- [ ] Do not add AppImage tools to the official Debian package `Build-Depends`.
-
-Create:
-
-- [ ] `packaging/appimage/README.md`
-- [ ] `packaging/appimage/AppRun`
-- [ ] `packaging/appimage/crypto-trading-lab.desktop`
-- [ ] `packaging/appimage/crypto-trading-lab.appdata.xml`
-- [ ] `packaging/appimage/build-appimage.sh`
-
-The build script must:
-
-- [ ] use `set -euo pipefail`;
-- [ ] detect errors;
-- [ ] not require root;
-- [ ] use a temporary directory;
-- [ ] clean resources;
-- [ ] document dependencies;
-- [ ] generate checksums;
-- [ ] avoid including credentials;
-- [ ] verify the artifact.
-
-- [ ] Do not download binaries without verifying their origin and checksum.
 
 ---
 
@@ -5241,3 +5119,126 @@ downloaded dataset works today; a continuous feed does not.
 - [x] Lesson-to-screen links (each lesson opening the related tool).
 - [x] Screenshots and tutorial media.
 
+
+
+## PART XVII - Packaging (deferred until the loop runs)
+
+## [ ] 81. Python packaging *(deferred — see §Delivery sequencing)*
+
+- [ ] Use `pyproject.toml`.
+- [ ] Prefer a simple Debian-compatible backend such as setuptools.
+
+Include:
+
+- [ ] project metadata;
+- [ ] graphical entry point;
+- [ ] console entry point;
+- [ ] translation files;
+- [ ] icons;
+- [ ] license;
+- [ ] example files;
+- [ ] typing information;
+- [ ] resources through `importlib.resources`.
+
+Expected commands:
+
+- [ ] `python3 -m build`
+- [ ] `python3 -m pytest`
+- [ ] `python3 -m crypto_trading_lab`
+- [ ] `crypto-trading-lab`
+
+- [ ] Do not use paths that depend on the current working directory.
+
+---
+## [ ] 82. Debian package *(deferred — see §Delivery sequencing)*
+
+- [ ] Create a complete and valid `debian/` directory.
+
+Expected files:
+
+- [ ] `debian/changelog`
+- [ ] `debian/control`
+- [ ] `debian/copyright`
+- [ ] `debian/rules`
+- [ ] `debian/source/format`
+- [ ] `debian/watch`
+- [ ] `debian/upstream/metadata`
+- [ ] `debian/crypto-trading-lab.install`
+- [ ] `debian/crypto-trading-lab.manpages`
+- [ ] `debian/crypto-trading-lab.desktop`
+- [ ] `debian/crypto-trading-lab.metainfo.xml`
+
+Use:
+
+- [ ] debhelper-compat;
+- [ ] dh-python;
+- [ ] pybuild;
+- [ ] `dh-sequence-python3` where appropriate;
+- [ ] automatic Python dependency substitution;
+- [ ] tests during package build;
+- [ ] `Rules-Requires-Root: no`;
+- [ ] source format `3.0 (quilt)`.
+
+The package must:
+
+- [ ] install into standard paths;
+- [ ] not install into `/opt`;
+- [ ] not include a virtual environment;
+- [ ] not download dependencies during the build;
+- [ ] not use pip during Debian package construction;
+- [ ] not include prebuilt wheels;
+- [ ] not modify user files during installation;
+- [ ] respect XDG directories;
+- [ ] store user data in appropriate user directories;
+- [ ] install icons;
+- [ ] install a `.desktop` file;
+- [ ] install AppStream metadata;
+- [ ] include a man page;
+- [ ] pass `lintian` reasonably;
+- [ ] build in a clean environment using `sbuild` or `pbuilder`.
+
+Carefully classify:
+
+- [ ] `Build-Depends`;
+- [ ] `Depends`;
+- [ ] `Recommends`;
+- [ ] `Suggests`.
+
+- [ ] Do not declare a development-only package as a mandatory runtime dependency.
+
+Include instructions for:
+
+- [ ] `dpkg-buildpackage -us -uc -b`
+- [ ] `lintian ../*.changes`
+
+- [ ] Verify exact Debian 12 package names before writing `debian/control`.
+
+---
+## [ ] 83. AppImage *(deferred — see §Delivery sequencing)*
+
+- [ ] Prepare a separate AppImage strategy.
+- [ ] Do not add AppImage tools to the official Debian package `Build-Depends`.
+
+Create:
+
+- [ ] `packaging/appimage/README.md`
+- [ ] `packaging/appimage/AppRun`
+- [ ] `packaging/appimage/crypto-trading-lab.desktop`
+- [ ] `packaging/appimage/crypto-trading-lab.appdata.xml`
+- [ ] `packaging/appimage/build-appimage.sh`
+
+The build script must:
+
+- [ ] use `set -euo pipefail`;
+- [ ] detect errors;
+- [ ] not require root;
+- [ ] use a temporary directory;
+- [ ] clean resources;
+- [ ] document dependencies;
+- [ ] generate checksums;
+- [ ] avoid including credentials;
+- [ ] verify the artifact.
+
+- [ ] Do not download binaries without verifying their origin and checksum.
+
+---

@@ -41,7 +41,7 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Verification kit:** the `Experiments/` kit was deleted on 2026-10-16
   (commit `b296785`); `requirements-all.txt` at the repository root and the
   manual `cross-platform` workflow now carry what it did.
-- **Specification:** `ROADMAP.md` — 80 chapters in 16 parts
+- **Specification:** `ROADMAP.md` — 83 chapters in 17 parts
 - **Git submodules:** 8 *optional* reference projects under `external/`.
   **A fresh clone creates `external/` as eight empty placeholder directories
   (git does that for submodules); they hold no files and you do not need to
@@ -58,7 +58,7 @@ A new AI Agent must read this file **before** doing anything else, then
   found in the audit; the last one, `strategy_registry`, was wired into the
   Lab and the CLI on 2026-10-07 and then re-reviewed, which exposed three
   further defects in it (see `unwired-modules-audit.md` item 16). The
-  frontier now is the **scientific loop** (see `ROADMAP.md` §Delivery sequencing): finish the end-to-end pipeline on real-ish data before any packaging. Packaging (chapters 15/16/18) is **deferred** until the loop runs.
+  frontier now is the **scientific loop** (see `ROADMAP.md` §Delivery sequencing): finish the end-to-end pipeline on real-ish data before any packaging. Packaging (chapters 81/82/83) is **deferred** until the loop runs.
   Chapter 22 (the CLI) was completed on 2026-10-26: every subcommand now
   calls the shared use-case layer in `application.py`, so the CLI and the
   GUI cannot diverge (§5.2 item 1). Chapter 56.5 was completed on
@@ -426,7 +426,7 @@ features the code did not ship. Concretely:
    (the troubleshooting links pointed at a file that did not exist; it now
    exists and a test resolves every link and anchor). Chapter 26 stays `[~]`
    for 26.1 "demonstrations" and 26.3 Coinbase, neither of which this task
-   covered. **Next task: chapters 15/16/18 (packaging).**
+   covered. **Next task: chapters 81/82/83 (packaging).**
 
    *Known limitation, stated so nobody is surprised:* the Paper Trading
    **screen** still replays a dataset. The live session is reachable from the
@@ -450,7 +450,7 @@ features the code did not ship. Concretely:
    dependency.
 7. **Translations** — the Spanish `.ts` still has untranslated strings that
    fall back to English. UI polish; can proceed in parallel, not blocking.
-8. **Chapters 15/16/18 — packaging. DEFERRED until the loop runs.** Do not
+8. **Chapters 81/82/83 — packaging. DEFERRED until the loop runs.** Do not
    start packaging until the §Delivery sequencing loop is operational end to
    end. The Debian packaging is stale: `debian/rules` calls `setup.py install`
    and `debian/control` does not list pyqtgraph or platformdirs.

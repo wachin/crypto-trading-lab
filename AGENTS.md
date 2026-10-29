@@ -87,7 +87,7 @@ functions the GUI uses. The immediate frontier is the **scientific loop**
 idea → hypothesis → backtest → analyse → refute → OOS/walk-forward →
 robustness → paper trading → qualification → testnet → evidence-of-edge
 gate) on real-ish data. Per `ROADMAP.md` §Delivery sequencing, **packaging
-(ch. 15/16/18) is deferred** until that loop runs. Real trading stays
+(ch. 81/82/83) is deferred** until that loop runs. Real trading stays
 disabled by default.
 
 `ROADMAP.md` is the per-chapter source of truth for what remains; see

@@ -199,7 +199,7 @@ alike.
 | Parameter sweep launched from the Strategy Builder | `src/crypto_trading_lab/ui/strategy_builder.py`, chapter 77 |
 | Realistic execution (partial fills, market impact) in the paper pipeline | `paper_session.py`, chapters 56/79 |
 | Beginner chart tutorials | `docs/en/beginners/`, chapter 19.2 |
-| Debian package and AppImage | chapters 16, 18 |
+| Debian package and AppImage | chapters 82, 83 |
 | Property-based tests for the engine arithmetic | `tests/backtesting/` |
 
 ---
