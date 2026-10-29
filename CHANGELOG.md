@@ -25,6 +25,20 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   `dataset_id` / `dataset_version` / `dataset_checksum`, wired through
   `run_backtest_file`.
 
+- **Chapters 62/63 (live monitoring / drift) advanced.** `live_vs_backtest.py`
+  now models the full monitored state (`MonitoredState`: portfolio value,
+  open/pending/executed orders, fees, slippage, drawdown, exposure,
+  risk-manager decisions, connection state, data freshness, environment,
+  kill-switch status, recent alerts) and derives beginner-readable alerts
+  (`monitoring_alerts`) that surface an unarmed kill switch, a lost
+  connection, or drawdown past 20%. Drift analysis gained the two remaining
+  63.1 dimensions — `latency_drift` (expected vs actual fill latency) and
+  `volatility_drift` (return volatility of the two equity curves, also a
+  `volatility` key in `calculate_drift_metrics`) — plus `drift_education()`
+  (63.3), which explains in plain language why backtest/paper/live never
+  match exactly and which gaps are normal versus warning signs. Neither
+  monitoring nor drift assessment ever touches the risk manager.
+
 - **A weekly check of the external URLs.** The offline link checker stops at
   the repository edge on purpose, so nothing noticed when an outside
   reference rotted. `tools/check_external_links.py` visits every `http(s)://` URL

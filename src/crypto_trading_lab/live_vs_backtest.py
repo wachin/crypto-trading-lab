@@ -965,4 +965,112 @@ __all__ = [
     "LIKELY_CAUSES",
     "DRIFT_ASSESSMENT_NOTE",
     "DRIFT_ANALYSIS_WARNING",
+    "volatility_of_returns",
+    "volatility_drift",
+    "latency_drift",
+    "drift_education",
+    "LIVE_VS_BACKTEST_EDUCATION",
+    "MonitoredState",
+    "monitoring_alerts",
 ]
+
+def volatility_of_returns(curve):
+    if not (len(curve) > 2):
+        return Decimal(0)
+    returns = []
+    for i in range(1, len(curve)):
+        prev = curve[i - 1]
+        if prev == 0:
+            returns.append(Decimal(0))
+        else:
+            returns.append((curve[i] - prev) / prev)
+    mean = sum(returns, Decimal(0)) / Decimal(len(returns))
+    variance = sum(((r - mean) * (r - mean) for r in returns), Decimal(0)) / Decimal(len(returns))
+    return variance.sqrt()
+
+
+def volatility_drift(backtest_curve, live_curve):
+    """Drift of return volatility between two equity curves (63.1).
+
+    Computes the per-period return volatility of each curve via
+    :func:`volatility_of_returns` and returns a :class:`DriftMetric` with
+    the same significance bands used by ``calculate_drift_metrics`` for the
+    ``volatility`` key (15 % relative threshold).
+    """
+    threshold = Decimal("0.15")
+    backtest_value = volatility_of_returns(backtest_curve)
+    live_value = volatility_of_returns(live_curve)
+    difference = live_value - backtest_value
+    if backtest_value == 0:
+        pct = Decimal(0)
+        significance = "high" if live_value != 0 else "low"
+    else:
+        pct = abs(difference / backtest_value)
+        if pct > threshold * 2:
+            significance = "high"
+        elif pct > threshold:
+            significance = "medium"
+        else:
+            significance = "low"
+    return DriftMetric(
+        name="volatility",
+        backtest_value=backtest_value,
+        live_value=live_value,
+        difference=difference,
+        pct_difference=pct,
+        significance=significance,
+    )
+
+
+def latency_drift(expected_latency, actual_latency):
+    threshold = Decimal("0.25")
+    difference = actual_latency - expected_latency
+    if expected_latency == 0:
+        pct = Decimal(0)
+        significance = "high" if actual_latency != 0 else "low"
+    else:
+        pct = abs(difference / expected_latency)
+        if pct > threshold * 2:
+            significance = "high"
+        elif pct > threshold:
+            significance = "medium"
+        else:
+            significance = "low"
+    return DriftMetric(name="latency", backtest_value=expected_latency, live_value=actual_latency, difference=difference, pct_difference=pct, significance=significance)
+
+LIVE_VS_BACKTEST_EDUCATION = (
+    "Backtest, paper and live results will never match exactly: live fills pay real slippage and fees, data arrives with latency, and market regimes shift. A small, stable gap is normal.",
+    "Watch for gaps that grow over time or that appear in many metrics at once: that points to a real change in behavior (degradation), not ordinary variability. A single small metric difference is usually normal.",
+)
+
+def drift_education():
+    return list(LIVE_VS_BACKTEST_EDUCATION)
+
+@dataclass(frozen=True)
+class MonitoredState:
+    portfolio_value: Decimal
+    open_positions: int = 0
+    pending_orders: int = 0
+    executed_orders: int = 0
+    fees: Decimal = Decimal(0)
+    slippage: Decimal = Decimal(0)
+    drawdown: Decimal = Decimal(0)
+    exposure: Decimal = Decimal(0)
+    risk_decisions: str = ""
+    connection_state: str = ""
+    data_freshness: str = ""
+    environment: str = ""
+    kill_switch_status: str = ""
+    recent_alerts: tuple = ()
+
+def monitoring_alerts(state):
+    alerts = []
+    if state.environment:
+        alerts.append("environment is " + state.environment)
+    if state.kill_switch_status and state.kill_switch_status != "armed":
+        alerts.append("kill switch is not armed")
+    if state.connection_state and state.connection_state != "connected":
+        alerts.append("connection is " + state.connection_state)
+    if state.drawdown > Decimal("0.20"):
+        alerts.append("drawdown exceeds 20 percent")
+    return alerts

@@ -168,8 +168,8 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 59 | [~] | 0 | 39 | Sí | Emergency kill switch |
 | 60 | [~] | 15 | 1 | No | Risk of ruin and capital depletion |
 | 61 | [~] | 2 | 16 | No | Capital protection |
-| 62 | [~] | 1 | 19 | Sí | Live monitoring |
-| 63 | [~] | 11 | 6 | No | Live vs backtest drift |
+| 62 | [~] | 18 | 2 | Sí | Live monitoring |
+| 63 | [~] | 33 | 8 | No | Live vs backtest drift |
 | 64 | [x] | 16 | 0 | No | Strategy failure detection |
 | 65 | [~] | 2 | 8 | No | Strategy promotion pipeline |
 | 66 | [x] | 20 | 0 | No | Strategy qualification |
@@ -4216,27 +4216,27 @@ Live monitoring covers paper trading, testnet, and real trading sessions.
 
 Display:
 
-- [ ] current portfolio value;
-- [ ] open positions;
-- [ ] pending orders;
-- [ ] executed orders;
-- [ ] fees;
+- [x] current portfolio value;
+- [x] open positions;
+- [x] pending orders;
+- [x] executed orders;
+- [x] fees;
 - [x] slippage.
-- [ ] drawdown;
-- [ ] exposure;
-- [ ] risk-manager decisions;
-- [ ] connection state;
-- [ ] data freshness;
-- [ ] environment indicator (always visible);
-- [ ] kill-switch status;
-- [ ] recent alerts.
+- [x] drawdown;
+- [x] exposure;
+- [x] risk-manager decisions;
+- [x] connection state;
+- [x] data freshness;
+- [x] environment indicator (always visible);
+- [x] kill-switch status;
+- [x] recent alerts.
 
 ### 62.2 Monitoring rules
 
-- [ ] The environment (backtest, paper, testnet, real) must be visible at all times.
-- [ ] Alerts must be understandable to a beginner.
-- [ ] Alerts must not depend only on color.
-- [ ] Monitoring must never bypass the risk manager.
+- [x] The environment (backtest, paper, testnet, real) must be visible at all times.
+- [x] Alerts must be understandable to a beginner.
+- [x] Alerts must not depend only on color.
+- [x] Monitoring must never bypass the risk manager.
 
 ### 62.3 Historical comparisons
 
@@ -4261,8 +4261,8 @@ Analyze:
 - [x] drawdown drift. (computed from backtest vs paper)
 - [x] slippage drift. (computed from model vs actual)
 - [x] fill-rate drift. (computed from expected vs actual)
-- [ ] latency drift;
-- [ ] volatility drift;
+- [x] latency drift; (computed by `latency_drift` between expected and actual fill latency)
+- [x] volatility drift; (computed by `volatility_drift` from the two equity curves; also a `volatility` key in `calculate_drift_metrics`)
 - [ ] market-regime changes (see Chapter 46).
 
 ### 63.2 Drift reporting
@@ -4275,8 +4275,8 @@ Analyze:
 
 ### 63.3 Education
 
-- [ ] Explain why backtest, paper, and live results will never match exactly.
-- [ ] Explain which differences are normal and which are warning signs.
+- [x] Explain why backtest, paper, and live results will never match exactly. (covered by `drift_education()`)
+- [x] Explain which differences are normal and which are warning signs. (covered by `drift_education()`)
 
 ---
 

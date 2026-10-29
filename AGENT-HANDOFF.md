@@ -393,9 +393,8 @@ features the code did not ship. Concretely:
    splits both equity curves into slices, and `assess_drift()` returns a
    `StrategyHealth` (healthy / suspicious / degraded) with the reasons, the
    causes and the evidence. The Paper Trading screen renders it. Chapter 63
-   stays `[~]` for two reasons that are *not* this item: "live behavior"
-   needs live trading (chapter 68), and 63.3 (the education text) is still
-   open. Tests: 12 new cases in `tests/test_live_vs_backtest.py`; documented
+   stays `[~]` for one reason that is *not* this item: "live behavior"
+   needs live trading (chapter 68); 63.3 (education text) closed 2026-10-29. Tests: 12 new cases in `tests/test_live_vs_backtest.py`; documented
    in `docs/en/developers/live-vs-backtest-drift.md`.
 4. ~~**Chapters 26.2/27** — a continuous Binance WebSocket feed.~~ **DONE
    2026-10-28.** The client had five real defects, all fixed: `start()`
@@ -441,7 +440,10 @@ features the code did not ship. Concretely:
    real trading. The loop stages still open are 33–35
    (strategies + builder), 37–38 (backtesting + splitting), 40–42
    (metrics/reports/benchmarks), 44–46 (robustness/walk-forward/regime), 57
-   (paper-trading live wiring into the Qt screen), 62–63 (monitoring/health),
+   (paper-trading live wiring into the Qt screen). 62–63 are `[~]` as of
+   2026-10-29: 62.1/62.2 (monitored state + alert rules), 63.1 (latency and
+   volatility drift) and 63.3 (education) are done; only the live-behavior
+   comparison items remain (they need live trading, chapter 68),
    Close these on real-ish data before
    any packaging. (Chapters 67, 64 and 66 - safety gates, failure detection and
    qualification - are [x] as of 2026-10-28.)
