@@ -14,6 +14,20 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **A weekly check of the external URLs.** The offline link checker stops at
+  the repository edge on purpose, so nothing noticed when an outside
+  reference rotted. `tools/check_external_links.py` visits every `http(s)://` URL
+  in the Markdown — skipping fenced blocks, inline code and `example.*` hosts,
+  because two of the URLs here are meant to be unreachable — and classifies
+  what came back. It runs in its own workflow, weekly and on demand, never
+  on a push: a third-party outage must not turn a commit red, and the test
+  job's offline determinism is a documented property. Its first live run
+  showed that HEAD is not trustworthy — `www.workbuddy.ai` answered 404 to
+  HEAD and 200 to GET for the same path — so a doubtful HEAD is now
+  confirmed with a one-byte GET before a link is called broken. 38 URLs: 36
+  ok, 2 accepted through `tools/external_links_allowlist.txt` (SSRN answers
+  403 to every non-browser client, a browser User-Agent included); a 404 is
+  never excused. 30 tests, none of which reach the network.
 - **A checker for the references written inside docstrings.** The suite
   never reads prose and the Markdown link checker never opens a
   docstring, so a rename could leave Sphinx roles (`:class:`, `:func:`)

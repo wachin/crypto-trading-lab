@@ -19,6 +19,8 @@ What it deliberately does not check
 -----------------------------------
 - External URLs (``http://``, ``https://``). This must stay offline: a link
   checker that reaches the network is a bug, exactly like a test that does.
+  ``tools/check_external_links.py`` covers those instead, on a weekly schedule
+  and never as part of this gate.
 - Reference-style links (``[text][label]``), which this repository does not
   use. If one is ever introduced, extend this script rather than trusting it.
 - Whether an image path resolves. Images are assets, not documentation

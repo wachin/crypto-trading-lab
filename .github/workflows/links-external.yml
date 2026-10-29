@@ -1,0 +1,31 @@
+name: links-external
+
+# The only workflow that reaches the network on purpose. It is deliberately
+# not part of tests.yml: a third-party outage must never turn a push red, and
+# the test job's offline determinism is a documented property of this
+# project. This one runs weekly and on demand, and it is the thing that
+# notices when an external reference rots.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Mondays, 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  external-links:
+    name: external links (weekly, network)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: false
+
+      # Standard library only, so there is no virtualenv and no pip install:
+      # the point is to check the links, not to exercise the packaging path.
+      - name: Check external links
+        run: python3 tools/check_external_links.py

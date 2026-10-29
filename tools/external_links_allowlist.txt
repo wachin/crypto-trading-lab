@@ -1,0 +1,13 @@
+# Hosts whose refusal is accepted by tools/check_external_links.py.
+#
+# Format: one host per line, followed by '#' and a short reason. The reason is
+# required: an exemption nobody can explain is how a checker quietly stops
+# checking. An entry only excuses a status that could not be determined
+# (403, 429, 451, 5xx, timeout); a 404 or a host that no longer resolves is
+# always a failure, allowlisted or not.
+#
+# papers.ssrn.com: Cloudflare bot protection answers 403 to every client that
+# is not a real browser session, including one sending a browser User-Agent
+# (checked by hand). The two abstracts cited in afml-techniques.md open
+# normally in a browser.
+papers.ssrn.com  # Cloudflare bot protection, not a dead link

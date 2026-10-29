@@ -15,16 +15,16 @@ A new AI Agent must read this file **before** doing anything else, then
 - **Repository:** `https://github.com/wachin/crypto-trading-lab`
   (branch `main`)
 - **State verified at commit:** the commit that carries this file.
-- **Tests:** 864 passed, 2 skipped, **exit code 0** —
+- **Tests:** 894 passed, 2 skipped, **exit code 0** —
   `QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q`
   (The exit code matters: the suite used to segfault while the interpreter
   shut down, so it printed "passed" and still failed the build. See §5.)
-- **CI:** `tests` is **green on `main`** — run
-  [40796376350](https://github.com/wachin/crypto-trading-lab/actions/runs/40796376350)
-  on commit `77102a2` (2026-10-28) reports 864/2 on `ubuntu-24.04` with pip and
-  carries **no annotations**. The first green run was `38777456963`
-  (2026-10-15); the suite had never passed before it. Do not let a push go red
-  without reading the log.
+- **CI:** `tests` is **green on `main`** — the run for the commit that carries
+  this file reports 894/2 on `ubuntu-24.04` with pip and carries **no
+  annotations**; the history is at
+  [actions/workflows/tests.yml](https://github.com/wachin/crypto-trading-lab/actions/workflows/tests.yml).
+  The first green run was `38777456963` (2026-10-15); the suite had never
+  passed before it. Do not let a push go red without reading the log.
 - **Verified platforms:** Debian 13 (system packages, Python 3.13.5) and
   **Windows 10** (pip/PyPI, Python 3.14.7, 2026-10-01 — clean install, the
   window opens, identical numbers, `ccxt` reaches the network).
@@ -473,7 +473,7 @@ git submodule update --init external/freqtrade
 # 2. Verify the environment:
 python3 --version            # ≥ 3.11 expected (3.13 on record)
 python3 -c "import PyQt6, pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 864 passed, 2 skipped expected
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # 894 passed, 2 skipped expected
 
 # 3. Read in this order:
 #    1. AGENT-HANDOFF.md (this file) — state and next steps
@@ -487,4 +487,4 @@ If the test count differs, stop and report it before changing anything.
 
 ---
 
-*Handoff updated 2026-10-28. Baseline: 864 passed, 2 skipped.*
+*Handoff updated 2026-10-28. Baseline: 894 passed, 2 skipped.*

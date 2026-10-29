@@ -46,7 +46,7 @@ git clone https://github.com/wachin/crypto-trading-lab
 cd crypto-trading-lab
 
 python3 -c "import pyqtgraph, sqlalchemy, platformdirs; print('deps OK')"
-QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # → 864 passed, 2 skipped
+QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q   # → 894 passed, 2 skipped
 PYTHONPATH=src python3 -m crypto_trading_lab            # run the app
 ```
 
@@ -124,6 +124,19 @@ those either — a rename leaves them pointing at nothing.
 resolves both against the AST (no imports, so no optional dependency is
 needed), reports how many references it checked, and fails when it finds
 none, because a scanner that matches nothing is broken too.
+
+The third checker goes the other way and reaches the network:
+`python3 tools/check_external_links.py` visits every
+`http(s)://` URL in the Markdown and reports what came back. It is **not**
+part of the offline gate and never runs on a push — a third-party outage must
+not turn a commit red — so it runs weekly
+(`.github/workflows/links-external.yml`) and on demand. Two
+outcomes fail it: a link that is gone (404/410, or a host that no longer
+resolves) and one whose status could not be determined (403, 429, 5xx,
+timeout). The second kind can be accepted in
+`tools/external_links_allowlist.txt`, one host per line with a reason;
+a 404 is never excused. If your change adds an external link, run the checker
+once by hand before opening the pull request.
 
 ---
 
