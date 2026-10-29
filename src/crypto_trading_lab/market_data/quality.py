@@ -1,6 +1,6 @@
 """Data quality validation and reporting (ROADMAP.md Chapter 29).
 
-Centralizes validation of *historical* datasets. Reuses
+Centralizes validation of *historical* datasets (ROADMAP ch. 29 extended). Reuses
 :func:`crypto_trading_lab.market_data.historical.validate_candles`
 for the mechanical checks (gaps, duplicates, grid alignment) and adds
 the Chapter 29 requirements that module does not cover:
@@ -40,7 +40,20 @@ __all__ = [
     "DataQualityValidator",
     "validate_dataset_quality",
     "create_quality_report",
+    "DatasetProvenance",
+    "SurvivorshipBiasNote",
+    "record_survivorship_bias",
+    "BarType",
+    "BarConstructionInfo",
+    "build_volume_bars",
+    "build_dollar_bars",
+    "build_imbalance_bars",
 ]
+
+#: Default factor beyond which a structural shift in traded volume
+#: (median of the first half vs the second half of a dataset) is flagged
+#: as a liquidity change rather than an ordinary spike.
+DEFAULT_LIQUIDITY_CHANGE_RATIO = Decimal("5")
 
 #: Default factor above/below which a candle's volume is suspicious
 #: relative to the rolling median of its recent neighbours.
@@ -143,12 +156,14 @@ class DataQualityReport:
     dataset_id: str
     version: int
     checksum: str
+    source: str
     symbol: str
     exchange: str
     interval: str
     start_time: Optional[datetime]
     end_time: Optional[datetime]
     candle_count: int
+    survivorship_bias: Optional[SurvivorshipBiasNote] = None
 
     missing_candles: int = 0
     duplicate_candles: int = 0
@@ -199,6 +214,7 @@ class DataQualityReport:
             "dataset_id": self.dataset_id,
             "version": self.version,
             "checksum": self.checksum,
+            "source": self.source,
             "symbol": self.symbol,
             "exchange": self.exchange,
             "interval": self.interval,
@@ -217,6 +233,11 @@ class DataQualityReport:
             "is_frozen": self.is_frozen,
             "volume_anomalies": [a.to_dict() for a in self.volume_anomalies],
             "issues": [i.to_dict() for i in self.issues],
+            "survivorship_bias": (
+                self.survivorship_bias.to_dict()
+                if self.survivorship_bias is not None
+                else None
+            ),
             "validated_at": self.validated_at.isoformat(),
         }
 
@@ -229,6 +250,7 @@ class DataQualityReport:
             dataset_id=str(data["dataset_id"]),
             version=int(data.get("version", 1)),
             checksum=str(data.get("checksum", "")),
+            source=str(data.get("source", "")),
             symbol=str(data["symbol"]),
             exchange=str(data["exchange"]),
             interval=str(data["interval"]),
@@ -247,6 +269,11 @@ class DataQualityReport:
             ),
             issues=tuple(
                 QualityIssue.from_dict(i) for i in data.get("issues", [])
+            ),
+            survivorship_bias=(
+                SurvivorshipBiasNote.from_dict(data["survivorship_bias"])
+                if data.get("survivorship_bias") is not None
+                else None
             ),
             validated_at=(
                 datetime.fromisoformat(validated_at)
@@ -271,6 +298,7 @@ class DataQualityValidator:
         volume_window: int = DEFAULT_VOLUME_WINDOW,
         volume_anomaly_ratio: Decimal = DEFAULT_VOLUME_ANOMALY_RATIO,
         stale_intervals: float = DEFAULT_STALE_INTERVALS,
+        liquidity_change_ratio: Decimal = DEFAULT_LIQUIDITY_CHANGE_RATIO,
     ) -> None:
         if volume_window < 3:
             raise ValueError("volume_window must be at least 3")
@@ -281,6 +309,7 @@ class DataQualityValidator:
         self.volume_window = volume_window
         self.volume_anomaly_ratio = volume_anomaly_ratio
         self.stale_intervals = stale_intervals
+        self.liquidity_change_ratio = liquidity_change_ratio
 
     # -- public API ------------------------------------------------------
 
@@ -294,6 +323,9 @@ class DataQualityValidator:
         dataset_id: str = "",
         version: int = 1,
         checksum: str = "",
+        source: str = "",
+        delisted_assets: set[str] | None = None,
+        survivorship_bias: SurvivorshipBiasNote | None = None,
         expected_end_time: Optional[datetime] = None,
         invalid_count: int = 0,
     ) -> DataQualityReport:
@@ -313,6 +345,8 @@ class DataQualityValidator:
             materialized, interval, expected_end_time, issues
         )
         frozen = self._is_frozen(materialized, issues)
+        check_delisted(symbol, delisted_assets, issues)
+        detect_liquidity_change(materialized, self.liquidity_change_ratio, self.volume_window, issues)
 
         anomalies = tuple(self._detect_volume_anomalies(materialized))
         if anomalies:
@@ -342,6 +376,7 @@ class DataQualityValidator:
             dataset_id=dataset_id,
             version=version,
             checksum=checksum,
+            source=source,
             symbol=symbol,
             exchange=exchange,
             interval=interval,
@@ -356,6 +391,7 @@ class DataQualityValidator:
             is_frozen=frozen,
             volume_anomalies=anomalies,
             issues=tuple(issues),
+            survivorship_bias=survivorship_bias,
         )
 
     # -- internals -------------------------------------------------------
@@ -543,6 +579,8 @@ class DataQualityValidator:
         return anomalies
 
 
+    # delisted-asset and liquidity checks live in module-level functions
+
 def _median(values: list[Decimal]) -> Decimal:
     ordered = sorted(values)
     n = len(ordered)
@@ -564,6 +602,9 @@ def validate_dataset_quality(
     dataset_id: str = "",
     version: int = 1,
     checksum: str = "",
+    source: str = "",
+    delisted_assets: set[str] | None = None,
+    survivorship_bias: SurvivorshipBiasNote | None = None,
     expected_end_time: Optional[datetime] = None,
     invalid_count: int = 0,
 ) -> DataQualityReport:
@@ -576,6 +617,9 @@ def validate_dataset_quality(
         dataset_id=dataset_id,
         version=version,
         checksum=checksum,
+        source=source,
+        delisted_assets=delisted_assets,
+        survivorship_bias=survivorship_bias,
         expected_end_time=expected_end_time,
         invalid_count=invalid_count,
     )
@@ -587,6 +631,9 @@ def create_quality_report(
     dataset_id: str,
     version: int,
     checksum: str,
+    source: str = "",
+    delisted_assets: set[str] | None = None,
+    survivorship_bias: SurvivorshipBiasNote | None = None,
     symbol: str,
     exchange: str,
     interval: str,
@@ -601,5 +648,131 @@ def create_quality_report(
         dataset_id=dataset_id,
         version=version,
         checksum=checksum,
+        source=source,
+        delisted_assets=delisted_assets,
+        survivorship_bias=survivorship_bias,
         invalid_count=invalid_count,
     )
+# ch29 appendix start
+def check_delisted(symbol, delisted_assets, issues):
+    if not delisted_assets:
+        return
+    if symbol in delisted_assets:
+        issues.append(QualityIssue(severity=QualityIssueSeverity.ERROR, code="DELISTED_ASSET", message=("the dataset references a delisted asset (" + symbol + "); historical data may exist but the market is no longer tradable"), details={"delisted_assets": [symbol]}))
+
+def detect_liquidity_change(candles, liquidity_change_ratio, window, issues):
+    needed = window * 2 + 1
+    if not (len(candles) > needed):
+        return
+    volumes = [c.volume for c in candles if c.volume > 0]
+    if not (len(volumes) > 3):
+        return
+    midpoint = len(volumes) // 2
+    first_median = _median(volumes[:midpoint])
+    second_median = _median(volumes[midpoint:])
+    if first_median == 0 or second_median == 0:
+        return
+    hi = max(first_median, second_median)
+    lo = min(first_median, second_median)
+    ratio = hi / lo
+    if not (ratio >= liquidity_change_ratio):
+        return
+    direction = "dropped" if first_median > second_median else "risen"
+    issues.append(QualityIssue(severity=QualityIssueSeverity.WARNING, code="LIQUIDITY_CHANGE", message=("trading volume has materially " + direction + " across the dataset"), details={"first_half_median_volume": str(first_median), "second_half_median_volume": str(second_median), "ratio": str(ratio), "threshold_ratio": str(liquidity_change_ratio)}))
+
+
+@dataclass(frozen=True)
+class DatasetProvenance:
+    dataset_id: str
+    version: int
+    checksum: str
+    source: str = ""
+    exchange: str = ""
+    symbol: str = ""
+    interval: str = ""
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+    def to_dict(self):
+        return {"dataset_id": self.dataset_id, "version": self.version, "checksum": self.checksum, "source": self.source, "exchange": self.exchange, "symbol": self.symbol, "interval": self.interval, "start_time": (self.start_time.isoformat() if self.start_time else None), "end_time": (self.end_time.isoformat() if self.end_time else None)}
+
+    @classmethod
+    def from_dict(cls, data):
+        start = data.get("start_time")
+        end = data.get("end_time")
+        return cls(dataset_id=str(data["dataset_id"]), version=int(data["version"]), checksum=str(data["checksum"]), source=str(data.get("source", "")), exchange=str(data.get("exchange", "")), symbol=str(data.get("symbol", "")), interval=str(data.get("interval", "")), start_time=(datetime.fromisoformat(start) if start else None), end_time=(datetime.fromisoformat(end) if end else None))
+
+    @classmethod
+    def from_dataset_version(cls, version):
+        start = getattr(version, "start", None)
+        end = getattr(version, "end", None)
+        return cls(dataset_id=str(version.dataset_id), version=int(version.version), checksum=str(version.checksum), source=str(getattr(version, "source", "") or ""), exchange=str(version.exchange), symbol=str(version.symbol), interval=str(version.interval), start_time=start, end_time=end)
+
+@dataclass(frozen=True)
+class SurvivorshipBiasNote:
+    kept: tuple
+    excluded: tuple
+    reason: str
+
+    def to_dict(self):
+        return {"kept": list(self.kept), "excluded": list(self.excluded), "reason": self.reason}
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(kept=tuple(data.get("kept", [])), excluded=tuple(data.get("excluded", [])), reason=str(data.get("reason", "")))
+
+def record_survivorship_bias(kept, excluded, reason):
+    return SurvivorshipBiasNote(kept=tuple(kept), excluded=tuple(excluded), reason=reason)
+
+class BarType(str, Enum):
+    TIME = "time"
+    VOLUME = "volume"
+    DOLLAR = "dollar"
+    IMBALANCE = "imbalance"
+
+@dataclass(frozen=True)
+class BarConstructionInfo:
+    bar_type: BarType
+    threshold: Decimal
+    source_interval: str
+    input_candles: int
+    output_bars: int
+    note: str = ""
+
+    def to_dict(self):
+        return {"bar_type": self.bar_type.value, "threshold": str(self.threshold), "source_interval": self.source_interval, "input_candles": self.input_candles, "output_bars": self.output_bars, "note": self.note}
+
+def _aggregate_bars(candles, threshold, value_of):
+    aggregated = []
+    bucket = []
+    running = Decimal(0)
+    for candle in candles:
+        bucket.append(candle)
+        running = running + value_of(candle)
+        if running >= threshold and bucket:
+            first = bucket[0]
+            last = bucket[-1]
+            high = max((c.high for c in bucket), default=first.high)
+            low = min((c.low for c in bucket), default=first.low)
+            volume = sum((c.volume for c in bucket), Decimal(0))
+            aggregated.append(Candle(symbol=first.symbol, interval="event", open_time=first.open_time, close_time=last.close_time, open=first.open, high=high, low=low, close=last.close, volume=volume))
+            bucket = []
+            running = Decimal(0)
+    return aggregated
+
+def build_volume_bars(candles, volume_threshold, source_interval=""):
+    if not (volume_threshold > 0):
+        raise ValueError("volume_threshold must be positive")
+    out = _aggregate_bars(candles, volume_threshold, lambda c: c.volume)
+    info = BarConstructionInfo(bar_type=BarType.VOLUME, threshold=volume_threshold, source_interval=source_interval, input_candles=len(candles), output_bars=len(out), note="volume bars; irregular cadence by design, not a time gap")
+    return out, info
+
+def build_dollar_bars(candles, value_threshold, source_interval=""):
+    if not (value_threshold > 0):
+        raise ValueError("value_threshold must be positive")
+    out = _aggregate_bars(candles, value_threshold, lambda c: c.close * c.volume)
+    info = BarConstructionInfo(bar_type=BarType.DOLLAR, threshold=value_threshold, source_interval=source_interval, input_candles=len(candles), output_bars=len(out), note="dollar bars; irregular cadence by design, not a time gap")
+    return out, info
+
+def build_imbalance_bars(candles, *args, **kwargs):
+    raise DataQualityError("imbalance bars require trade-level data, which candle aggregates do not provide; not supported")

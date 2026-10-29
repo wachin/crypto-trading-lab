@@ -14,6 +14,17 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
 
 ### Added
 
+- **Chapter 29 (data quality management) closed.** `market_data/quality.py`
+  now flags delisted assets (`DELISTED_ASSET`), detects structural liquidity
+  changes (`LIQUIDITY_CHANGE`), records an explicit survivorship-bias note
+  when composing datasets, and exposes `DatasetProvenance` so every research
+  result records the exact dataset id, version and checksum. The optional
+  research bar types (29.1) gained volume and dollar bars (`build_volume_bars`
+  / `build_dollar_bars`); imbalance bars stay unsupported because candle
+  aggregates lack trade-level pressure. `BacktestResult` now carries
+  `dataset_id` / `dataset_version` / `dataset_checksum`, wired through
+  `run_backtest_file`.
+
 - **A weekly check of the external URLs.** The offline link checker stops at
   the repository edge on purpose, so nothing noticed when an outside
   reference rotted. `tools/check_external_links.py` visits every `http(s)://` URL

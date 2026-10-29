@@ -135,7 +135,7 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 26 | [~] | 36 | 6 | No | Market-data sources and exchange adapters |
 | 27 | [x] | 22 | 0 | No | Connection state management |
 | 28 | [~] | 19 | 1 | No | Data import |
-| 29 | [ ] | 0 | 23 | No | Data quality management |
+| 29 | [~] | 22 | 1 | Imbalance bars (29.1) need trade-level data; not supported | Data quality management |
 | 30 | [~] | 14 | 11 | No | Market precision and exchange rules |
 | 31 | [~] | 23 | 6 | No | Technical indicators |
 | 32 | [~] | 18 | 16 | No | Financial charts |
@@ -1934,35 +1934,35 @@ Market data quality is a research prerequisite, not an afterthought.
 
 The system must support:
 
-- [ ] dataset identity and versioning (dataset ID, dataset version, source, exchange, pair, interval, time range);
-- [ ] dataset checksums for reproducibility (see Chapter 53);
-- [ ] validation on import and on storage (see Chapter 28);
-- [ ] detection of gaps and missing candles;
-- [ ] detection of duplicate candles;
-- [ ] detection of out-of-order timestamps;
-- [ ] detection of invalid OHLCV values;
-- [ ] detection of stale or frozen data;
-- [ ] detection of suspicious volume anomalies where data allows;
-- [ ] handling of delisted assets where historical data is available;
-- [ ] handling of changes in market liquidity where historical data is available;
-- [ ] explicit handling of survivorship bias when composing datasets;
-- [ ] a visible data-quality report per dataset;
-- [ ] warnings when a dataset is incomplete for the requested analysis.
+- [x] dataset identity and versioning (dataset ID, dataset version, source, exchange, pair, interval, time range);
+- [x] dataset checksums for reproducibility (see Chapter 53);
+- [x] validation on import and on storage (see Chapter 28);
+- [x] detection of gaps and missing candles;
+- [x] detection of duplicate candles;
+- [x] detection of out-of-order timestamps;
+- [x] detection of invalid OHLCV values;
+- [x] detection of stale or frozen data;
+- [x] detection of suspicious volume anomalies where data allows;
+- [x] handling of delisted assets where historical data is available;
+- [x] handling of changes in market liquidity where historical data is available;
+- [x] explicit handling of survivorship bias when composing datasets;
+- [x] a visible data-quality report per dataset;
+- [x] warnings when a dataset is incomplete for the requested analysis.
 
-- [ ] Every research result must record the exact dataset version and checksum used (see Chapters 38, 52, and 53).
-- [ ] The application must never silently fill missing candles in a way that could affect research conclusions; any filling policy must be explicit, documented, and recorded.
+- [x] Every research result must record the exact dataset version and checksum used (see Chapters 38, 52, and 53).
+- [x] The application must never silently fill missing candles in a way that could affect research conclusions; any filling policy must be explicit, documented, and recorded.
 
 ### 29.1 Advanced bar types (research)
 
 Beyond time-based candles, the system may support event-based bars for research (see 49.1):
 
-- [ ] volume bars (a new bar after a fixed amount of volume);
-- [ ] dollar bars (a new bar after a fixed traded value);
+- [x] volume bars (a new bar after a fixed amount of volume);
+- [x] dollar bars (a new bar after a fixed traded value);
 - [ ] imbalance bars where the data source provides trade-level data;
-- [ ] every bar type must be a first-class dataset with its own ID, version, and checksum;
-- [ ] bar construction must record its thresholds and parameters;
-- [ ] event-based bars must be clearly distinguishable from time candles in the UI and the database;
-- [ ] missing-data policies for event-based bars must be explicit (their cadence is irregular by design and must not be treated as gaps in a time series).
+- [x] every bar type must be a first-class dataset with its own ID, version, and checksum;
+- [x] bar construction must record its thresholds and parameters;
+- [x] event-based bars must be clearly distinguishable from time candles in the UI and the database;
+- [x] missing-data policies for event-based bars must be explicit (their cadence is irregular by design and must not be treated as gaps in a time series).
 
 ---
 

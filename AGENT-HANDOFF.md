@@ -438,13 +438,17 @@ features the code did not ship. Concretely:
    get data → form an idea → write a hypothesis → backtest → analyse →
    try to refute it → OOS / walk-forward → robustness → paper trading →
    qualification → testnet → evidence-of-edge gate → (only then) consider
-   real trading. The loop stages still open are ch. 29 (data quality), 33–35
+   real trading. The loop stages still open are 33–35
    (strategies + builder), 37–38 (backtesting + splitting), 40–42
    (metrics/reports/benchmarks), 44–46 (robustness/walk-forward/regime), 57
    (paper-trading live wiring into the Qt screen), 62–63 (monitoring/health),
    Close these on real-ish data before
    any packaging. (Chapters 67, 64 and 66 - safety gates, failure detection and
    qualification - are [x] as of 2026-10-28.)
+   Chapter 29 (data quality) is [~] as of 2026-10-29: delisted-asset,
+   liquidity-change and survivorship-bias checks plus dataset provenance
+   are done; imbalance bars (29.1) stay unsupported without trade-level
+   data.
 6. **Chapter 48 — machine learning** is part of the loop's refute/robustness
    stage but deliberately unbuilt; it needs a dependency decision first
    (chapter 4) before any code, so it follows the loop stages that need no new

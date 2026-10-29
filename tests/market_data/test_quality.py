@@ -18,6 +18,14 @@ from crypto_trading_lab.market_data.quality import (
     QualityIssueSeverity,
     create_quality_report,
     validate_dataset_quality,
+    DatasetProvenance,
+    SurvivorshipBiasNote,
+    record_survivorship_bias,
+    BarType,
+    build_volume_bars,
+    build_dollar_bars,
+    build_imbalance_bars,
+    DataQualityError,
 )
 
 HOUR = timedelta(hours=1)
@@ -273,3 +281,58 @@ def test_report_survives_a_dict_round_trip():
     assert restored.to_dict() == original.to_dict()
     assert restored.volume_anomalies == original.volume_anomalies
     assert restored.issues == original.issues
+
+class TestChapter29Extensions:
+    def test_delisted_asset_is_error(self):
+        candles = _candles(10)
+        report = validate_dataset_quality(candles, delisted_assets={"BTC/USDT"}, **VALIDATION_KWARGS)
+        codes = [i.code for i in report.issues]
+        assert "DELISTED_ASSET" in codes
+        assert report.has_errors
+
+    def test_no_delisted_asset_is_clean(self):
+        candles = _candles(10)
+        report = validate_dataset_quality(candles, **VALIDATION_KWARGS)
+        assert not any(i.code == "DELISTED_ASSET" for i in report.issues)
+
+    def test_liquidity_change_warning(self):
+        vols = ["100"] * 25 + ["1"] * 25
+        candles = _candles(50, volumes=vols)
+        report = validate_dataset_quality(candles, **VALIDATION_KWARGS)
+        assert any(i.code == "LIQUIDITY_CHANGE" for i in report.issues)
+
+    def test_provenance_round_trip(self):
+        p = DatasetProvenance(dataset_id="d1", version=2, checksum="c1", exchange="binance", symbol="BTC/USDT", interval="1h")
+        d = p.to_dict()
+        p2 = DatasetProvenance.from_dict(d)
+        assert p2.dataset_id == "d1" and p2.checksum == "c1"
+
+    def test_survivorship_note_round_trip(self):
+        note = record_survivorship_bias(["BTC", "ETH"], ["XRP"], "delisted")
+        d = note.to_dict()
+        note2 = SurvivorshipBiasNote.from_dict(d)
+        assert note2.excluded == ("XRP",)
+
+    def test_survivorship_attached_to_report(self):
+        note = record_survivorship_bias(["BTC"], [], "kept only")
+        report = validate_dataset_quality(candles=_candles(10), survivorship_bias=note, **VALIDATION_KWARGS)
+        assert report.survivorship_bias is not None
+        assert report.survivorship_bias.excluded == ()
+
+    def test_volume_bars(self):
+        candles = _candles(20, volume="5")
+        bars, info = build_volume_bars(candles, Decimal("50"))
+        assert info.bar_type is BarType.VOLUME
+        assert len(bars) == 2
+        assert info.output_bars == 2
+
+    def test_dollar_bars(self):
+        candles = _candles(20, volume="5")
+        bars, info = build_dollar_bars(candles, Decimal("5000"))
+        assert info.bar_type is BarType.DOLLAR
+        assert len(bars) == 2
+
+    def test_imbalance_bars_unsupported(self):
+        candles = _candles(10)
+        with pytest.raises(DataQualityError):
+            build_imbalance_bars(candles)

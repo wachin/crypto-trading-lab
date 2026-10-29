@@ -337,3 +337,11 @@ def test_position_fraction_out_of_range_is_rejected(fraction):
             BuyAndHoldStrategy(),
             BacktestConfig(position_fraction=fraction),
         )
+
+def test_dataset_provenance_recorded():
+    from crypto_trading_lab.market_data.quality import DatasetProvenance
+    prov = DatasetProvenance(dataset_id="d9", version=4, checksum="chk")
+    result = run_backtest(_candles([100, 101, 102]), BuyAndHoldStrategy(), dataset=prov)
+    assert result.dataset_id == "d9"
+    assert result.dataset_checksum == "chk"
+    assert result.dataset_version == 4

@@ -446,6 +446,7 @@ def run_backtest_file(
         make_session_factory,
     )
     from crypto_trading_lab.strategy_registry import StrategyRegistry
+    from crypto_trading_lab.market_data.quality import DatasetProvenance
 
     payload = load_config_file(config_path)
     strategy_id = payload.get("strategy")
@@ -591,16 +592,16 @@ def run_backtest_file(
             "Import a CSV first, or widen the symbol/interval filters."
         )
 
-    result = run_backtest(candles, strategy, config)
+    result = run_backtest(candles, strategy, config, dataset=(DatasetProvenance.from_dataset_version(dataset) if dataset is not None else None))
 
     benchmark_name = str(payload.get("benchmark", "buy_and_hold")).lower()
     benchmark_result: BacktestResult | None
     if benchmark_name in ("none", "null", "off"):
         benchmark_result = None
     elif benchmark_name in ("buy_and_hold", "buy-and-hold", "hold"):
-        benchmark_result = run_backtest(candles, BuyAndHoldStrategy(), config)
+        benchmark_result = run_backtest(candles, BuyAndHoldStrategy(), config, dataset=(DatasetProvenance.from_dataset_version(dataset) if dataset is not None else None))
     elif benchmark_name in ("null_strategy", "null-strategy"):
-        benchmark_result = run_backtest(candles, NullStrategy(), config)
+        benchmark_result = run_backtest(candles, NullStrategy(), config, dataset=(DatasetProvenance.from_dataset_version(dataset) if dataset is not None else None))
     else:
         raise ApplicationError(
             f"unknown benchmark {benchmark_name!r}; use buy_and_hold, "

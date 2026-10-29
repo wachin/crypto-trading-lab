@@ -288,7 +288,9 @@ class BacktestResult:
     partial_fills: int = 0
     # Reproducibility records (ROADMAP 37.9).
     strategy_version: str = "unknown"
+    dataset_id: str = "unknown"
     dataset_version: str = "unknown"
+    dataset_checksum: str = "unknown"
     dataset_period: str = ""
     #: Interval of the candles this run consumed (``1m``, ``1d``, ``1M``).
     #: Chapter 40 needs it to annualize: a year is 12 monthly candles, not
@@ -446,6 +448,7 @@ def run_backtest(
     candles: Sequence[Candle],
     strategy: Strategy,
     config: BacktestConfig | None = None,
+    dataset: "DatasetProvenance | None" = None,
 ) -> BacktestResult:
     """Run one deterministic backtest (chapter 37).
 
@@ -639,7 +642,9 @@ def run_backtest(
         strategy_version=str(getattr(strategy, "version", "unknown")),
         # Chapter 53 (experiment tracking) does not exist yet, so
         # datasets are honestly recorded as unversioned.
-        dataset_version="unversioned (experiment tracking pending, ch. 53)",
+        dataset_id=(dataset.dataset_id if dataset is not None else "unknown"),
+        dataset_version=(dataset.version if dataset is not None else "unversioned (experiment tracking pending, ch. 53)"),
+        dataset_checksum=(dataset.checksum if dataset is not None else "unknown"),
         dataset_period=(
             f"{candles[0].open_time.isoformat()} to "
             f"{candles[-1].close_time.isoformat()}"
