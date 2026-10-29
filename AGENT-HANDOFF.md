@@ -438,7 +438,7 @@ features the code did not ship. Concretely:
    try to refute it → OOS / walk-forward → robustness → paper trading →
    qualification → testnet → evidence-of-edge gate → (only then) consider
    real trading. The loop stages still open are 33–35
-   (strategies + builder), 37–38 (backtesting + splitting), 40–42
+   (strategies + builder; 33 initial strategies 2/3/4/6 done 2026-10-29, 33.1-33.9 still open), 37–38 (backtesting + splitting), 40–42
    (metrics/reports/benchmarks), 44–46 (robustness/walk-forward/regime), 57
    (paper-trading live wiring into the Qt screen). 62–63 are `[~]` as of
    2026-10-29: 62.1/62.2 (monitored state + alert rules), 63.1 (latency and

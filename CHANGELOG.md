@@ -39,6 +39,8 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   match exactly and which gaps are normal versus warning signs. Neither
   monitoring nor drift assessment ever touches the risk manager.
 
+- **Chapter 33 initial strategies completed (items 2/3/4).** Added three educational strategies to `backtesting/engine.py` and registered them in `strategy_registry.py` (ids `rsi`, `breakout`, `bollinger`): `RSIStrategy` (Wilder RSI crossing the oversold/overbought levels, with optional volume and trend SMA filters and a post-exit cooldown), `RollingHighLowBreakoutStrategy` (buys a close above the rolling `period`-bar high, exits on a break below the rolling low), and `BollingerBandsMeanReversionStrategy` (buys a close crossing into the lower band, sells on recovery to the middle band). All follow the chapter-33 architecture: they emit `OrderSide` signals consumed by the engine, never touch the exchange, the risk manager, or credentials. `NullStrategy` (item 6) is also now marked done. New tests in `tests/backtesting/test_strategies_33.py` (13 cases); full suite passes.
+
 - **A weekly check of the external URLs.** The offline link checker stops at
   the repository edge on purpose, so nothing noticed when an outside
   reference rotted. `tools/check_external_links.py` visits every `http(s)://` URL

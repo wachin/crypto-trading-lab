@@ -70,7 +70,7 @@ class StrategyRegistry:
     def _load_builtin_strategies(self) -> None:
         """Register built-in strategies."""
         from crypto_trading_lab.backtesting.engine import (
-            MACrossoverStrategy, BuyAndHoldStrategy, NullStrategy
+            MACrossoverStrategy, BuyAndHoldStrategy, NullStrategy, RSIStrategy, RollingHighLowBreakoutStrategy, BollingerBandsMeanReversionStrategy
         )
 
         builtins = [
@@ -80,6 +80,9 @@ class StrategyRegistry:
             }, "Moving Average Crossover Strategy", "Built-in"),
             ("buy_and_hold", BuyAndHoldStrategy, {}, "Buy and Hold Strategy", "Built-in"),
             ("null_strategy", NullStrategy, {}, "Null Strategy (never trades)", "Built-in"),
+            ("rsi", RSIStrategy, {"period": {"type": "int", "min": 1, "max": 200, "default": 14, "description": "RSI period"}, "oversold": {"type": "int", "min": 1, "max": 99, "default": 30, "description": "Oversold level"}, "overbought": {"type": "int", "min": 2, "max": 99, "default": 70, "description": "Overbought level"}, "volume_filter_period": {"type": "int", "min": 0, "max": 200, "default": 0, "description": "Volume-filter SMA period (0 disables)"}, "trend_filter_period": {"type": "int", "min": 0, "max": 500, "default": 0, "description": "Trend-filter SMA period (0 disables)"}, "cooldown": {"type": "int", "min": 0, "max": 500, "default": 0, "description": "Candles to wait after an exit"}}, "RSI Strategy (configurable filters)", "Built-in"),
+            ("breakout", RollingHighLowBreakoutStrategy, {"period": {"type": "int", "min": 2, "max": 500, "default": 20, "description": "Lookback bars for the rolling range"}}, "Rolling High/Low Breakout Strategy", "Built-in"),
+            ("bollinger", BollingerBandsMeanReversionStrategy, {"period": {"type": "int", "min": 1, "max": 500, "default": 20, "description": "Bollinger SMA period"}, "k": {"type": "int", "min": 1, "max": 10, "default": 2, "description": "Number of standard deviations"}}, "Bollinger Bands Mean Reversion Strategy", "Built-in"),
         ]
 
         for strategy_id, factory, params, desc, author in builtins:

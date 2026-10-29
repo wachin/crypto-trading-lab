@@ -139,7 +139,7 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 30 | [~] | 14 | 11 | No | Market precision and exchange rules |
 | 31 | [~] | 23 | 6 | No | Technical indicators |
 | 32 | [~] | 18 | 16 | No | Financial charts |
-| 33 | [~] | 2 | 84 | No | Strategies |
+| 33 | [~] | 6 | 80 | No | Strategies |
 | 34 | [ ] | 0 | 24 | No | Visual strategy builder |
 | 35 | [ ] | 0 | 12 | No | Strategy complexity control |
 | 36 | [~] | 4 | 15 | No | Strategy registry |
@@ -2107,11 +2107,11 @@ The purpose of a strategy is to define **when a trading signal should be generat
 Initial strategies:
 
 * [x] 1. Moving-average crossover.
-* [ ] 2. RSI with configurable filters.
-* [ ] 3. Rolling high/low breakout.
-* [ ] 4. Bollinger Bands mean reversion as an educational example.
+* [x] 2. RSI with configurable filters.
+* [x] 3. Rolling high/low breakout.
+* [x] 4. Bollinger Bands mean reversion as an educational example.
 * [x] 5. Buy-and-hold benchmark.
-* [ ] 6. Null strategy that never trades.
+* [x] 6. Null strategy that never trades.
 
 Each strategy must declare:
 

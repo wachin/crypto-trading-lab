@@ -29,7 +29,10 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Protocol, Sequence
 
+from collections import deque
+
 from crypto_trading_lab.domain.models import Candle, OrderSide
+from crypto_trading_lab.indicators.library import RSI
 from crypto_trading_lab.execution_realism import (
     ExecutionConfig,
     FillType,
@@ -651,3 +654,194 @@ def run_backtest(
         ),
         interval=candles[0].interval,
     )
+
+@dataclass
+class RSIStrategy:
+    """RSI with configurable filters (chapter 33, strategy 2).
+
+    Buys when RSI crosses down through the oversold level (with optional
+    volume and trend filters) and sells when it crosses up through the
+    overbought level. Signals are emitted at the close and filled at the
+    next open, like every other strategy in this engine.
+    """
+
+    period: int = 14
+    oversold: int = 30
+    overbought: int = 70
+    volume_filter_period: int = 0
+    trend_filter_period: int = 0
+    cooldown: int = 0
+    version: str = "1.0.0"
+
+    def __post_init__(self) -> None:
+        if self.period < 1:
+            raise ValueError("period must be at least 1")
+        if not (0 < self.oversold < self.overbought < 100):
+            raise ValueError("need 0 < oversold < overbought < 100")
+        if self.volume_filter_period < 0:
+            raise ValueError("volume_filter_period must be non-negative")
+        if self.trend_filter_period < 0:
+            raise ValueError("trend_filter_period must be non-negative")
+        if self.cooldown < 0:
+            raise ValueError("cooldown must be non-negative")
+        self._rsi: tuple = ()
+        self._cooldown_remaining: int = 0
+
+    @property
+    def name(self) -> str:
+        return f"RSI({self.period}) {self.oversold}/{self.overbought}"
+
+    @property
+    def warmup_candles(self) -> int:
+        return self.period + 1
+
+    def _series(self, candles):
+        if len(self._rsi) != len(candles):
+            self._rsi = RSI(self.period).compute(candles).values
+        return self._rsi
+
+    def _volume_ok(self, index, candles) -> bool:
+        p = self.volume_filter_period
+        if index < p - 1:
+            return False
+        window = candles[index - p + 1: index + 1]
+        vols = [c.volume for c in window]
+        if any(v is None for v in vols):
+            return False
+        average = sum(vols, Decimal(0)) / Decimal(p)
+        return candles[index].volume > average
+
+    def _trend_ok(self, index, candles) -> bool:
+        p = self.trend_filter_period
+        if index < p - 1:
+            return False
+        window = candles[index - p + 1: index + 1]
+        closes = [c.close for c in window]
+        average = sum(closes, Decimal(0)) / Decimal(p)
+        return candles[index].close > average
+
+    def on_candle(self, index, candles):
+        values = self._series(candles)
+        value = values[index]
+        if value is None:
+            return None
+        if self._cooldown_remaining > 0:
+            self._cooldown_remaining -= 1
+        if self.volume_filter_period > 0 and not self._volume_ok(index, candles):
+            return None
+        if self.trend_filter_period > 0 and not self._trend_ok(index, candles):
+            return None
+        if index >= 1 and values[index - 1] is not None:
+            prev = values[index - 1]
+            if prev > self.oversold and value <= self.oversold:
+                if self._cooldown_remaining == 0:
+                    return OrderSide.BUY
+            if prev < self.overbought and value >= self.overbought:
+                self._cooldown_remaining = self.cooldown
+                return OrderSide.SELL
+        elif value >= self.overbought:
+            self._cooldown_remaining = self.cooldown
+            return OrderSide.SELL
+        return None
+
+@dataclass
+class RollingHighLowBreakoutStrategy:
+    """Rolling high/low breakout (chapter 33, strategy 3).
+
+    Buys when the close breaks above the highest high of the last
+    ``period`` bars (a breakout) and exits the long when the close breaks
+    below the lowest low of that window (a breakdown). Educational
+    trend-following exit; the engine closes the position on the SELL
+    signal.
+    """
+
+    period: int = 20
+    version: str = "1.0.0"
+
+    def __post_init__(self) -> None:
+        if self.period < 2:
+            raise ValueError("period must be at least 2")
+        self._highs: deque = deque(maxlen=self.period)
+        self._lows: deque = deque(maxlen=self.period)
+
+    @property
+    def name(self) -> str:
+        return f"Rolling {self.period}-bar high/low breakout"
+
+    @property
+    def warmup_candles(self) -> int:
+        return self.period + 1
+
+    def on_candle(self, index, candles):
+        candle = candles[index]
+        if len(self._highs) < self.period:
+            self._highs.append(candle.high)
+            self._lows.append(candle.low)
+            return None
+        rolling_high = max(self._highs)
+        rolling_low = min(self._lows)
+        if candle.close > rolling_high:
+            self._highs.append(candle.high)
+            self._lows.append(candle.low)
+            return OrderSide.BUY
+        if candle.close < rolling_low:
+            self._highs.append(candle.high)
+            self._lows.append(candle.low)
+            return OrderSide.SELL
+        self._highs.append(candle.high)
+        self._lows.append(candle.low)
+        return None
+
+
+@dataclass
+class BollingerBandsMeanReversionStrategy:
+    """Bollinger Bands mean reversion (chapter 33, strategy 4).
+
+    Buys when the close crosses down into the lower band (price stretched
+    below the mean) and sells when it crosses back up to the middle band
+    (the mean). An educational mean-reversion example; the engine handles
+    entry and exit from the BUY/SELL signals.
+    """
+
+    period: int = 20
+    k: int = 2
+    version: str = "1.0.0"
+
+    def __post_init__(self) -> None:
+        if self.period < 1:
+            raise ValueError("period must be at least 1")
+        if self.k <= 0:
+            raise ValueError("k must be positive")
+        self._closes: deque = deque(maxlen=self.period)
+
+    @property
+    def name(self) -> str:
+        return f"Bollinger({self.period},{self.k}) mean reversion"
+
+    @property
+    def warmup_candles(self) -> int:
+        return self.period
+
+    def on_candle(self, index, candles):
+        close = candles[index].close
+        self._closes.append(close)
+        if len(self._closes) < self.period:
+            return None
+        n = Decimal(self.period)
+        mean = sum(self._closes, Decimal(0)) / n
+        variance = sum((c * c for c in self._closes), Decimal(0)) / n - mean * mean
+        if variance < 0:
+            variance = Decimal(0)
+        stdev = variance.sqrt()
+        lower = mean - Decimal(self.k) * stdev
+        middle = mean
+        if index >= 1:
+            prev_close = candles[index - 1].close
+            if prev_close > lower and close <= lower:
+                return OrderSide.BUY
+            if prev_close < middle and close >= middle:
+                return OrderSide.SELL
+        elif close >= middle:
+            return OrderSide.SELL
+        return None
+
