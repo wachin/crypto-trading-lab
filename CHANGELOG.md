@@ -422,6 +422,22 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   installed, so the chapter-41 export test runs instead of skipping).
 
 ### Fixed
+- **`create_order` rejected every order it was given.** `_validate_order_request`
+  accepted an optional `market`, but `create_order` never passed one, and
+  the guard `if request.symbol != market.symbol if market else True:`
+  parses as `(request.symbol != market.symbol) if market else True` — with
+  `market=None` it is always true, so every order raised
+  `AdapterInvalidOrder("symbol does not match market")`. `create_order` now
+  resolves the market from `exchangeInfo` (fetched once, then cached on the
+  adapter) and validates against it, so the tick-size, step-size,
+  minimum-quantity and minimum-notional checks chapter 30 asks for actually
+  run. Two more defects sat on the same path: a market order was rejected
+  for having no price to compare the minimum order value against (it now
+  leaves that check to the exchange), and step/tick precision was parsed
+  with `int("0.00001000".split('.')[-1])`, which reads Binance's padded
+  `0.00001000` as 1000 — `_decimal_places` normalizes the value first. The
+  old behaviour failed closed, so no order was ever sent; chapter 68 was
+  blocked on it.
 - **A re-import could silently drop a candle of another interval.**
   `CandleRepository.save_candles(replace=False)` built its "already
   stored" set from the first candle's interval but keyed it by

@@ -1,13 +1,29 @@
 """Tests for Binance adapter (ROADMAP chapters 26.2, 26)."""
 
-import pytest
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from crypto_trading_lab.exchanges.binance.adapter import BinanceRestAdapter
+import pytest
+
+from crypto_trading_lab.exchanges.binance.adapter import (
+    BinanceRestAdapter,
+    _decimal_places,
+)
 from crypto_trading_lab.exchanges.binance.config import BINANCE_SPOT_TESTNET_ENDPOINTS
-from crypto_trading_lab.domain.models import ConnectionState, Symbol
+from crypto_trading_lab.domain.models import (
+    ConnectionState,
+    Market,
+    OrderRequest,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    Symbol,
+)
 from crypto_trading_lab.exchanges.base.adapter import Capability
-from crypto_trading_lab.exchanges.errors import AdapterNotSupported
+from crypto_trading_lab.exchanges.errors import (
+    AdapterInvalidOrder,
+    AdapterNotSupported,
+)
 
 
 class TestBinanceRestAdapter:
@@ -160,3 +176,177 @@ def test_candle_parsing():
         assert candles[0].symbol == Symbol('BTC/USDT')
         assert candles[0].open == 50000
         assert candles[0].close == 50500
+
+
+# Realistic exchangeInfo: Binance pads step and tick values with zeros.
+EXCHANGE_INFO = {
+    "symbols": [
+        {
+            "symbol": "BTCUSDT",
+            "baseAsset": "BTC",
+            "quoteAsset": "USDT",
+            "status": "TRADING",
+            "filters": [
+                {"filterType": "PRICE_FILTER", "tickSize": "0.01000000"},
+                {
+                    "filterType": "LOT_SIZE",
+                    "minQty": "0.00001000",
+                    "stepSize": "0.00001000",
+                },
+                {"filterType": "MIN_NOTIONAL", "minNotional": "10.00000000"},
+            ],
+        }
+    ]
+}
+
+
+def _trading_adapter():
+    return BinanceRestAdapter(
+        BINANCE_SPOT_TESTNET_ENDPOINTS,
+        allow_trading=True,
+        api_key="test_key",
+        api_secret="test_secret",
+    )
+
+
+def _order_response(**overrides):
+    data = {
+        "orderId": 42,
+        "symbol": "BTCUSDT",
+        "side": "BUY",
+        "type": "LIMIT",
+        "status": "NEW",
+        "origQty": "0.001",
+        "executedQty": "0",
+        "price": "50000.00",
+        "time": 1700000000000,
+    }
+    data.update(overrides)
+    return data
+
+
+def _limit_request(**overrides):
+    data = {
+        "symbol": Symbol("BTC/USDT"),
+        "side": OrderSide.BUY,
+        "order_type": OrderType.LIMIT,
+        "quantity": Decimal("0.001"),
+        "price": Decimal("50000.00"),
+    }
+    data.update(overrides)
+    return OrderRequest(**data)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [("0.01000000", 2), ("0.00001000", 5), ("1.00000000", 0), ("0.5", 1)],
+)
+def test_decimal_places_of_a_step(text, expected):
+    assert _decimal_places(text) == expected
+
+
+def test_market_precision_comes_from_the_step_and_tick():
+    adapter = BinanceRestAdapter(BINANCE_SPOT_TESTNET_ENDPOINTS)
+    with patch.object(adapter, "_make_request", return_value=EXCHANGE_INFO):
+        market = adapter.fetch_markets()[0]
+
+    assert market.quantity_precision == 5
+    assert market.price_precision == 2
+
+
+def test_create_order_sends_a_valid_limit_order():
+    adapter = _trading_adapter()
+    with patch.object(adapter, "_make_request", return_value=EXCHANGE_INFO), patch.object(
+        adapter, "_make_signed_request", return_value=_order_response()
+    ) as signed:
+        result = adapter.create_order(_limit_request())
+
+    assert result.adapter_order_id == "42"
+    assert result.status is OrderStatus.OPEN
+    path, params = signed.call_args[0]
+    assert path == "/api/v3/order"
+    assert signed.call_args[1]["method"] == "POST"
+    assert params["symbol"] == "BTCUSDT"
+    assert params["quantity"] == "0.001"
+    assert params["price"] == "50000.00"
+    assert params["timeInForce"] == "GTC"
+
+
+def test_create_order_accepts_a_market_order_without_a_price():
+    # Regression: validation used to reject every market order with
+    # "cannot check minimum order value without a price".
+    adapter = _trading_adapter()
+    request = OrderRequest(
+        symbol=Symbol("BTC/USDT"),
+        side=OrderSide.BUY,
+        order_type=OrderType.MARKET,
+        quantity=Decimal("0.001"),
+    )
+    with patch.object(adapter, "_make_request", return_value=EXCHANGE_INFO), patch.object(
+        adapter,
+        "_make_signed_request",
+        return_value=_order_response(type="MARKET", price="0"),
+    ) as signed:
+        result = adapter.create_order(request)
+
+    assert result.adapter_order_id == "42"
+    assert "price" not in signed.call_args[0][1]
+
+
+def test_create_order_rejects_a_quantity_below_the_minimum():
+    adapter = _trading_adapter()
+    with patch.object(adapter, "_make_request", return_value=EXCHANGE_INFO), patch.object(
+        adapter, "_make_signed_request"
+    ) as signed:
+        with pytest.raises(AdapterInvalidOrder, match="below minimum"):
+            adapter.create_order(_limit_request(quantity=Decimal("0.000001")))
+
+    signed.assert_not_called()
+
+
+def test_create_order_rejects_a_symbol_the_exchange_does_not_list():
+    adapter = _trading_adapter()
+    with patch.object(adapter, "_make_request", return_value=EXCHANGE_INFO), patch.object(
+        adapter, "_make_signed_request"
+    ) as signed:
+        with pytest.raises(AdapterInvalidOrder, match="not a trading market"):
+            adapter.create_order(_limit_request(symbol=Symbol("ETH/USDT")))
+
+    signed.assert_not_called()
+
+
+def test_market_metadata_is_fetched_once_across_orders():
+    adapter = _trading_adapter()
+    with patch.object(
+        adapter, "_make_request", return_value=EXCHANGE_INFO
+    ) as info, patch.object(
+        adapter, "_make_signed_request", return_value=_order_response()
+    ):
+        adapter.create_order(_limit_request())
+        adapter.create_order(_limit_request())
+
+    assert info.call_count == 1
+
+
+def _market(symbol="BTC/USDT"):
+    return Market(
+        exchange="binance",
+        symbol=Symbol(symbol),
+        base=symbol.split("/")[0],
+        quote=symbol.split("/")[1],
+        price_precision=2,
+        quantity_precision=3,
+        min_quantity=Decimal("0.001"),
+        min_notional=Decimal("10"),
+    )
+
+
+def test_validate_order_request_accepts_a_matching_market():
+    adapter = _trading_adapter()
+    adapter._validate_order_request(_limit_request(), _market())
+
+
+def test_validate_order_request_rejects_a_mismatched_symbol():
+    adapter = _trading_adapter()
+    with pytest.raises(AdapterInvalidOrder, match="symbol does not match"):
+        adapter._validate_order_request(_limit_request(), _market("ETH/USDT"))

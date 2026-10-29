@@ -69,6 +69,18 @@ from crypto_trading_lab.exchanges.feed_health import FeedHealthRecord, FeedHealt
 logger = logging.getLogger(__name__)
 
 
+def _decimal_places(text: str) -> int:
+    """Decimal places of an exchange step/tick string.
+
+    Binance sends values such as ``"0.00001000"``. Counting the digits
+    after the point would answer 8, and ``int()`` on them answers 1000;
+    neither is the step. Normalizing first gives the step's own
+    precision, because trailing zeros do not constrain an order.
+    """
+    exponent = Decimal(text).normalize().as_tuple().exponent
+    return max(0, -int(exponent))
+
+
 # Retry helper with exponential backoff and jitter (ROADMAP chapter 27)
 # Transient errors that should trigger a retry
 _TRANSIENT_ERRORS = (
@@ -183,6 +195,11 @@ class BinanceRestAdapter(ExchangeAdapter):
         # API credentials for authenticated requests
         self._api_key = api_key
         self._api_secret = api_secret
+
+        # Market metadata cache (chapter 30): filled by fetch_markets()
+        # and read by create_order(), so pre-trade validation does not
+        # spend a REST round trip on every order.
+        self._markets: dict[Symbol, Market] = {}
         
         # Feed health persistence (optional; enabled when path provided)
         self._health_store_path = health_store_path
@@ -442,9 +459,9 @@ class BinanceRestAdapter(ExchangeAdapter):
                         min_notional = Decimal(f['minNotional'])
                     elif f['filterType'] == 'LOT_SIZE':
                         min_qty = Decimal(f['minQty'])
-                        qty_prec = int(f['stepSize'].split('.')[-1] or '1')
+                        qty_prec = _decimal_places(f['stepSize'])
                     elif f['filterType'] == 'PRICE_FILTER':
-                        price_prec = int(f['tickSize'].split('.')[-1] or '1')
+                        price_prec = _decimal_places(f['tickSize'])
                         
                 markets.append(Market(
                     exchange='binance',
@@ -461,7 +478,8 @@ class BinanceRestAdapter(ExchangeAdapter):
             except Exception as e:
                 logger.debug("Skipping market %s: %s", symbol_info.get('symbol'), e)
                 continue
-                
+
+        self._markets = {market.symbol: market for market in markets}
         return markets
         
     def fetch_ticker(self, symbol: Symbol) -> Ticker:
@@ -655,7 +673,7 @@ class BinanceRestAdapter(ExchangeAdapter):
             raise AdapterAuthenticationError("API credentials required for order placement")
             
         # Pre-trade validation (chapter 30)
-        self._validate_order_request(request)
+        self._validate_order_request(request, self._market_for(request.symbol))
         
         params = {
             'symbol': str(request.symbol).replace('/', ''),
@@ -693,30 +711,44 @@ class BinanceRestAdapter(ExchangeAdapter):
         data = self._make_signed_request("/api/v3/order", params, method="DELETE")
         return self._parse_order(data)
         
+    def _market_for(self, symbol: Symbol) -> Market:
+        """Market metadata for ``symbol``, fetched once and then cached.
+
+        Pre-trade validation needs the tick size, step size and minimum
+        order value, which only ``exchangeInfo`` knows.
+        """
+        if symbol not in self._markets:
+            self.fetch_markets()
+        market = self._markets.get(symbol)
+        if market is None:
+            raise AdapterInvalidOrder(
+                f"{symbol} is not a trading market on this exchange"
+            )
+        return market
+
     def _validate_order_request(self, request: OrderRequest, market: Market | None = None) -> None:
         """Pre-trade validation (chapter 30).
-        
-        Validates: tick size, step size, min notional, min quantity, 
-        risk limits, data freshness, duplicate prevention.
+
+        Checks tick size, step size, minimum quantity and minimum order
+        value against ``market``. A market order carries no price, so its
+        minimum order value is left to the exchange's own check.
+
+        Risk limits, data freshness and duplicate prevention are still
+        missing; see the TODO at the end of this method.
         """
         if not self.supports(Capability.TRADING):
             raise AdapterNotSupported("trading is not enabled on this adapter (read-only mode)")
-        if request.symbol != market.symbol if market else True:
+        if market is not None and request.symbol != market.symbol:
             raise AdapterInvalidOrder("symbol does not match market")
-            
+
         # Validate quantity precision (step size)
         if market:
             if market.min_quantity is not None and request.quantity < market.min_quantity:
                 raise AdapterInvalidOrder(
                     f"quantity {request.quantity} below minimum {market.min_quantity}"
                 )
-            if market.min_notional is not None:
-                price = request.price
-                if price is None:
-                    raise AdapterInvalidOrder(
-                        "cannot check minimum order value without a price"
-                    )
-                notional = request.quantity * price
+            if market.min_notional is not None and request.price is not None:
+                notional = request.quantity * request.price
                 if notional < market.min_notional:
                     raise AdapterInvalidOrder(
                         f"order value {notional} below minimum order value "
