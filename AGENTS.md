@@ -66,6 +66,14 @@ task.
    answered, the work was accepted. Stop at the boundary you were
    given and wait for an explicit answer; if you must proceed on an
    assumption, state the assumption where the human will see it.
+10. **Keep the agent-onboarding tracker current.** When you add,
+    rename, or remove a file in the agent-onboarding surface
+    (`AGENTS.md`, `CLAUDE.md`, `AGENT-HANDOFF.md`, the onboarding
+    reading lists, the agent prompt in `README.md`), or when the test
+    baseline changes, update
+    `docs/en/developers/agent-onboarding-tracker.md` in the same
+    change: tick or add the relevant row, update the "Last verified"
+    date, and sync the baseline across every file the tracker lists.
 
 ## Environment facts (verify at session start)
 

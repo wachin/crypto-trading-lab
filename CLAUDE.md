@@ -42,6 +42,10 @@
   price, quantity, or balance path.
 - **No look-ahead.** A strategy sees `candles[:i]` only; signals fill at
   the next candle's open.
+- **Keep the agent-onboarding tracker current.** When you add, rename, or
+  remove a file in the agent-onboarding surface, or when the test baseline
+  changes, update `docs/en/developers/agent-onboarding-tracker.md` in the
+  same change.
 
 ## Environment
 
