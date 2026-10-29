@@ -82,29 +82,20 @@ class CandleRepository:
         exchange_name: str = "mock",
         replace: bool = True,
     ) -> int:
-        """Persist candles; returns the number of rows affected.
+        """Persist candles; returns the number of rows written.
 
-        ``replace=True`` re-imports cleanly (OR REPLACE on the unique
-        key); ``replace=False`` skips candles that already exist.
+        Rows are keyed by (market, interval, open_time), so the same
+        open_time in two intervals is two independent rows.
+        ``replace=True`` re-imports cleanly: an existing row is updated
+        in place. ``replace=False`` skips candles that already exist,
+        so the returned count is the number of *new* rows.
         """
         if not candles:
             return 0
-        first = candles[0]
-        market_id = self._market_id(first.symbol, exchange_name)
+        market_id = self._market_id(candles[0].symbol, exchange_name)
 
-        existing: set[datetime] = set()
-        if not replace:
-            rows = self._session.execute(
-                select(CandleRecord.open_time).where(
-                    CandleRecord.market_id == market_id,
-                    CandleRecord.interval == first.interval,
-                )
-            ).scalars()
-            existing = {_parse(value) for value in rows}
         added = 0
         for candle in candles:
-            if not replace and candle.open_time in existing:
-                continue  # chapter 28: skip rows that already exist
             open_iso = _iso(candle.open_time)
             existing_record = self._session.scalar(
                 select(CandleRecord).where(
@@ -114,6 +105,11 @@ class CandleRepository:
                 )
             )
             if existing_record is not None:
+                if not replace:
+                    # Chapter 28: skip rows that already exist. The key is
+                    # (market, interval, open_time) — a candle of another
+                    # interval that shares this open_time is a different row.
+                    continue
                 # Upsert: update values in place (re-import is safe).
                 existing_record.close_time = _iso(candle.close_time)
                 existing_record.open = candle.open

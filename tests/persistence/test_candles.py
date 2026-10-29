@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+
+from sqlalchemy import text
 
 from crypto_trading_lab.domain.models import Candle, Symbol
 from crypto_trading_lab.persistence.database import (
@@ -16,16 +19,14 @@ from crypto_trading_lab.persistence.candles import CandleRepository
 SYMBOL = Symbol("BTC/USDT")
 
 
-def _candle(minute, close="105"):
-    from datetime import datetime, timedelta, timezone
-
+def _candle(minute, close="105", interval="1m"):
     start = datetime(2024, 1, 1, tzinfo=timezone.utc) + timedelta(
         minutes=minute
     )
     close_dec = Decimal(close)
     return Candle(
         symbol=SYMBOL,
-        interval="1m",
+        interval=interval,
         open_time=start,
         close_time=start + timedelta(minutes=1),
         open=Decimal("100"),
@@ -76,8 +77,6 @@ def test_reimport_without_replace_skips_existing():
 
 def test_range_queries():
     repo = _repo()
-    from datetime import datetime, timezone
-
     repo.save_candles([_candle(m) for m in range(10)])
     start = datetime(2024, 1, 1, 0, 3, tzinfo=timezone.utc)
     end = datetime(2024, 1, 1, 0, 6, tzinfo=timezone.utc)
@@ -110,3 +109,59 @@ def test_intervals_are_isolated():
     repo.save_candles([candle_1m, candle_5m])
     assert repo.count(SYMBOL, "1m") == 1
     assert repo.count(SYMBOL, "5m") == 1
+
+
+def test_replace_false_does_not_skip_another_interval():
+    # Regression: the "already stored" check used to key on open_time
+    # alone, so a new 5m candle was dropped when a stored 1m candle
+    # shared its open_time.
+    repo = _repo()
+    repo.save_candles([_candle(0)])
+    added = repo.save_candles(
+        [_candle(0), _candle(0, interval="5m")], replace=False
+    )
+    assert added == 1
+    assert repo.count(SYMBOL, "1m") == 1
+    assert repo.count(SYMBOL, "5m") == 1
+
+
+def test_save_empty_batch_writes_nothing():
+    repo = _repo()
+    assert repo.save_candles([]) == 0
+    assert repo.load_candles(SYMBOL, "1m") == []
+
+
+def test_loaded_timestamps_are_utc_aware():
+    repo = _repo()
+    repo.save_candles([_candle(0)])
+    loaded = repo.load_candles(SYMBOL, "1m")
+    assert loaded[0].open_time.tzinfo is not None
+    assert loaded[0].open_time.utcoffset() == timedelta(0)
+
+
+def test_count_of_unknown_market_is_zero():
+    repo = _repo()
+    assert repo.count(Symbol("ETH/USDT"), "1m") == 0
+
+
+def test_new_exchange_is_created_on_first_write():
+    repo = _repo()
+    repo.save_candles([_candle(0)], exchange_name="binance")
+    assert repo.count(SYMBOL, "1m", exchange_name="binance") == 1
+    # Candles are scoped per exchange; the default market stays empty.
+    assert repo.count(SYMBOL, "1m") == 0
+
+
+def test_naive_stored_timestamp_is_read_as_utc():
+    # A legacy or hand-edited row may lack the tz suffix; read it as UTC
+    # rather than returning a naive datetime into the engine.
+    engine = database_engine(":memory:")
+    create_database(engine)
+    repo = CandleRepository(make_session_factory(engine)())
+    repo.save_candles([_candle(0)])
+    with engine.begin() as connection:
+        connection.execute(
+            text("UPDATE candles SET open_time = '2024-01-01T00:00:00'")
+        )
+    loaded = repo.load_candles(SYMBOL, "1m")
+    assert loaded[0].open_time == datetime(2024, 1, 1, tzinfo=timezone.utc)

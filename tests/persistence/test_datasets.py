@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import text
 
 from crypto_trading_lab.market_data.historical import DatasetVersion
 from crypto_trading_lab.persistence.database import (
@@ -83,3 +85,42 @@ def test_delete_removes_the_identity_only():
     assert repo.delete("BINANCE_BTCUSDT_1H_2024_V1") is True
     assert repo.get("BINANCE_BTCUSDT_1H_2024_V1") is None
     assert repo.delete("missing") is False
+
+
+def test_list_datasets_is_newest_first():
+    repo = _repository()
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    repo.save(_version("D1", downloaded_at=base))
+    repo.save(_version("D2", downloaded_at=base + timedelta(days=1)))
+    repo.save(_version("D3", downloaded_at=base + timedelta(days=2)))
+
+    assert [d.dataset_id for d in repo.list_datasets()] == ["D3", "D2", "D1"]
+
+
+def test_latest_returns_the_most_recent_download():
+    repo = _repository()
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    repo.save(_version("OLD", downloaded_at=base))
+    repo.save(_version("NEW", downloaded_at=base + timedelta(days=1)))
+
+    latest = repo.latest(symbol="BTC/USDT")
+
+    assert latest is not None
+    assert latest.dataset_id == "NEW"
+
+
+def test_naive_stored_timestamp_is_read_as_utc():
+    # A legacy or hand-edited row may lack the tz suffix; read it as UTC.
+    engine = database_engine(":memory:")
+    create_database(engine)
+    repo = DatasetRepository(make_session_factory(engine)())
+    repo.save(_version())
+    with engine.begin() as connection:
+        connection.execute(
+            text("UPDATE datasets SET start = '2024-01-01T00:00:00'")
+        )
+
+    loaded = repo.get("BINANCE_BTCUSDT_1H_2024_V1")
+
+    assert loaded is not None
+    assert loaded.start == datetime(2024, 1, 1, tzinfo=timezone.utc)

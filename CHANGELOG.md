@@ -422,6 +422,19 @@ per-chapter state of the specification, see [`ROADMAP.md`](ROADMAP.md).
   installed, so the chapter-41 export test runs instead of skipping).
 
 ### Fixed
+- **A re-import could silently drop a candle of another interval.**
+  `CandleRepository.save_candles(replace=False)` built its "already
+  stored" set from the first candle's interval but keyed it by
+  `open_time` alone, so a new 5m candle was skipped whenever a stored 1m
+  candle shared its open_time: a mixed-interval batch reported 0 rows and
+  wrote nothing. The skip now uses the full (market, interval,
+  open_time) key — the same key as the table's unique constraint — and
+  the docstring says what the returned count means. Both call sites pass
+  `replace=True`, so no stored dataset was affected. The persistence
+  suite now also covers the ordering of `list_datasets`/`latest`, UTC
+  round-trips, empty batches, the auto-created exchange row and the
+  legacy rows without a timezone suffix; the package is at 100% branch
+  coverage from `tests/persistence/` alone.
 - **The probabilistic Sharpe ratio mixed two frequencies.** It divided
   annualized return by annualized volatility and then fed that
   *annualized* ratio to `sqrt((1 + SR²/2) / T)` with `T` counted per
