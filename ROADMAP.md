@@ -170,7 +170,7 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 61 | [~] | 2 | 16 | No | Capital protection |
 | 62 | [~] | 1 | 19 | Sí | Live monitoring |
 | 63 | [~] | 11 | 6 | No | Live vs backtest drift |
-| 64 | [ ] | 0 | 16 | No | Strategy failure detection |
+| 64 | [x] | 16 | 0 | No | Strategy failure detection |
 | 65 | [~] | 2 | 8 | No | Strategy promotion pipeline |
 | 66 | [ ] | 0 | 20 | No | Strategy qualification |
 | 67 | [x] | 21 | 0 | No | Safety gates |
@@ -4280,7 +4280,7 @@ Analyze:
 
 ---
 
-## [ ] 64. Strategy failure detection
+## [x] 64. Strategy failure detection
 
 The system must detect when a strategy stops behaving as it did historically.
 
@@ -4288,13 +4288,13 @@ The system must detect when a strategy stops behaving as it did historically.
 
 Consider:
 
-- [ ] performance degradation;
-- [ ] drawdown increase;
-- [ ] trade-distribution changes;
-- [ ] volatility changes;
-- [ ] execution degradation;
-- [ ] regime changes;
-- [ ] data-quality problems.
+- [x] performance degradation;
+- [x] drawdown increase;
+- [x] trade-distribution changes;
+- [x] volatility changes;
+- [x] execution degradation;
+- [x] regime changes;
+- [x] data-quality problems.
 
 ### 64.2 Recommendations
 
@@ -4308,18 +4308,18 @@ Pause
 Retire
 ```
 
-- [ ] Every recommendation must show the reason.
-- [ ] Never hide the reason behind a recommendation.
-- [ ] Recommendations must be based on recorded evidence, not guesses.
-- [ ] Recommendations must never bypass the risk manager.
-- [ ] A “Retire” recommendation must update the strategy registry status (see Chapter 36).
-- [ ] Recommendations must include the data and thresholds used.
+- [x] Every recommendation must show the reason.
+- [x] Never hide the reason behind a recommendation.
+- [x] Recommendations must be based on recorded evidence, not guesses.
+- [x] Recommendations must never bypass the risk manager.
+- [x] A “Retire” recommendation must update the strategy registry status (see Chapter 36).
+- [x] Recommendations must include the data and thresholds used.
 
 ### 64.3 Education
 
-- [ ] Explain why strategies degrade over time.
-- [ ] Explain that past performance does not guarantee continued performance.
-- [ ] Explain the difference between normal variability and genuine failure.
+- [x] Explain why strategies degrade over time.
+- [x] Explain that past performance does not guarantee continued performance.
+- [x] Explain the difference between normal variability and genuine failure.
 
 ---
 
