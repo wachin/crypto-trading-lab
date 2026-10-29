@@ -54,14 +54,14 @@ So the window is not the constraint. The constraint is discipline.
 A useful property of this repository: the test suite is **offline by design**
 ("a test that reaches the network is a bug"). Verification is therefore
 cheap, deterministic and repeatable, which matters much more to a smaller or
-less capable model than raw window size does. Measured on 2026-10-15 —
+less capable model than raw window size does. Measured on 2026-10-28 —
 pointing every proxy at a dead port changes nothing:
 
 ```bash
 http_proxy=http://127.0.0.1:9 https_proxy=http://127.0.0.1:9 \
 ALL_PROXY=http://127.0.0.1:9 QT_QPA_PLATFORM=offscreen \
 python3 -m pytest tests/ -q
-# → 843 passed, 2 skipped, exit code 0
+# → 864 passed, 2 skipped, exit code 0
 ```
 
 The two skips are intentional guards in `tests/exchanges/contract.py`
