@@ -19,7 +19,7 @@ Before any commit, the full test suite must pass.
 QT_QPA_PLATFORM=offscreen python3 -m pytest tests/ -q
 ```
 
-The baseline is **864 passed, 2 skipped**. If tests fail, fix them before proceeding.
+The baseline is **980 passed, 2 skipped**. If tests fail, fix them before proceeding.
 
 ### 3. Results shown honestly
 
@@ -80,12 +80,15 @@ When reporting results:
 
 ## Documentation files
 
+* `CLAUDE.md` - Auto-loaded by agent tools at session start; entry point
 * `ROADMAP.md` - Project specification
+* `AGENTS.md` - Non-negotiable ground rules
 * `AGENT-HANDOFF.md` - State for new developers
+* `CONTRIBUTING.md` - Workflow, review process, quality bar
 * `docs/en/developers/` - Technical documentation
 * `docs/en/beginners/` - User guides
 
 ## History
 
-* Last updated: 2026-09-17
-* Version: 1.0.0
+* Last updated: 2026-10-29
+* Version: 1.1.0

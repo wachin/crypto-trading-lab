@@ -19,6 +19,7 @@ Read these, in this order, before touching anything:
 
 | # | File | What it gives you |
 |---|---|---|
+| 0 | [`CLAUDE.md`](CLAUDE.md) | Auto-loaded by Claude Code and other agent tools at session start; points to the files below |
 | 1 | [`AGENT-HANDOFF.md`](AGENT-HANDOFF.md) | What is already built and the exact continuation point |
 | 2 | [`AGENTS.md`](AGENTS.md) | The non-negotiable ground rules |
 | 3 | [`ROADMAP.md`](ROADMAP.md) | **The specification.** Find the chapter that owns your task |
