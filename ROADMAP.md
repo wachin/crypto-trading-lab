@@ -172,7 +172,7 @@ task order is in `AGENT-HANDOFF.md` §5.2.
 | 63 | [~] | 11 | 6 | No | Live vs backtest drift |
 | 64 | [x] | 16 | 0 | No | Strategy failure detection |
 | 65 | [~] | 2 | 8 | No | Strategy promotion pipeline |
-| 66 | [ ] | 0 | 20 | No | Strategy qualification |
+| 66 | [x] | 20 | 0 | No | Strategy qualification |
 | 67 | [x] | 21 | 0 | No | Safety gates |
 | 68 | [x] | 54 | 0 | No | Real trading |
 | 69 | [~] | 22 | 59 | No | Development phases |
@@ -4373,7 +4373,7 @@ Monitoring
 
 ---
 
-## [ ] 66. Strategy qualification
+## [x] 66. Strategy qualification
 
 Qualification is a formal evaluation stage. A strategy must not be considered “qualified” merely because `Profit > 0`.
 
@@ -4381,20 +4381,20 @@ Qualification is a formal evaluation stage. A strategy must not be considered �
 
 The qualification process must consider, where applicable:
 
-- [ ] out-of-sample performance;
-- [ ] drawdown;
-- [ ] risk-adjusted metrics;
-- [ ] benchmark comparison (see Chapter 42);
-- [ ] sample size;
-- [ ] parameter stability (see Chapter 39);
-- [ ] robustness (see Chapter 44);
-- [ ] walk-forward (see Chapter 45);
-- [ ] paper trading (see Chapter 57);
-- [ ] execution realism (see Chapter 56);
-- [ ] data quality (see Chapter 29);
-- [ ] complexity (see Chapter 35);
-- [ ] statistical evidence (see Chapter 43);
-- [ ] operational stability (see Chapter 62).
+- [x] out-of-sample performance;
+- [x] drawdown;
+- [x] risk-adjusted metrics;
+- [x] benchmark comparison (see Chapter 42);
+- [x] sample size;
+- [x] parameter stability (see Chapter 39);
+- [x] robustness (see Chapter 44);
+- [x] walk-forward (see Chapter 45);
+- [x] paper trading (see Chapter 57);
+- [x] execution realism (see Chapter 56);
+- [x] data quality (see Chapter 29);
+- [x] complexity (see Chapter 35);
+- [x] statistical evidence (see Chapter 43);
+- [x] operational stability (see Chapter 62).
 
 ### 66.2 Qualification outcomes
 
@@ -4406,15 +4406,15 @@ Conditionally Qualified
 Not Qualified
 ```
 
-- [ ] “Conditionally Qualified” must list the conditions and their deadlines or thresholds.
-- [ ] “Not Qualified” must explain which criteria failed and why.
-- [ ] Qualification reports must be stored and referenced from the strategy registry (see Chapter 36).
-- [ ] Qualification is not a guarantee of future profitability.
+- [x] “Conditionally Qualified” must list the conditions and their deadlines or thresholds.
+- [x] “Not Qualified” must explain which criteria failed and why.
+- [x] Qualification reports must be stored and referenced from the strategy registry (see Chapter 36).
+- [x] Qualification is not a guarantee of future profitability.
 
 ### 66.3 Qualification review
 
-- [ ] A qualified strategy must be re-qualified after material changes (parameters, data, execution model, market conditions).
-- [ ] Re-qualification intervals must be documented.
+- [x] A qualified strategy must be re-qualified after material changes (parameters, data, execution model, market conditions).
+- [x] Re-qualification intervals must be documented.
 
 ---
 
